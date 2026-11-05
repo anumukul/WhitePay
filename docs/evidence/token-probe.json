@@ -1,0 +1,1539 @@
+{
+  "fetchedAt": "2026-11-05T16:46:16.972Z",
+  "network": {
+    "id": 1874,
+    "name": "Whitechain Sepolia",
+    "rpcUrl": "https://rpc.testnet.whitechain.io",
+    "explorerUrl": "https://explorer.testnet.whitechain.io",
+    "usdt": "0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7",
+    "nativeCurrency": {
+      "name": "WhiteBIT Coin",
+      "symbol": "WBT",
+      "decimals": 18
+    }
+  },
+  "operations": "READ_ONLY_ETH_CALL",
+  "checks": [
+    {
+      "name": "nonzero implementation",
+      "passed": true
+    },
+    {
+      "name": "explorer implementation matches RPC storage",
+      "passed": true
+    },
+    {
+      "name": "implementation source fully verified",
+      "passed": true
+    },
+    {
+      "name": "verified runtime matches RPC implementation bytecode",
+      "passed": true
+    },
+    {
+      "name": "EIP-712 domain name/version/chain/proxy match",
+      "passed": true
+    },
+    {
+      "name": "disposable signer has zero WBT and zero USDT",
+      "passed": true
+    },
+    {
+      "name": "transfer authorization typehash matches",
+      "passed": true
+    },
+    {
+      "name": "receive authorization typehash matches",
+      "passed": true
+    },
+    {
+      "name": "permit bytes valid",
+      "passed": true
+    },
+    {
+      "name": "permit vrs valid",
+      "passed": true
+    },
+    {
+      "name": "permit wrong chain rejected",
+      "passed": true
+    },
+    {
+      "name": "permit wrong nonce rejected",
+      "passed": true
+    },
+    {
+      "name": "permit expired rejected",
+      "passed": true
+    },
+    {
+      "name": "TransferWithAuthorization bytes zero-value valid",
+      "passed": true
+    },
+    {
+      "name": "TransferWithAuthorization vrs zero-value valid",
+      "passed": true
+    },
+    {
+      "name": "TransferWithAuthorization tampered amount rejected",
+      "passed": true
+    },
+    {
+      "name": "ReceiveWithAuthorization bytes zero-value valid",
+      "passed": true
+    },
+    {
+      "name": "ReceiveWithAuthorization vrs zero-value valid",
+      "passed": true
+    },
+    {
+      "name": "ReceiveWithAuthorization tampered amount rejected",
+      "passed": true
+    },
+    {
+      "name": "receive third-party caller rejected",
+      "passed": true
+    },
+    {
+      "name": "receive valid positive value reaches balance check",
+      "passed": true
+    },
+    {
+      "name": "receive validAfter exact boundary rejected",
+      "passed": true
+    },
+    {
+      "name": "receive validBefore exact boundary rejected",
+      "passed": true
+    },
+    {
+      "name": "eth_call changes were not persisted",
+      "passed": true
+    },
+    {
+      "name": "snapshot block hash unchanged",
+      "passed": true
+    }
+  ],
+  "chainIdHex": "0x752",
+  "block": {
+    "number": "0xbbb209",
+    "hash": "0xc525e6dccb09fd8c00ca78a2d2e9244ec4035f9675fe9a19a05bc55d879d3c89",
+    "timestamp": "0x6aecb2d9"
+  },
+  "tokenCode": {
+    "bytes": 2227,
+    "keccak256": "0x4d9be648c5bf39973670d9f8b481d5d0b971e6a2db2deccc6b98cde21c5dd83e"
+  },
+  "proxy": {
+    "standard": "EIP-1967",
+    "slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+    "storage": "0x00000000000000000000000026425662d126412128967ecf0a02ec48573026f7",
+    "implementation": "0x26425662d126412128967ecf0a02ec48573026f7"
+  },
+  "implementationCode": {
+    "bytes": 16067,
+    "keccak256": "0xb5c69874a061f6c8750294eefc2de2f45a7c229e961b03fc901f3612010822d6"
+  },
+  "explorer": {
+    "proxyUrl": "https://explorer.testnet.whitechain.io/api/v2/smart-contracts/0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7",
+    "implementationUrl": "https://explorer.testnet.whitechain.io/api/v2/smart-contracts/0x26425662d126412128967ecf0a02ec48573026f7",
+    "proxy": {
+      "name": null,
+      "isVerified": false,
+      "isFullyVerified": false,
+      "compilerVersion": null,
+      "proxyType": "eip1967",
+      "implementations": [
+        {
+          "address_hash": "0x26425662D126412128967ECf0a02EC48573026F7",
+          "name": "TetherTokenV2"
+        }
+      ],
+      "abi": [],
+      "sourceHashes": []
+    },
+    "implementation": {
+      "name": "TetherTokenV2",
+      "isVerified": true,
+      "isFullyVerified": true,
+      "compilerVersion": "v0.8.4+commit.c7e474f2",
+      "proxyType": null,
+      "implementations": [],
+      "abi": [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Approval",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "authorizer",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            }
+          ],
+          "name": "AuthorizationCanceled",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "authorizer",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            }
+          ],
+          "name": "AuthorizationUsed",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+            }
+          ],
+          "name": "BlockPlaced",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+            }
+          ],
+          "name": "BlockReleased",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_blockedUser",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_balance",
+              "type": "uint256"
+            }
+          ],
+          "name": "DestroyedBlockedFunds",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_destination",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "Mint",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "Redeem",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            }
+          ],
+          "name": "Transfer",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "CANCEL_AUTHORIZATION_TYPEHASH",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "DOMAIN_SEPARATOR",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "RECEIVE_WITH_AUTHORIZATION_TYPEHASH",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "TRANSFER_WITH_AUTHORIZATION_TYPEHASH",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+            }
+          ],
+          "name": "addToBlockedList",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            }
+          ],
+          "name": "allowance",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "approve",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "authorizer",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            }
+          ],
+          "name": "authorizationState",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "balanceOf",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "authorizer",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "cancelAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "authorizer",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "name": "cancelAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "decimals",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "subtractedValue",
+              "type": "uint256"
+            }
+          ],
+          "name": "decreaseAllowance",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_blockedUser",
+              "type": "address"
+            }
+          ],
+          "name": "destroyBlockedFunds",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "addedValue",
+              "type": "uint256"
+            }
+          ],
+          "name": "increaseAllowance",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "_decimals",
+              "type": "uint8"
+            }
+          ],
+          "name": "initialize",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "isBlocked",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "isTrusted",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_destination",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "mint",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address[]",
+              "name": "_recipients",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "_values",
+              "type": "uint256[]"
+            }
+          ],
+          "name": "multiTransfer",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "name",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "nonces",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "name": "permit",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "permit",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validAfter",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validBefore",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "name": "receiveWithAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validAfter",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validBefore",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "receiveWithAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "redeem",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_user",
+              "type": "address"
+            }
+          ],
+          "name": "removeFromBlockedList",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "symbol",
+          "outputs": [
+            {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "totalSupply",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "transfer",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_sender",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "_recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "transferFrom",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "transferOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validAfter",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validBefore",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes",
+              "name": "signature",
+              "type": "bytes"
+            }
+          ],
+          "name": "transferWithAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validAfter",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "validBefore",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "name": "transferWithAuthorization",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      "sourceHashes": [
+        {
+          "file": "contracts/Tether/TetherTokenV2.sol",
+          "keccak256": "0x558c4cc49d7ae5346da9290236a76f7bbe0d5964e03f1b8155fd27aa382cbedd"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+          "keccak256": "0x35b09b69aca3bc2633da8f47382a81ecf367efe57167a2114f60f9ec81988afa"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+          "keccak256": "0x8b2abd85d0ece7e866e100e9d47ca9cbec93c87cf71a8d267b2b93eb81f7d5e9"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol",
+          "keccak256": "0x8570116be0ba91a0e4e48508d8b74afb67baa9446c4cc08e2c54510be07835ce"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol",
+          "keccak256": "0xf449ca0a763d4b1b4462cf8706857074492f324020a2b9d099181b5383055ad3"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol",
+          "keccak256": "0x6795c369a4eefa78468e38966f7851fbc2dda5e5b9ccd3fa2b45970e2e4d3abd"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol",
+          "keccak256": "0xf07c1013d0ecf7a80ff5bf8f59105fc0acc5bf83aa4196b409d9ac3666d37cc6"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-IERC20PermitUpgradeable.sol",
+          "keccak256": "0x4e321ee7110594e92c1c834d7de2fbdfd01fbed6c06127fe75c5836fe80a24a0"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol",
+          "keccak256": "0x828a6fb02c79a63dc5867427f355c0a9c65b4359fecadae73883154da550f6f8"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol",
+          "keccak256": "0x00c96e792d367a436015f12ce2665aa8e2a0d61d2c6045a82cbb37da20e5a042"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol",
+          "keccak256": "0xdddbd304b5a96782965d6c04ea9889734be0691a68fcff10908f48ce330cac7b"
+        },
+        {
+          "file": "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol",
+          "keccak256": "0x30f3940c119b4d93578bac394f43ee9b0b8465ea1e60b316244183be2983a5ed"
+        },
+        {
+          "file": "contracts/Tether/EIP3009.sol",
+          "keccak256": "0x3bf8998288f05f89138bc88eec490da55d8c9a4079cac99a7dd7c0019a27daf0"
+        },
+        {
+          "file": "contracts/Tether/TetherToken.sol",
+          "keccak256": "0x8d725db80bf614162dd142a74b9794015772dcf5caf473636d0a7f043b886be6"
+        },
+        {
+          "file": "contracts/Tether/WithBlockedList.sol",
+          "keccak256": "0x5268f0e3e20d816b557c66c0e9444dd32d807267903bab4b87ea9944c7f6e187"
+        },
+        {
+          "file": "contracts/Tether/interfaces/IERC1271.sol",
+          "keccak256": "0x3c08eaa660bf7230f95e414371fb78323fe1a0763111abe4be613b399b68681e"
+        },
+        {
+          "file": "contracts/Tether/util/ECRecover.sol",
+          "keccak256": "0xaec9dfbfad49120da4e2f66a29adea092e460e14814eda10dd0359d25b2f3bd6"
+        },
+        {
+          "file": "contracts/Tether/util/MessageHashUtils.sol",
+          "keccak256": "0x94190d4e56ee3d9e47fa70a765cd558b2e6dd9daaa797fcc96f4df80e49ef5bf"
+        },
+        {
+          "file": "contracts/Tether/util/SignatureChecker.sol",
+          "keccak256": "0xacaccae0608ed7cdb56508686d3d59b0f2e5621f156eb56275529f7cce1ccb6d"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "name": "Tether USD",
+    "symbol": "USDT",
+    "decimals": 6
+  },
+  "domain": {
+    "name": "Tether USD",
+    "version": "1",
+    "chainId": 1874,
+    "verifyingContract": "0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7",
+    "expected": "0xcdcfacb6b15c8238b4e5fbb47bdb83b7f83f50a531d264bf9763d2bd1d3d2a25",
+    "onchain": "0xcdcfacb6b15c8238b4e5fbb47bdb83b7f83f50a531d264bf9763d2bd1d3d2a25"
+  },
+  "probeAccount": {
+    "address": "0x82C6d6D4cCf5291a0F505E85B79da0a772aAa3A3",
+    "recipient": "0xe64d14bc8aE4d49A85c9aF860c5c2d5C985Af6b7",
+    "nativeBalance": "0x0",
+    "tokenBalance": "0",
+    "permitNonce": "0",
+    "authorizationNonce": "0x72d4d2c9b74c7250718c74d88c025f599fc07c203ebbff32f3015ac339ee0f0e"
+  },
+  "calls": [
+    {
+      "label": "permit bytes valid",
+      "function": "permit(address,address,uint256,uint256,bytes)",
+      "selector": "0x9fd5a6cf",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "permit vrs valid",
+      "function": "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+      "selector": "0xd505accf",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "permit wrong chain rejected",
+      "function": "permit(address,address,uint256,uint256,bytes)",
+      "selector": "0x9fd5a6cf",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "EIP2612: invalid signature",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: EIP2612: invalid signature",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001a454950323631323a20696e76616c6964207369676e6174757265000000000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "permit wrong nonce rejected",
+      "function": "permit(address,address,uint256,uint256,bytes)",
+      "selector": "0x9fd5a6cf",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "EIP2612: invalid signature",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: EIP2612: invalid signature",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001a454950323631323a20696e76616c6964207369676e6174757265000000000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "permit expired rejected",
+      "function": "permit(address,address,uint256,uint256,bytes)",
+      "selector": "0x9fd5a6cf",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "ERC20Permit: expired deadline",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: ERC20Permit: expired deadline",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001d45524332305065726d69743a206578706972656420646561646c696e65000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "TransferWithAuthorization bytes zero-value valid",
+      "function": "transferWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0xcf092995",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "TransferWithAuthorization vrs zero-value valid",
+      "function": "transferWithAuthorization(address,address,uint256,uint256,uint256,bytes32,uint8,bytes32,bytes32)",
+      "selector": "0xe3ee160e",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "TransferWithAuthorization tampered amount rejected",
+      "function": "transferWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0xcf092995",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "TetherToken: invalid signature",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: TetherToken: invalid signature",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001e546574686572546f6b656e3a20696e76616c6964207369676e61747572650000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "ReceiveWithAuthorization bytes zero-value valid",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "ReceiveWithAuthorization vrs zero-value valid",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,uint8,bytes32,bytes32)",
+      "selector": "0xef55bec6",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "successful eth_call (empty return)",
+      "passed": true,
+      "response": {
+        "status": "empty",
+        "result": "0x"
+      },
+      "conclusion": "CALL_VERIFIED_ONLY"
+    },
+    {
+      "label": "ReceiveWithAuthorization tampered amount rejected",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "TetherToken: invalid signature",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: TetherToken: invalid signature",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001e546574686572546f6b656e3a20696e76616c6964207369676e61747572650000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "receive third-party caller rejected",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "TetherToken: to != msg.sender",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: TetherToken: to != msg.sender",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001d546574686572546f6b656e3a20746f20213d206d73672e73656e646572000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "receive valid positive value reaches balance check",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "ERC20: transfer amount exceeds balance",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: ERC20: transfer amount exceeds balance",
+          "data": "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002645524332303a207472616e7366657220616d6f756e7420657863656564732062616c616e63650000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "receive validAfter exact boundary rejected",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "TetherToken: auth early",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: TetherToken: auth early",
+          "data": "0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000017546574686572546f6b656e3a2061757468206561726c79000000000000000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    },
+    {
+      "label": "receive validBefore exact boundary rejected",
+      "function": "receiveWithAuthorization(address,address,uint256,uint256,uint256,bytes32,bytes)",
+      "selector": "0x88b7ab63",
+      "abiPresent": true,
+      "selectorPresent": true,
+      "expected": "TetherToken: auth expired",
+      "passed": true,
+      "response": {
+        "status": "error",
+        "error": {
+          "code": 3,
+          "message": "execution reverted: TetherToken: auth expired",
+          "data": "0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000019546574686572546f6b656e3a2061757468206578706972656400000000000000"
+        }
+      },
+      "conclusion": "UNPROVEN"
+    }
+  ],
+  "authorizationTypehashes": {
+    "transfer": "0x7c7c6cdb67a18743f49ec6fa9b35f50d52ed05cbed4cc592e13b44501c1a2267",
+    "receive": "0xd099cc98ef71107a616c4f0f941f04c322d8e254fe26b3c6668db87aae413de8"
+  },
+  "afterCalls": {
+    "permitNonce": "0",
+    "allowance": "0",
+    "authorizationUsed": false
+  },
+  "status": "READ_ONLY_CAPABILITIES_VERIFIED",
+  "limitations": [
+    "Zero-value eth_call and permit simulation only; no funded payment, mined transaction, receipt, durable nonce consumption or live replay proof.",
+    "Recipient was an EOA impersonated via eth_call, not a deployed checkout contract.",
+    "Proxy implementation and token-owner blocklist powers can change compatibility."
+  ]
+}

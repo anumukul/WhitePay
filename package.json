@@ -16,10 +16,12 @@
     "test:integration": "node scripts/unavailable.mjs integration",
     "test:e2e": "node scripts/unavailable.mjs e2e",
     "test:sepolia": "node scripts/unavailable.mjs sepolia",
-    "test:contracts": "node scripts/unavailable.mjs contracts"
+    "test:contracts": "node scripts/unavailable.mjs contracts",
+    "probe:token": "pnpm build && node scripts/probe-token.mjs"
   },
   "devDependencies": {
     "prettier": "3.6.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "viem": "2.38.5"
   }
 }
