@@ -2,12 +2,12 @@
 
 Last confirmed step: 00 — baseline accepted for commit/push by user
 Current authorized step: 00 (user requested building from scratch following supplied instructions)
-Status: APPROVED — commit/push authorized; execution pending
+Status: APPROVED_COMMITTED — baseline pushed to origin/main
 Current branch: main
-Last reviewed commit: NONE
+Last reviewed commit: 8a38005 (Step 00 baseline)
 Last test report: docs/progress/step-00.md
 Authorized remote: https://github.com/anumukul/WhitePay.git
-Authorized push destination: origin/main (initial branch of empty repository)
+Push destination: origin/main — https://github.com/anumukul/WhitePay.git
 
 Unresolved blockers:
 

@@ -1,6 +1,6 @@
 # Step 00 — Repository and baseline
 
-Status: APPROVED for commit/push by user; execution pending.
+Status: APPROVED_COMMITTED — baseline commit 8a38005 pushed to origin/main.
 
 ## Scope
 
@@ -41,3 +41,7 @@ CI definition exists but no GitHub Actions run has occurred. No contracts or app
 Human signoff: user explicitly instructed pushing all baseline code to the supplied WhitePay repository. Manual test execution by user was not reported. Proposed commit: `chore(workspace): establish tested WhitePay baseline and milestone tracking`. Authorized initial destination: `origin/main`.
 
 Next step: 01 — Official USDT capability investigation. Do not begin before separate authorization.
+
+## Commit and push evidence
+
+`git push -u origin main` exited 0 and created `main` in `https://github.com/anumukul/WhitePay.git`. Baseline commit: `8a38005`. The staged whitespace check flagged existing Markdown hard-break spaces in the two verbatim supplied requirements files; these were retained intentionally.
