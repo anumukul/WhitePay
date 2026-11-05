@@ -36,11 +36,10 @@ test('chain configuration rejects accidental token or network substitution', asy
   );
   assert.equal(Object.isFrozen(WHITECHAIN_SEPOLIA), true);
 });
-test('canonical requirements and progress tracking exist', () => {
+test('implementation progress and local configuration templates exist', () => {
   for (const file of [
-    'PR.md',
-    'CLAUDE.md',
     'docs/progress/STATE.md',
+    'docs/progress/step-02.md',
     '.env.example',
     '.gitignore',
   ]) {

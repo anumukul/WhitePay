@@ -1,4 +1,4 @@
-/** Required network constants from PR.md; live compatibility is not yet verified. */
+/** Required Whitechain Sepolia constants; live compatibility is not implied here. */
 export const WHITECHAIN_SEPOLIA = Object.freeze({
   id: 1874,
   name: 'Whitechain Sepolia',

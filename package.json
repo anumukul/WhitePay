@@ -17,9 +17,17 @@
     "test:e2e": "node scripts/unavailable.mjs e2e",
     "test:sepolia": "node scripts/unavailable.mjs sepolia",
     "test:contracts": "node scripts/unavailable.mjs contracts",
-    "probe:token": "pnpm build && node scripts/probe-token.mjs"
+    "probe:token": "pnpm build && node scripts/probe-token.mjs",
+    "test:poc": "forge test --root packages/contracts -vv",
+    "test:poc:fork": "FOUNDRY_PROFILE=fork forge test --root packages/contracts --fork-url https://rpc.testnet.whitechain.io --fork-block-number 12300809 --match-contract OfficialTokenForkTest -vv",
+    "build:poc": "forge build --root packages/contracts",
+    "poc:preflight": "pnpm build && pnpm build:poc && node scripts/poc/preflight.mjs",
+    "poc:wallet-config": "pnpm build && node scripts/poc/wallet-config.mjs",
+    "poc:estimate-deployment": "pnpm build:poc && node scripts/poc/estimate-deployment.mjs",
+    "poc:wallet-addresses": "pnpm build && node scripts/poc/export-wallet-addresses.mjs"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "5.4.0",
     "prettier": "3.6.2",
     "typescript": "5.9.3",
     "viem": "2.38.5"

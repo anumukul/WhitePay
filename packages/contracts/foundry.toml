@@ -1,0 +1,18 @@
+[profile.default]
+src = "poc"
+test = "test/poc"
+out = "out"
+cache_path = "cache"
+allow_paths = ["../../node_modules"]
+solc = "0.8.24"
+evm_version = "paris"
+optimizer = true
+optimizer_runs = 200
+remappings = ["@openzeppelin/contracts/=../../node_modules/@openzeppelin/contracts/"]
+
+[fuzz]
+runs = 256
+
+# Opt-in local execution against official chain state; never broadcasts.
+[profile.fork]
+test = "test/fork"

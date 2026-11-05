@@ -34,3 +34,17 @@ Before any external write, preview chain, signer addresses, constructor args/cal
 ## Blocking inputs for live proof
 
 Establish how to obtain the exact official test USDT. Prepare isolated payer, relayer, merchant, and fee-recipient addresses through a private keystore workflow. Never paste private keys into chat. No funding, signing for broadcast, deployment, or faucet transaction was authorized or performed in Step 01.
+
+## Step 02 experimental evaluation — 2026-11-05
+
+User authorized the next step after Step 01 manual testing instructions. Experimental code under `packages/contracts/poc/` evaluates Path A without changing or freezing the future production checkout ABI. Human approval of a final interface and the second-teammate security review remain pending.
+
+The PoC uses the EIP-712 order digest as the token authorization nonce and independently verifies an EOA order signature. The exact type is `Order(bytes32 orderId,address payer,address merchant,uint256 amount,uint256 fee,address feeRecipient,address token,uint256 validAfter,uint256 validBefore,bytes32 quoteId)` under domain `WhitePayAuthorizationPoC`, version `1`, chain `1874`, verifying contract = actual receiver. Token authorization uses the verified Tether USD/version 1/proxy domain.
+
+Local tests and the official-code fork show correct atomic payouts, event, nonce consumption/replay, and rollback. The fork impersonates the token owner to mint local balances. This is not a live funding/payment proof. See [Step 02 evidence](../evidence/gasless-poc.md).
+
+Build choice: experimental Solidity 0.8.24, Paris target, optimizer 200, OpenZeppelin 5.4.0. Official Whitechain Foundry docs (checked 2026-11-05) identify Prague as the supported maximum; Paris is a conservative lower target. Revisit and pin final deployment settings in Step 03/04.
+
+## Operational funding update — user-reported DevRel recommendation
+
+User explicitly requested evaluating YetiTrade testnet to acquire the existing exact official USDT with test WBT. The isolated-wallet funding plan and read-only verified sample are in `docs/runbooks/step-02-yetitrade-funding.md` and `docs/evidence/yetitrade-funding-preview.json`. This changes the Step 02 asset-acquisition plan, not the payment authorization architecture or final checkout ABI. It does not add swaps to the WhitePay product or authorize any trading, token approvals, funding transfer, deployment or Git action.

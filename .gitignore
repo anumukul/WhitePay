@@ -12,3 +12,26 @@ keystores/
 packages/contracts/cache/
 packages/contracts/out/
 broadcast/
+
+# Local project instructions are intentionally not published with the code.
+CLAUDE.md
+PR.md
+PR (2).md
+
+# Wallet configuration and transaction-specific RPC evidence are local artifacts.
+docs/evidence/poc-config.json
+docs/evidence/wallet-public-addresses.json
+docs/evidence/poc-before-funding.json
+docs/evidence/poc-funded.json
+docs/evidence/poc-preflight*.json
+docs/evidence/poc-unfunded-preflight.json
+docs/evidence/poc-wallet-review.json
+docs/evidence/poc-deployment-estimate*.json
+docs/evidence/*-funding-preview.json
+docs/evidence/*-funding-approved-precheck.json
+docs/evidence/*-funding-verified.json
+docs/evidence/trading-to-payer-usdt-transfer-preview.json
+docs/evidence/trading-wallet-public.json
+docs/evidence/usdt-*.json
+docs/evidence/yetitrade-*.json
+docs/evidence/token-probe-manual.json

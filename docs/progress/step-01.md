@@ -49,8 +49,14 @@ DEPLOYED URLS: NOT DEPLOYED. Mined payment receipt/replay: NOT VERIFIED. Step 02
 
 ## Human gate and Git authorization
 
-Human acceptance and ADR approval are PENDING. Per the user's standing instruction to commit and push code while working, Step 01 code/evidence may be uploaded to the existing `origin/main` for review; that upload does not infer manual acceptance or authorize Step 02. No core contract ABI has been changed.
+Human acceptance and ADR approval are PENDING. Step 01 code/evidence was uploaded before the user revoked standing push authorization. No further push is permitted until manual review and explicit approval. That upload does not infer manual acceptance or authorize Step 02. No core contract ABI has been changed.
 
 HUMAN DECISION REQUIRED: approve Step 01 evidence and the proposed authorization path, or report `FAIL STEP 01: <symptom>`.
 
 NEXT STEP: 02 — genuine zero-WBT proof. DO NOT BEGIN automatically.
+
+## Git evidence
+
+Commit `013a87b` — `feat(probes): verify official Whitechain USDT signature capabilities`. `git push origin main` exited 0 to `https://github.com/anumukul/WhitePay.git`. Upload follows standing user authorization; milestone acceptance and ADR approval remain pending.
+
+User correction: do not push until manual review. This supersedes prior standing push authorization. The progress follow-up remains uncommitted locally.

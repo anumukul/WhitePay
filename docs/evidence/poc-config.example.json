@@ -1,0 +1,13 @@
+{
+  "chainId": 1874,
+  "deployer": "",
+  "relayer": "",
+  "payer": "",
+  "merchant": "",
+  "feeRecipient": "",
+  "amount": "5000000",
+  "fee": "5000",
+  "deploymentGasLimit": "2000000",
+  "paymentGasLimit": "500000",
+  "maxFeePerGas": "20000000000"
+}
