@@ -1,8 +1,8 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-type DB = Database.Database;
+export type DB = DatabaseSync;
 
 let singleton: DB | null = null;
 
@@ -12,18 +12,27 @@ export function getDb(): DB {
     ? process.env.DATABASE_URL.slice(5)
     : process.env.DATABASE_URL || "data/demo.db";
   mkdirSync(dirname(path), { recursive: true });
-  const db = new Database(path);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+  const db = new DatabaseSync(path);
+  db.exec("PRAGMA foreign_keys = ON");
   migrate(db);
   singleton = db;
   return db;
 }
 
 export function resetDbForTests(path: string): DB {
+  if (singleton) {
+    try { singleton.close(); } catch { /* ignore */ }
+  }
   singleton = null;
   process.env.DATABASE_URL = `file:${path}`;
   return getDb();
+}
+
+export function closeDbForTests(): void {
+  if (singleton) {
+    try { singleton.close(); } catch { /* ignore */ }
+    singleton = null;
+  }
 }
 
 function migrate(db: DB): void {

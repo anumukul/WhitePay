@@ -14,24 +14,28 @@ export interface GrantResult {
 
 export function grantEntitlementOnce(input: GrantInput): GrantResult {
   const db = getDb();
-  const tx = db.transaction(() => {
+  db.exec("BEGIN");
+  try {
     const existing = db
       .prepare("SELECT order_id FROM entitlements WHERE order_id = ?")
       .get(input.orderId);
-    if (existing) return { granted: false, reason: "already_granted" as const };
-
+    if (existing) {
+      db.exec("ROLLBACK");
+      return { granted: false, reason: "already_granted" };
+    }
     db.prepare(
       `INSERT INTO entitlements (order_id, provider, provider_payment_id, credits_granted, created_at)
        VALUES (?, ?, ?, ?, ?)`,
     ).run(input.orderId, input.provider, input.providerPaymentId, input.credits, Date.now());
-
     db.prepare(
       `INSERT INTO credit_ledger (delta, reason, order_id, created_at) VALUES (?, ?, ?, ?)`,
     ).run(input.credits, `grant:${input.provider}`, input.orderId, Date.now());
-
+    db.exec("COMMIT");
     return { granted: true };
-  });
-  return tx();
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 }
 
 export function creditBalance(): number {
@@ -44,15 +48,22 @@ export function creditBalance(): number {
 
 export function spendOneCredit(): { ok: boolean; balance: number } {
   const db = getDb();
-  const tx = db.transaction(() => {
+  db.exec("BEGIN");
+  try {
     const balance = creditBalance();
-    if (balance <= 0) return { ok: false, balance };
+    if (balance <= 0) {
+      db.exec("ROLLBACK");
+      return { ok: false, balance };
+    }
     db.prepare(
       `INSERT INTO credit_ledger (delta, reason, order_id, created_at) VALUES (?, ?, NULL, ?)`,
     ).run(-1, "spend", Date.now());
+    db.exec("COMMIT");
     return { ok: true, balance: balance - 1 };
-  });
-  return tx();
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 }
 
 export function getEntitlement(orderId: string) {
