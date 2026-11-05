@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+keystores/
+*.pem
+*.key
+packages/contracts/cache/
+packages/contracts/out/
+broadcast/

@@ -1,0 +1,25 @@
+{
+  "name": "whitepay",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": ">=24 <26"
+  },
+  "scripts": {
+    "build": "pnpm --filter @whitepay/shared build",
+    "typecheck": "pnpm --filter @whitepay/shared typecheck",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "pnpm build && node --test tests/*.test.mjs",
+    "test:integration": "node scripts/unavailable.mjs integration",
+    "test:e2e": "node scripts/unavailable.mjs e2e",
+    "test:sepolia": "node scripts/unavailable.mjs sepolia",
+    "test:contracts": "node scripts/unavailable.mjs contracts"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  }
+}
