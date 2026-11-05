@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/app.ts" },
+  "exports": {
+    ".": "./src/app.ts",
+    "./src/*": "./src/*"
+  },
   "scripts": {
     "dev": "node --experimental-sqlite --import tsx/esm src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
