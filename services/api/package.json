@@ -1,0 +1,18 @@
+{
+  "name": "@whitepay/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/app.ts" },
+  "scripts": {
+    "dev": "node --experimental-sqlite --import tsx/esm src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --experimental-sqlite --test --import tsx/esm test/*.test.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "22.9.0",
+    "tsx": "4.19.2",
+    "typescript": "5.9.3"
+  }
+}
