@@ -1,4 +1,4 @@
-import { WhitePay } from "../whitepay/stub-client.js";
+import { WhitePay } from "@whitepay/node";
 import type {
   CreateCheckoutInput,
   CreateCheckoutResult,
@@ -7,17 +7,19 @@ import type {
   VerifyWebhookInput,
 } from "./types.js";
 
-// SWAP-POINT: when @whitepay/node ships, change the import above to
-// `import { WhitePay } from "@whitepay/node";` and delete lib/whitepay/stub-client.ts.
-// No other code in this file needs to change.
-
+// Real @whitepay/node SDK. Session creation hits the merchant API; the
+// redirect target is a local stand-in until the hosted-checkout page ships.
 function client(): WhitePay {
   const secretKey = process.env.WHITEPAY_SECRET_KEY;
   if (!secretKey) throw new Error("WHITEPAY_SECRET_KEY not set");
   return new WhitePay({
     secretKey,
-    apiBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",
+    apiBaseUrl: process.env.WHITEPAY_API_URL ?? "http://localhost:3001",
   });
+}
+
+function appBaseUrl(): string {
+  return process.env.APP_BASE_URL ?? "http://localhost:3000";
 }
 
 export const whitepayAdapter: PaymentProvider = {
@@ -29,11 +31,14 @@ export const whitepayAdapter: PaymentProvider = {
       priceId: input.priceId,
       externalOrderId: input.orderId,
       successUrl: input.successUrl,
-      cancelUrl: input.cancelUrl,
     });
-    const url = new URL(session.redirectUrl);
+    // The real API returns a redirectUrl that points at the merchant's own
+    // hosted-checkout host. Here the demo serves a local stand-in page until
+    // S9/13 ships the real hosted checkout. The session id is the same.
+    const base = appBaseUrl();
+    const url = new URL(`${base}/_stub/whitepay/pay/${session.id}`);
     url.searchParams.set("orderId", input.orderId);
-    return { redirectUrl: url.toString(), providerSessionId: session.sessionId };
+    return { redirectUrl: url.toString(), providerSessionId: session.id };
   },
 
   async verifyWebhook({ payload, signature }: VerifyWebhookInput): Promise<NormalizedPaymentEvent> {
@@ -46,10 +51,11 @@ export const whitepayAdapter: PaymentProvider = {
     const sig = parts.find((p) => p.startsWith("v1="))?.slice(3) ?? signature;
     if (!timestamp) throw new Error("WhitePay webhook missing timestamp");
     const event = wp.webhooks.verify({ payload: raw, signature: sig, timestamp, secret });
+    const data = event.data as { orderId: string; paymentId: string };
     return {
       eventId: event.id,
-      orderId: event.data.orderId,
-      providerPaymentId: event.data.paymentId,
+      orderId: data.orderId,
+      providerPaymentId: data.paymentId,
     };
   },
 };

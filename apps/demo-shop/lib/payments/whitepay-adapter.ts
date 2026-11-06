@@ -1,14 +1,19 @@
-import { WhitePay } from "../whitepay/stub-client.js";
+import { WhitePay } from "@whitepay/node";
 import type {
   CreateCheckoutInput, CreateCheckoutResult, NormalizedPaymentEvent, PaymentProvider, VerifyWebhookInput,
 } from "./types.js";
 
-// SWAP-POINT: when @whitepay/node ships, change the import to `import { WhitePay } from "@whitepay/node";`
-
 function client(): WhitePay {
   const secretKey = process.env.WHITEPAY_SECRET_KEY;
   if (!secretKey) throw new Error("WHITEPAY_SECRET_KEY not set");
-  return new WhitePay({ secretKey, apiBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3100" });
+  return new WhitePay({
+    secretKey,
+    apiBaseUrl: process.env.WHITEPAY_API_URL ?? "http://localhost:3001",
+  });
+}
+
+function appBaseUrl(): string {
+  return process.env.APP_BASE_URL ?? "http://localhost:3100";
 }
 
 export const whitepayAdapter: PaymentProvider = {
@@ -19,11 +24,11 @@ export const whitepayAdapter: PaymentProvider = {
       priceId: input.priceId,
       externalOrderId: input.orderId,
       successUrl: input.successUrl,
-      cancelUrl: input.cancelUrl,
     });
-    const url = new URL(session.redirectUrl);
+    const base = appBaseUrl();
+    const url = new URL(`${base}/_stub/whitepay/pay/${session.id}`);
     url.searchParams.set("orderId", input.orderId);
-    return { redirectUrl: url.toString(), providerSessionId: session.sessionId };
+    return { redirectUrl: url.toString(), providerSessionId: session.id };
   },
   async verifyWebhook({ payload, signature }: VerifyWebhookInput): Promise<NormalizedPaymentEvent> {
     const wp = client();
@@ -35,6 +40,7 @@ export const whitepayAdapter: PaymentProvider = {
     const sig = parts.find((p) => p.startsWith("v1="))?.slice(3) ?? signature;
     if (!timestamp) throw new Error("WhitePay webhook missing timestamp");
     const event = wp.webhooks.verify({ payload: raw, signature: sig, timestamp, secret });
-    return { eventId: event.id, orderId: event.data.orderId, providerPaymentId: event.data.paymentId };
+    const data = event.data as { orderId: string; paymentId: string };
+    return { eventId: event.id, orderId: data.orderId, providerPaymentId: data.paymentId };
   },
 };

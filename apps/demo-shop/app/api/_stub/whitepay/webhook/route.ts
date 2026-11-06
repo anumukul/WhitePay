@@ -1,9 +1,29 @@
-// SWAP-POINT: replace with real relayer/indexer emission once Step 07 lands
+// DEV-ONLY TRIGGER: simulates the on-chain settlement event that the real worker
+// (services/worker) will deliver once the contract is deployed. Disabled in production.
 import { NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
-import { signPayload, type WhitePayEvent } from "@/lib/whitepay/stub-client";
+import { createHmac, randomUUID } from "node:crypto";
+
+interface WhitePayEvent {
+  id: string;
+  type: "payment.succeeded";
+  data: {
+    orderId: string;
+    paymentId: string;
+    sessionId: string;
+    amountMinor: string;
+    currency: "USDT";
+    chainId: number;
+  };
+}
+
+function signPayload(secret: string, timestamp: string, payload: string): string {
+  return createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest("hex");
+}
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return new NextResponse("stub disabled in production", { status: 410 });
+  }
   const body = await req.json();
   const { orderId, sessionId, forwardTo } = body;
   const event: WhitePayEvent = {

@@ -7,7 +7,7 @@ import type {
   VerifyWebhookInput,
 } from "./types.js";
 
-const API_VERSION: Stripe.LatestApiVersion = "2024-10-28.acacia";
+const API_VERSION: Stripe.LatestApiVersion = "2024-11-20.acacia";
 
 function client(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
