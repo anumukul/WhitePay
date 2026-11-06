@@ -12,7 +12,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --experimental-sqlite --test --import tsx/esm test/*.test.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "viem": "2.38.5"
+  },
   "devDependencies": {
     "@types/node": "22.9.0",
     "tsx": "4.19.2",

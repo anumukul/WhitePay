@@ -91,5 +91,23 @@ function migrate(db: DB): void {
       created_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_payments_merchant ON payments(merchant_id);
+
+    CREATE TABLE IF NOT EXISTS submissions (
+      id TEXT PRIMARY KEY,
+      merchant_id TEXT NOT NULL REFERENCES merchants(id),
+      session_id TEXT NOT NULL REFERENCES checkout_sessions(id),
+      payer_address TEXT NOT NULL,
+      order_payload TEXT NOT NULL,
+      order_digest TEXT NOT NULL UNIQUE,
+      order_signature TEXT,
+      token_signature TEXT,
+      status TEXT NOT NULL,
+      tx_hash TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      UNIQUE (session_id, payer_address)
+    );
+    CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
+    CREATE INDEX IF NOT EXISTS idx_submissions_merchant ON submissions(merchant_id);
   `);
 }

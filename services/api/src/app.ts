@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { authenticate } from "./auth.js";
 import { getDb } from "./db.js";
 import { createSession, getSession, listPaymentsForMerchant, getPaymentForMerchant, HttpError } from "./sessions.js";
+import { buildOrderForSession, recordSignatures, getSubmissionForMerchant } from "./orders.js";
 
 type Handler = (req: IncomingMessage, res: ServerResponse, ctx: Ctx) => Promise<void> | void;
 interface Ctx {
@@ -69,6 +70,44 @@ const routes: Record<string, Record<string, Handler>> = {
     if (!p) throw new HttpError(404, "not_found");
     send(res, 200, p);
   },
+  "POST /v1/checkout/sessions/:id/order": async (_req, res, ctx) => {
+    // path: /v1/checkout/sessions/<sessionId>/order
+    const parts = ctx.url.pathname.split("/");
+    const sessionId = parts[parts.length - 2];
+    const b = ctx.body as { payerAddress?: string };
+    if (!b?.payerAddress) throw new HttpError(400, "missing_payer_address");
+    const result = buildOrderForSession({
+      sessionId,
+      merchantId: ctx.merchantId,
+      payerAddress: b.payerAddress,
+    });
+    send(res, 200, result);
+  },
+  "POST /v1/submissions/:id/signatures": async (_req, res, ctx) => {
+    const parts = ctx.url.pathname.split("/");
+    const submissionId = parts[parts.length - 2];
+    const b = ctx.body as { orderSignature?: string; tokenSignature?: string };
+    if (!b?.orderSignature || !b?.tokenSignature) throw new HttpError(400, "missing_signatures");
+    const result = recordSignatures({
+      submissionId,
+      merchantId: ctx.merchantId,
+      orderSignature: b.orderSignature,
+      tokenSignature: b.tokenSignature,
+    });
+    if (!result.ok) {
+      if (result.reason === "not_found") throw new HttpError(404, "not_found");
+      if (result.reason === "already_signed") throw new HttpError(409, "already_signed");
+      throw new HttpError(400, "bad_request");
+    }
+    res.writeHead(204);
+    res.end();
+  },
+  "GET /v1/submissions/:id": (_req, res, ctx) => {
+    const id = ctx.url.pathname.split("/").pop()!;
+    const row = getSubmissionForMerchant(id, ctx.merchantId);
+    if (!row) throw new HttpError(404, "not_found");
+    send(res, 200, row);
+  },
 };
 
 function matchRoute(method: string, pathname: string): Handler | null {
@@ -84,6 +123,31 @@ function matchRoute(method: string, pathname: string): Handler | null {
   }
   if (method === "GET" && prefix === "/v1/payments" && last.startsWith("pay_")) {
     return routes["GET /v1/payments/:id"];
+  }
+  if (method === "GET" && prefix === "/v1/submissions" && last.startsWith("sub_")) {
+    return routes["GET /v1/submissions/:id"];
+  }
+  // Two-segment param routes: /v1/<x>/<id>/<action>
+  if (parts.length >= 2) {
+    const action = last;
+    const idSegment = parts.pop()!;
+    const parentPrefix = parts.join("/");
+    if (
+      method === "POST" &&
+      parentPrefix === "/v1/checkout/sessions" &&
+      idSegment.startsWith("cs_") &&
+      action === "order"
+    ) {
+      return routes["POST /v1/checkout/sessions/:id/order"];
+    }
+    if (
+      method === "POST" &&
+      parentPrefix === "/v1/submissions" &&
+      idSegment.startsWith("sub_") &&
+      action === "signatures"
+    ) {
+      return routes["POST /v1/submissions/:id/signatures"];
+    }
   }
   return null;
 }
