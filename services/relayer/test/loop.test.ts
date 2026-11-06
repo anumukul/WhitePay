@@ -44,6 +44,7 @@ function freshDbs(): void {
       token_signature TEXT,
       status TEXT NOT NULL,
       tx_hash TEXT,
+      error_reason TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
@@ -142,9 +143,10 @@ test("runOnce marks submissions failed when chain send throws", async () => {
   const status = getSubmissionStatus(id);
   assert.equal(status, "failed");
   const row = getApiDb()
-    .prepare("SELECT tx_hash FROM submissions WHERE id = ?")
-    .get(id) as { tx_hash: string };
-  assert.match(row.tx_hash, /^error:chain_error/);
+    .prepare("SELECT error_reason, tx_hash FROM submissions WHERE id = ?")
+    .get(id) as { error_reason: string; tx_hash: string | null };
+  assert.match(row.error_reason, /^chain_error/);
+  assert.equal(row.tx_hash, null);
 });
 
 test("runOnce marks failed when validation rejects (time expired)", async () => {
@@ -154,8 +156,8 @@ test("runOnce marks failed when validation rejects (time expired)", async () => 
   const r = await runOnce(cfg, chain);
   assert.equal(r.failed, 1);
   assert.equal(getSubmissionStatus(id), "failed");
-  const row = getApiDb().prepare("SELECT tx_hash FROM submissions WHERE id = ?").get(id) as { tx_hash: string };
-  assert.ok(row.tx_hash.includes("time_expired"));
+  const row = getApiDb().prepare("SELECT error_reason FROM submissions WHERE id = ?").get(id) as { error_reason: string };
+  assert.equal(row.error_reason, "time_expired");
 });
 
 test("runOnce is idempotent: second pass finds nothing (statuses already moved)", async () => {
@@ -227,6 +229,6 @@ test("malformed order payload marks failed with invalid_payload", async () => {
     .run(id, PAYER, "0x" + "cc".repeat(32), "0x" + "aa".repeat(65), "0x" + "bb".repeat(65), Date.now(), Date.now());
   const r = await runOnce(cfg, fakeChain());
   assert.equal(r.failed, 1);
-  const row = getApiDb().prepare("SELECT tx_hash FROM submissions WHERE id = ?").get(id) as { tx_hash: string };
-  assert.match(row.tx_hash, /invalid_payload/);
+  const row = getApiDb().prepare("SELECT error_reason FROM submissions WHERE id = ?").get(id) as { error_reason: string };
+  assert.equal(row.error_reason, "invalid_payload");
 });

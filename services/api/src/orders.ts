@@ -269,6 +269,7 @@ export interface SubmissionRow {
   orderSignature: string | null;
   tokenSignature: string | null;
   txHash: string | null;
+  errorReason: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -278,7 +279,7 @@ export function getSubmissionForMerchant(id: string, merchantId: string): Submis
     .prepare(
       `SELECT id, session_id as sessionId, payer_address as payerAddress, order_digest as orderDigest,
               status, order_signature as orderSignature, token_signature as tokenSignature,
-              tx_hash as txHash, created_at as createdAt, updated_at as updatedAt
+              tx_hash as txHash, error_reason as errorReason, created_at as createdAt, updated_at as updatedAt
        FROM submissions WHERE id = ? AND merchant_id = ?`,
     )
     .get(id, merchantId) as SubmissionRow | undefined;

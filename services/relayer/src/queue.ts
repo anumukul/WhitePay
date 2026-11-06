@@ -64,10 +64,9 @@ export function markSubmitted(id: string, txHash: string): void {
 }
 
 export function markFailed(id: string, reason: string): void {
-  // Store the failure reason in tx_hash slot prefixed so it's visible; schema has no error column yet.
   getApiDb()
-    .prepare("UPDATE submissions SET status = 'failed', tx_hash = ?, updated_at = ? WHERE id = ?")
-    .run(`error:${reason}`.slice(0, 200), Date.now(), id);
+    .prepare("UPDATE submissions SET status = 'failed', error_reason = ?, updated_at = ? WHERE id = ?")
+    .run(reason.slice(0, 200), Date.now(), id);
 }
 
 export function getSubmissionStatus(id: string): string | null {

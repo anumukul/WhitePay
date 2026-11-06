@@ -103,6 +103,7 @@ function migrate(db: DB): void {
       token_signature TEXT,
       status TEXT NOT NULL,
       tx_hash TEXT,
+      error_reason TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL,
       UNIQUE (session_id, payer_address)
