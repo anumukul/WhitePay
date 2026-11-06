@@ -1,0 +1,26 @@
+No files changed, compilation skipped
+
+Ran 20 tests for test/unit/WhitePayCheckout.t.sol:WhitePayCheckoutTest
+[PASS] testAmountTamperRejected() (gas: 67513)
+[PASS] testCrossContractSignatureRejected() (gas: 1317875)
+[PASS] testDisallowedTokenRejected() (gas: 714502)
+[PASS] testExactAtomicSplit() (gas: 230119)
+[PASS] testExpiredBoundaryRejected() (gas: 63113)
+[PASS] testFeeRecipientTamperRejected() (gas: 67306)
+[PASS] testFeeTamperRejected() (gas: 67190)
+[PASS] testFeeTransferFailureRollsBack() (gas: 258096)
+[PASS] testFrontRunDifferentPayerRejected() (gas: 69508)
+[PASS] testFuzzExactMathHolds(uint64,uint64) (runs: 256, μ: 265626, ~: 266732)
+[PASS] testMerchantTamperRejected() (gas: 67284)
+[PASS] testPayerEqualsMerchantRejected() (gas: 61867)
+[PASS] testReentryBlocked() (gas: 658173)
+[PASS] testReplayRejected() (gas: 220035)
+[PASS] testTokenTamperRejected() (gas: 714448)
+[PASS] testValidAfterBoundaryRejected() (gas: 62926)
+[PASS] testWrongRuntimeChainRejected() (gas: 56733)
+[PASS] testWrongSignerRejected() (gas: 67250)
+[PASS] testZeroAmountRejected() (gas: 61389)
+[PASS] testZeroFeeNoFeeTransfer() (gas: 175480)
+Suite result: ok. 20 passed; 0 failed; 0 skipped; finished in 48.22ms (80.37ms CPU time)
+
+Ran 1 test suite in 50.91ms (48.22ms CPU time): 20 tests passed, 0 failed, 0 skipped (20 total tests)

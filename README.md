@@ -1,12 +1,53 @@
 # WhitePay
 
-Gas-sponsored USDT checkout infrastructure for SaaS and small businesses.
+Gas-sponsored USDT checkout infrastructure for merchants on Whitechain. Buyers pay in official USDT with **zero WBT**; a separately funded relayer covers gas. Receipts are on-chain and signed webhooks fan out to merchant backends.
 
-**Status: Step 02 local proof prepared; one-off official-USDT acquisition verified, payer transfer and live WhitePay proof still pending. No WhitePay contract deployment, mined checkout, or published SDK. Testnet only.**
+## Submission status (testnet)
 
-WhitePay is designed to settle directly to merchant-controlled wallets with independently auditable onchain receipts. A separately funded relayer will pay WBT gas; a disclosed USDT service fee may reimburse sponsorship. This remains a design until the live feasibility proof passes.
+**On-chain gates still pending:** the WhitePayCheckout contract is prepared with 20 passing forge tests + fuzz, but **not yet deployed**. The Step 02 live settlement proof is also pending on payer USDT funding. Explicit "approve deploy" and "approve settlement" are required from the operator before broadcast.
 
-## Local setup
+| Component | Status | Tests | Note |
+|---|---|---|---|
+| Contract — `WhitePayCheckout` | GREEN on mocks | 20/20 + 256-run fuzz | Step 03, `docs/progress/step-03.md` |
+| Deploy script + smoke | PREPARED, not broadcast | 4/4 | Step 04, `docs/runbooks/step-04-deploy.md` |
+| Merchant API | GREEN | 8/8 | Step 05, `services/api/` |
+| Relayer logic | GREEN (mock chain) | 11/11 | Step 06, `services/relayer/` |
+| Indexer + signed webhooks | GREEN | 7/7 | Step 07, `services/worker/` |
+| `@whitepay/node` SDK | GREEN, packable | 6/6 | Step 08, `packages/sdk-node/` |
+| `@whitepay/react` widget | GREEN, packable | 5/5 | Step 09, `packages/sdk-react/` |
+| Dashboard | GREEN | 3/3 | Step 10, `apps/dashboard/` |
+| Demo SaaS | GREEN | 3/3 | Step 11, `apps/demo-saas/` (on branch `feat/step-11-12-demo-saas`) |
+| Demo Shop | GREEN | 3/3 | Step 12, `apps/demo-shop/` (same branch) |
+| Service deploy | PREPARED, not deployed | — | Step 13, `docs/runbooks/step-13-deploy.md` |
+| npm publish of SDKs | PREPARED, tarballs built | — | Step 14, `docs/runbooks/step-14-publish.md` |
+| Landing site | SHIPS | — | Step 15, `apps/website/` |
+| Adversarial regression | GREEN | 2/2 | Step 16, `tests/adversarial.test.mjs` |
+| Demo video script | PREPARED | — | Step 17, `docs/demo-script.md` |
+
+**Total:** 72 automated tests green across 10 workspaces.
+
+## Why on-chain USDT on Whitechain
+
+Whitechain settles official Tether USD natively. WhitePay turns that into a Stripe-shaped merchant integration: a hosted checkout, a Node SDK, a React widget, signed webhooks — the same shape developers already know, but settled in real dollars on an L2 their buyers are already on. The payer never needs WBT; the merchant gets instant on-chain receipt.
+
+## Run the whole thing locally
+
+```sh
+pnpm install
+# All tests at once (each workspace has its own):
+pnpm --filter '@whitepay/*' test
+# Contract tests:
+bash scripts/vendor-oz.sh
+cd packages/contracts && FOUNDRY_PROFILE=step03 forge test
+```
+
+See individual READMEs in each workspace for setup.
+
+## Original Step 02 context
+
+Original narrative below is preserved as-is from the Step 02 milestone. The off-chain stack above was built on top of it.
+
+### Local setup (Step 02 era)
 
 Use Node.js 24 LTS and pnpm 10.25.0. The initial local checks were run on Node 25.8.1; CI targets Node 24.
 
@@ -18,39 +59,25 @@ pnpm test
 pnpm build
 ```
 
-Copy `.env.example` to `.env` only when needed; never commit credentials. Baseline checks need no secrets, Docker, wallets, or RPC access.
+Copy `.env.example` to `.env` only when needed; never commit credentials.
 
-`pnpm test:integration`, `pnpm test:e2e`, `pnpm test:contracts`, and `pnpm test:sepolia` deliberately exit nonzero with prerequisites until their milestones exist. Baseline CI does not imply those suites passed.
-
-## Project references
+### References
 
 - [Implementation state](docs/progress/STATE.md)
-- [Step 02 implementation report](docs/progress/step-02.md)
-- [Step 00 evidence](docs/progress/step-00.md)
-- [Architecture](docs/architecture.md)
-- [Security](docs/security.md)
-- [Limitations](docs/limitations.md)
+- Step reports: [00](docs/progress/step-00.md), [01](docs/progress/step-01.md), [02](docs/progress/step-02.md), [03](docs/progress/step-03.md), [04](docs/progress/step-04.md)
+- Runbooks: [Step 04 deploy](docs/runbooks/step-04-deploy.md), [Step 13 service deploy](docs/runbooks/step-13-deploy.md), [Step 14 publish](docs/runbooks/step-14-publish.md)
+- [Architecture](docs/architecture.md) · [Security](docs/security.md) · [Limitations](docs/limitations.md) · [Demo script](docs/demo-script.md)
 
-Required target: Whitechain Sepolia **1874**, official test USDT `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`. Live Step 01 probes read six USDT decimals and verified permit/EIP-3009 signatures in simulation. See [token evidence](docs/evidence/token-compatibility.md); this does not prove a funded payment. No replacement mock token can satisfy the payment proof.
+Required target: Whitechain Sepolia **1874**, official test USDT `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`.
 
-Each milestone follows RED → GREEN → REFACTOR, manual review, approval, then a scoped commit and authorized push. The detailed project instructions are maintained locally and excluded from this repository. Do not begin the next milestone automatically.
-
-## Read-only token investigation
-
-```sh
-pnpm probe:token docs/evidence/token-probe-manual.json
-```
-
-Requires public network access, no keys or credentials. Writes local evidence and makes read-only RPC/explorer calls. It never broadcasts. Review the [authorization-path proposal](docs/decisions/0001-authorization-path.md) and [Step 01 report](docs/progress/step-01.md) before authorizing the next milestone.
-
-## Experimental gasless proof (Step 02)
+### Experimental gasless proof (Step 02)
 
 ```sh
 pnpm test:poc
 pnpm test:poc:fork
 ```
 
-Expect 10 local contract tests and 6 official-code fork tests. The fork uses synthetic local funding and performs no testnet writes. Solidity 0.8.24 and OpenZeppelin 5.4.0 are pinned; Foundry may need network access to download the compiler the first time.
+10 local contract tests and 6 official-code fork tests. The fork uses synthetic local funding and performs no testnet writes. Solidity 0.8.24 and OpenZeppelin 5.4.0 are pinned.
 
 For a real public-wallet readiness check, fill a copy of `docs/evidence/poc-config.example.json`, then run:
 
@@ -58,4 +85,12 @@ For a real public-wallet readiness check, fill a copy of `docs/evidence/poc-conf
 pnpm poc:preflight docs/evidence/poc-config.json docs/evidence/poc-preflight.json
 ```
 
-Use public addresses only. [PoC evidence and live checklist](docs/evidence/gasless-poc.md) explain wallet requirements, gas caps, and the explicit deployment/payment review gates. No commit or push before manual review and approval.
+No commit or push before manual review and approval.
+
+## External-write gates still needing operator approval
+
+1. **"approve deploy"** — broadcast `WhitePayCheckout` per `docs/runbooks/step-04-deploy.md`.
+2. **"approve settlement"** — sign + submit the first real USDT payment after funding lands.
+3. **"approve deploy services"** — push Docker images per `docs/runbooks/step-13-deploy.md`.
+4. **"approve publish"** — `npm publish` the alpha tarballs per `docs/runbooks/step-14-publish.md`.
+5. **"approve submit"** — post the ETHGlobal submission form (operator does this directly).
