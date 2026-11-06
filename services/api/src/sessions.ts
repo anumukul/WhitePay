@@ -16,6 +16,7 @@ export interface CreateSessionInput {
   merchantId: string;
   priceId: string;
   externalOrderId: string;
+  customerReference?: string;
   successUrl?: string;
 }
 export interface CheckoutSession {
@@ -28,9 +29,10 @@ export interface CheckoutSession {
   currency: string;
   tokenAddress: string;
   successUrl: string | null;
+  customerReference: string | null;
   payoutAddress: string;
 }
-const select = `SELECT id,redirect_url AS "redirectUrl",external_order_id AS "externalOrderId",price_id AS "priceId",status,amount_minor AS "amountMinor",currency,token_address AS "tokenAddress",success_url AS "successUrl",payout_address AS "payoutAddress" FROM checkout_sessions`;
+const select = `SELECT customer_reference AS "customerReference",id,redirect_url AS "redirectUrl",external_order_id AS "externalOrderId",price_id AS "priceId",status,amount_minor AS "amountMinor",currency,token_address AS "tokenAddress",success_url AS "successUrl",payout_address AS "payoutAddress" FROM checkout_sessions`;
 const convert = (r: any): CheckoutSession => ({
   ...r,
   amountMinor: Number(r.amountMinor),
@@ -54,7 +56,9 @@ export async function createSession(
     if (existing) {
       if (
         existing.priceId !== input.priceId ||
-        (existing.successUrl ?? null) !== (input.successUrl ?? null)
+        (existing.successUrl ?? null) !== (input.successUrl ?? null) ||
+        (existing.customerReference ?? null) !==
+          (input.customerReference ?? null)
       )
         throw new HttpError(409, 'external_order_conflict');
       return convert(existing);
@@ -70,7 +74,7 @@ export async function createSession(
     const base = process.env.CHECKOUT_PAGE_BASE_URL ?? 'http://localhost:3000';
     const redirectUrl = `${base.replace(/\/$/, '')}/checkout/${id}`;
     await c.query(
-      `INSERT INTO checkout_sessions(id,merchant_id,price_id,external_order_id,status,redirect_url,success_url,amount_minor,currency,token_address,payout_address,created_at) VALUES($1,$2,$3,$4,'open',$5,$6,$7,$8,$9,$10,$11)`,
+      `INSERT INTO checkout_sessions(id,merchant_id,price_id,external_order_id,status,redirect_url,success_url,amount_minor,currency,token_address,payout_address,created_at,customer_reference) VALUES($1,$2,$3,$4,'open',$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
         id,
         merchantId,
@@ -83,6 +87,7 @@ export async function createSession(
         p.token_address,
         p.payout_address,
         Date.now(),
+        input.customerReference ?? null,
       ],
     );
     return convert((await c.query(select + ' WHERE id=$1', [id])).rows[0]);
@@ -104,7 +109,7 @@ export async function getSession(
 export async function listPaymentsForMerchant(merchantId: string) {
   return (
     await getDb().query(
-      'SELECT id,session_id AS "sessionId",status,amount_minor::float8 AS "amountMinor",tx_hash AS "txHash",block_number AS "blockNumber",created_at AS "createdAt" FROM payments WHERE merchant_id=$1 ORDER BY created_at DESC LIMIT 100',
+      'SELECT id,session_id AS "sessionId",status,amount_minor::float8 AS "amountMinor",tx_hash AS "txHash",block_number::float8 AS "blockNumber",created_at::float8 AS "createdAt" FROM payments WHERE merchant_id=$1 ORDER BY created_at DESC LIMIT 100',
       [merchantId],
     )
   ).rows;
@@ -113,9 +118,22 @@ export async function getPaymentForMerchant(id: string, merchantId: string) {
   return (
     (
       await getDb().query(
-        'SELECT id,session_id AS "sessionId",status,amount_minor::float8 AS "amountMinor",tx_hash AS "txHash",block_number AS "blockNumber",created_at AS "createdAt" FROM payments WHERE id=$1 AND merchant_id=$2',
+        'SELECT id,session_id AS "sessionId",status,amount_minor::float8 AS "amountMinor",tx_hash AS "txHash",block_number::float8 AS "blockNumber",created_at::float8 AS "createdAt" FROM payments WHERE id=$1 AND merchant_id=$2',
         [id, merchantId],
       )
     ).rows[0] ?? null
   );
+}
+
+export async function getPaymentForSession(
+  sessionId: string,
+  merchantId: string,
+) {
+  const row = (
+    await getDb().query(
+      'SELECT id FROM payments WHERE session_id=$1 AND merchant_id=$2',
+      [sessionId, merchantId],
+    )
+  ).rows[0];
+  return row ? getPaymentForMerchant(row.id, merchantId) : null;
 }

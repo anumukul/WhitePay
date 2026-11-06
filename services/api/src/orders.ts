@@ -227,7 +227,8 @@ export async function buildOrderForSession(input: {
           throw new HttpError(409, 'quote_expired');
         return result(old);
       }
-      if (!expired || !['awaiting_signature', 'expired'].includes(old.status))
+      const closing = old.order_payload.validBefore <= now + 120;
+      if (!closing || !['awaiting_signature', 'expired'].includes(old.status))
         throw new HttpError(409, 'quote_not_renewable');
     }
     const cfg = settings();
@@ -292,6 +293,18 @@ export async function buildOrderForSession(input: {
     const out = await c.query(
       `INSERT INTO submissions(id,merchant_id,session_id,payer_address,order_payload,order_typed_data,token_typed_data,order_digest,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'awaiting_signature',$9,$9) ON CONFLICT(session_id,payer_address) DO UPDATE SET order_payload=EXCLUDED.order_payload,order_typed_data=EXCLUDED.order_typed_data,token_typed_data=EXCLUDED.token_typed_data,order_digest=EXCLUDED.order_digest,status='awaiting_signature',order_signature=NULL,token_signature=NULL,updated_at=EXCLUDED.updated_at RETURNING *`,
       values,
+    );
+    const saved = out.rows[0];
+    await c.query(
+      'INSERT INTO submission_quotes(order_digest,submission_id,order_payload,order_typed_data,token_typed_data,created_at) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(order_digest) DO NOTHING',
+      [
+        saved.order_digest,
+        saved.id,
+        JSON.stringify(saved.order_payload),
+        JSON.stringify(saved.order_typed_data),
+        JSON.stringify(saved.token_typed_data),
+        Date.now(),
+      ],
     );
     return result(out.rows[0]);
   });

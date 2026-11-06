@@ -21,6 +21,7 @@ export const sessionSchema = z
   .object({
     priceId: text,
     externalOrderId: text,
+    customerReference: text.optional(),
     successUrl: z
       .string()
       .url()

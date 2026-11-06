@@ -449,3 +449,49 @@ test('cross-merchant submission and payment reads are hidden', async () => {
   );
   assert.equal((await req('/v1/payments/pay_hidden')).status, 200);
 });
+
+test('explicit unsigned renewal becomes available at the two-minute cutoff without extending the old quote', async () => {
+  const s = await session('cutoff-renewal');
+  const owner = (
+    await getDb().query(
+      'SELECT merchant_id FROM checkout_sessions WHERE id=$1',
+      [s.id],
+    )
+  ).rows[0].merchant_id;
+  const payer = privateKeyToAccount(generatePrivateKey()).address;
+  const first = await buildOrderForSession({
+    sessionId: s.id,
+    merchantId: owner,
+    payerAddress: payer,
+  });
+  const validBefore = first.typedData.message.validBefore;
+  await assert.rejects(
+    () =>
+      buildOrderForSession({
+        sessionId: s.id,
+        merchantId: owner,
+        payerAddress: payer,
+        renew: true,
+        nowMs: (validBefore - 121) * 1000,
+      }),
+    /quote_not_renewable/,
+  );
+  const renewed = await buildOrderForSession({
+    sessionId: s.id,
+    merchantId: owner,
+    payerAddress: payer,
+    renew: true,
+    nowMs: (validBefore - 120) * 1000,
+  });
+  assert.notEqual(renewed.orderDigest, first.orderDigest);
+  assert.equal(first.typedData.message.validBefore, validBefore);
+  assert.equal(
+    (
+      await getDb().query(
+        'SELECT count(*) FROM submission_quotes WHERE submission_id=$1',
+        [first.submissionId],
+      )
+    ).rows[0].count,
+    '2',
+  );
+});

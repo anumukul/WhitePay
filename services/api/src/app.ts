@@ -1,3 +1,17 @@
+import { mintApiKey } from './auth.js';
+import {
+  merchantProfile,
+  renameMerchant,
+  listProducts,
+  renameProduct,
+  listPrices,
+  listOrders,
+  listKeys,
+  revokeKey,
+  webhookView,
+  saveWebhook,
+  testWebhook,
+} from './admin.js';
 import {
   createServer,
   type IncomingMessage,
@@ -12,6 +26,7 @@ import {
   getSession,
   listPaymentsForMerchant,
   getPaymentForMerchant,
+  getPaymentForSession,
   HttpError,
 } from './sessions.js';
 import {
@@ -63,7 +78,74 @@ export function createApp() {
         return send(res, 200, { ok: true });
       const merchantId = await authenticate(req.headers.authorization);
       if (!merchantId) return send(res, 401, { error: 'unauthorized' });
-      const body = method === 'POST' ? await readJson(req) : undefined;
+      const body =
+        method === 'POST' || method === 'PATCH'
+          ? await readJson(req)
+          : undefined;
+      if (path === '/v1/merchant') {
+        if (method === 'GET')
+          return send(res, 200, await merchantProfile(merchantId));
+        if (method === 'PATCH') {
+          const b = z.object({ name: text }).strict().parse(body);
+          return send(res, 200, await renameMerchant(merchantId, b.name));
+        }
+      }
+      const lists = {
+        '/v1/products': listProducts,
+        '/v1/prices': listPrices,
+        '/v1/checkout/sessions': listOrders,
+        '/v1/api-keys': listKeys,
+      };
+      if (method === 'GET' && path in lists)
+        return send(res, 200, {
+          data: await lists[path as keyof typeof lists](merchantId),
+        });
+      if (method === 'POST' && path === '/v1/api-keys') {
+        const b = z
+          .object({ expiresAt: z.number().int().positive().optional() })
+          .strict()
+          .parse(body);
+        if (b.expiresAt !== undefined && b.expiresAt <= Date.now())
+          throw new HttpError(400, 'invalid_request');
+        return send(res, 201, await mintApiKey(merchantId, b.expiresAt));
+      }
+      const revoke = /^\/v1\/api-keys\/([\w-]+)\/revoke$/.exec(path);
+      if (method === 'POST' && revoke) {
+        z.object({}).strict().parse(body);
+        await revokeKey(revoke[1], merchantId);
+        return send(res, 204);
+      }
+      if (path === '/v1/webhook-endpoints') {
+        if (method === 'GET')
+          return send(res, 200, await webhookView(merchantId));
+        if (method === 'POST') {
+          const b = z
+            .object({
+              url: z.string().url().max(2048),
+              rotateSecret: z.boolean().optional(),
+            })
+            .strict()
+            .parse(body);
+          return send(
+            res,
+            200,
+            await saveWebhook(merchantId, b.url, b.rotateSecret),
+          );
+        }
+      }
+      if (method === 'POST' && path === '/v1/webhook-endpoints/test') {
+        z.object({}).strict().parse(body);
+        return send(res, 200, await testWebhook(merchantId));
+      }
+      const editProduct = /^\/v1\/products\/([\w-]+)$/.exec(path);
+      if (method === 'PATCH' && editProduct) {
+        const b = z.object({ name: text }).strict().parse(body);
+        return send(
+          res,
+          200,
+          await renameProduct(editProduct[1], merchantId, b.name),
+        );
+      }
       if (method === 'POST' && path === '/v1/products') {
         const b = z.object({ name: text }).strict().parse(body);
         return send(res, 201, await createProduct(merchantId, b.name));
@@ -103,6 +185,7 @@ export function createApp() {
               b.priceId,
               b.externalOrderId,
               b.successUrl ?? null,
+              b.customerReference ?? null,
             ]),
           )
           .digest('hex');
@@ -132,7 +215,9 @@ export function createApp() {
         return send(res, 200, out);
       }
       const sessionRoute =
-        /^\/v1\/checkout\/sessions\/([\w-]+)(?:\/(order|renew))?$/.exec(path);
+        /^\/v1\/checkout\/sessions\/([\w-]+)(?:\/(order|renew|payment))?$/.exec(
+          path,
+        );
       if (sessionRoute) {
         const [, sessionId, action] = sessionRoute;
         if (method === 'GET' && !action) {
@@ -140,7 +225,14 @@ export function createApp() {
           if (!s) throw new HttpError(404, 'not_found');
           return send(res, 200, s);
         }
-        if (method === 'POST' && action) {
+        if (method === 'GET' && action === 'payment') {
+          if (!(await getSession(sessionId, merchantId)))
+            throw new HttpError(404, 'not_found');
+          return send(res, 200, {
+            payment: await getPaymentForSession(sessionId, merchantId),
+          });
+        }
+        if (method === 'POST' && (action === 'order' || action === 'renew')) {
           const b = z.object({ payerAddress: address }).strict().parse(body);
           return send(
             res,

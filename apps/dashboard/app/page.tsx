@@ -1,31 +1,58 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-
-async function login(formData: FormData) {
-  "use server";
-  const key = String(formData.get("apiKey") ?? "").trim();
-  if (!key.startsWith("wp_sk_")) throw new Error("API key must start with wp_sk_");
-  const c = await cookies();
-  c.set("dashboard_api_key", key, { httpOnly: true, sameSite: "lax", path: "/" });
-  redirect("/payments");
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { dashboardRequest } from '../lib/api-client';
+import {
+  createDashboardSession,
+  dashboardCookieOptions,
+  getDashboardSession,
+} from '../lib/session';
+export const dynamic = 'force-dynamic';
+async function login(form: FormData) {
+  'use server';
+  const key = String(form.get('apiKey') ?? '').trim();
+  try {
+    await dashboardRequest(
+      key,
+      process.env.WHITEPAY_API_URL ?? 'http://localhost:3001',
+      '/v1/merchant',
+    );
+  } catch {
+    redirect('/?error=auth');
+  }
+  const token = createDashboardSession(key),
+    c = await cookies();
+  c.delete('dashboard_api_key');
+  c.set('whitepay_dashboard', token, dashboardCookieOptions());
+  redirect('/payments');
 }
-
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const c = await cookies();
+  if (getDashboardSession(c.get('whitepay_dashboard')?.value))
+    redirect('/payments');
+  const error = (await searchParams).error;
   return (
-    <main style={{ maxWidth: 520 }}>
+    <main>
+      <h1>Merchant sign in</h1>
+      <p>Use your merchant API key. It stays on the dashboard server.</p>
+      {error && (
+        <p role="alert">Sign in again with a valid merchant API key.</p>
+      )}
       <form action={login}>
-        <label style={{ display: "block", marginBottom: 8 }}>API key</label>
+        <label htmlFor="apiKey">API key</label>
         <input
+          id="apiKey"
           name="apiKey"
           type="password"
+          autoComplete="off"
           required
-          placeholder="wp_sk_..."
-          style={{ width: "100%", padding: 10, border: "1px solid #ccc", borderRadius: 6 }}
         />
-        <button type="submit" style={{ marginTop: 12, padding: "10px 16px", background: "#111", color: "#fff", border: 0, borderRadius: 6 }}>
-          Sign in
-        </button>
+        <button type="submit">Sign in</button>
       </form>
+      <p>Whitechain Sepolia testnet only.</p>
     </main>
   );
 }
