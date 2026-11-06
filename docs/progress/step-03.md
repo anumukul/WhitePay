@@ -2,6 +2,8 @@
 
 Status: **GREEN on mocks**. No deployment. Security review by a second teammate still required before Step 04.
 
+Known blocker from subsequent Step 02 review: this final contract still keys `settled` globally by orderId and is susceptible to cross-payer ID squatting (R-01). The user-approved payer-scoped fix has been implemented in the experimental PoC only. Step 03 must apply/review the corresponding correction and update final-chain-client/API/indexer assumptions before any final-contract deployment. Mock-green status is not deployment clearance. See the current Step 02 report and ADR 0001.
+
 ## Scope
 
 Minimal production `WhitePayCheckout` matching the authorization path approved in ADR 0001 (path A: EIP-3009 `receiveWithAuthorization`, bound to EIP-712 order digest as the token nonce). Settles one payment atomically, splits between merchant and fee recipient, no custody, no escrow, no admin functions beyond the constructor-time allowed-token list.
@@ -33,23 +35,23 @@ FOUNDRY_PROFILE=step03 forge test
 
 20 tests, all green. Fuzz: 256 runs on `(amount, fee)` via uint64 inputs.
 
-| Test | Covers |
-|---|---|
-| `testExactAtomicSplit` | happy path: payer debited exactly `amount+fee`, merchant credited `amount`, fee recipient `fee`, contract 0, nonce consumed, order marked settled |
-| `testZeroFeeNoFeeTransfer` | fee=0 skips fee transfer |
-| `testReplayRejected` | same `orderId` second time reverts `OrderAlreadySettled` |
-| `testMerchantTamperRejected` / `testFeeTamperRejected` / `testAmountTamperRejected` / `testFeeRecipientTamperRejected` / `testTokenTamperRejected` | mutating any economic field after signing → `InvalidOrderSignature` (or `TokenNotAllowed` / revert for token swap) |
-| `testExpiredBoundaryRejected` / `testValidAfterBoundaryRejected` | strict open interval `(validAfter, validBefore)` — equal timestamps revert |
-| `testWrongRuntimeChainRejected` | `block.chainid != expectedChainId` reverts with `WrongChain` |
-| `testCrossContractSignatureRejected` | signature valid for deployment A does not verify under deployment B (EIP-712 domain binding) |
-| `testWrongSignerRejected` | signed by an address that is not `order.payer` → `InvalidOrderSignature` |
-| `testFrontRunDifferentPayerRejected` | attacker can't take a signed order and swap the `payer` field — digest changes, sig invalid |
-| `testZeroAmountRejected` | `amount=0` → `InvalidTerms` |
-| `testPayerEqualsMerchantRejected` | collapsed roles → `InvalidTerms` |
-| `testDisallowedTokenRejected` | a token not in the constructor allowlist → `TokenNotAllowed` |
-| `testFeeTransferFailureRollsBack` | if the fee transfer fails, the entire settle reverts — payer balance restored, order not consumed, nonce not consumed |
-| `testReentryBlocked` | malicious token re-entering `settle` during `receiveWithAuthorization` → revert (nonReentrant) |
-| `testFuzzExactMathHolds` | fuzz 256 runs: exact-math balance invariants hold for all `(amount, fee)` |
+| Test                                                                                                                                               | Covers                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testExactAtomicSplit`                                                                                                                             | happy path: payer debited exactly `amount+fee`, merchant credited `amount`, fee recipient `fee`, contract 0, nonce consumed, order marked settled |
+| `testZeroFeeNoFeeTransfer`                                                                                                                         | fee=0 skips fee transfer                                                                                                                          |
+| `testReplayRejected`                                                                                                                               | same `orderId` second time reverts `OrderAlreadySettled`                                                                                          |
+| `testMerchantTamperRejected` / `testFeeTamperRejected` / `testAmountTamperRejected` / `testFeeRecipientTamperRejected` / `testTokenTamperRejected` | mutating any economic field after signing → `InvalidOrderSignature` (or `TokenNotAllowed` / revert for token swap)                                |
+| `testExpiredBoundaryRejected` / `testValidAfterBoundaryRejected`                                                                                   | strict open interval `(validAfter, validBefore)` — equal timestamps revert                                                                        |
+| `testWrongRuntimeChainRejected`                                                                                                                    | `block.chainid != expectedChainId` reverts with `WrongChain`                                                                                      |
+| `testCrossContractSignatureRejected`                                                                                                               | signature valid for deployment A does not verify under deployment B (EIP-712 domain binding)                                                      |
+| `testWrongSignerRejected`                                                                                                                          | signed by an address that is not `order.payer` → `InvalidOrderSignature`                                                                          |
+| `testFrontRunDifferentPayerRejected`                                                                                                               | attacker can't take a signed order and swap the `payer` field — digest changes, sig invalid                                                       |
+| `testZeroAmountRejected`                                                                                                                           | `amount=0` → `InvalidTerms`                                                                                                                       |
+| `testPayerEqualsMerchantRejected`                                                                                                                  | collapsed roles → `InvalidTerms`                                                                                                                  |
+| `testDisallowedTokenRejected`                                                                                                                      | a token not in the constructor allowlist → `TokenNotAllowed`                                                                                      |
+| `testFeeTransferFailureRollsBack`                                                                                                                  | if the fee transfer fails, the entire settle reverts — payer balance restored, order not consumed, nonce not consumed                             |
+| `testReentryBlocked`                                                                                                                               | malicious token re-entering `settle` during `receiveWithAuthorization` → revert (nonReentrant)                                                    |
+| `testFuzzExactMathHolds`                                                                                                                           | fuzz 256 runs: exact-math balance invariants hold for all `(amount, fee)`                                                                         |
 
 Full output in `docs/evidence/step-03-forge-output.txt` (captured from `forge test -vv`).
 

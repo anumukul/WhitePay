@@ -1,5 +1,6 @@
 [profile.default]
 src = "poc"
+script = "script/poc"
 test = "test/poc"
 out = "out"
 cache_path = "cache"
@@ -21,6 +22,7 @@ test = "test/fork"
 # to sidestep OneDrive/Windows case-sensitivity on cross-package relative paths.
 [profile.step03]
 src = "src"
+script = "script"
 test = "test/unit"
 out = "out-step03"
 cache_path = "cache-step03"

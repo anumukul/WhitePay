@@ -1,6 +1,6 @@
 # Step 02 proof evidence — local preparation only
 
-Status: **NOT VERIFIED ONCHAIN**. Local checks pass. Five wallets were created and publicly verified; test WBT was transferred to the deployer/relayer and the isolated trading wallet acquired official USDT. The separate payer transfer, source review, and explicit deployment/payment approvals remain pending.
+Status: **R-01 FIXED; AWAITING SPECIFIC DEPLOYMENT APPROVAL; LIVE PAYMENT NOT VERIFIED**. User approved payer-scoped replay correction plus commit/push and substituted AI review for unavailable teammate review. Eleven official-token fork tests, ten local PoC tests and 28 root Node tests pass. Regenerated preview and review findings are in `docs/progress/step-02.md`; all pre-fix bytecode previews are obsolete. Nothing is deployed.
 
 ## Experimental implementation
 
@@ -36,14 +36,14 @@ The blank example also exits 1 locally for a missing deployer address: [output](
 
 ## Remaining live acceptance checks
 
-1. Review experimental source with the second teammate. Verify exact public roles and known official-token code hash/domain. Resolve official USDT acquisition; the documented faucet supplies WBT only.
+1. Source review completed as AI review under the user's explicit exception for unavailable teammate review; payer-scoped R-01 correction is tested. Verify current public roles and official-token code hash/domain again before deployment. Payer funding of 10 official USDT and zero WBT is verified.
 2. Keep payer WBT exactly zero. Fund only deployer/relayer with WBT and payer with the exact official token. Any faucet claim/funding action requires separate authorization; never fund public test fixtures.
 3. Run preflight on the real public config. Preview actual deployer, nonce, creation code hash, constructor arguments (none), chain, gas estimate, total fee budget including L1 data fee, and predicted address. Obtain explicit deployment approval.
 4. Deploy only after approval using the isolated encrypted keystore; record actual deployment receipt/address. Reconcile predicted address and runtime. The final checkout/source-verification milestone remains Step 04.
 5. Prepare two typed-data signatures for that actual receiver and a short-lived unique order. Show merchant amount, fee, total, recipients, window, and domains. Payer signs via a private keystore/wallet workflow; no secret enters chat/logs.
 6. Preview exact relayer transaction and simulate it. Record independent pre-payment balances, order/nonce unused, and signer/target. Obtain separate payment-broadcast approval. No payer transaction is sent.
 7. Verify successful receipt and exactly matching receiver `PaymentSettled` and official-USDT Transfer logs. Requery payer WBT=0, exact token debit and merchant/fee credits, no residual receiver balance, and relayer WBT decrease matching fee evidence (including any L1 data fee).
-8. Retry identical order with read-only `eth_call`; require `OrderAlreadySettled`. Query token authorizationState=true and test token nonce replay via recipient-origin simulation for `TetherToken: auth invalid`. Do not spend extra WBT solely to demonstrate a revert.
+8. Query `settled(address,bytes32)(bool)` with the exact payer/orderId; require true. Retry identical order with read-only `eth_call`; require `OrderAlreadySettled`. Query token authorizationState=true and test token nonce replay via recipient-origin simulation for `TetherToken: auth invalid`. Match payer and orderId together when reconciling events. Do not spend extra WBT solely to demonstrate a revert.
 9. Save actual explorer links, block hashes, receipt/logs, and sanitized before/after balances. This is required to pass Step 02. A successful fork or preflight is insufficient.
 
 ## Official documentation checked

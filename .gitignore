@@ -31,6 +31,8 @@ docs/evidence/*-funding-preview.json
 docs/evidence/*-funding-approved-precheck.json
 docs/evidence/*-funding-verified.json
 docs/evidence/trading-to-payer-usdt-transfer-preview.json
+docs/evidence/trading-to-payer-usdt-transfer-approved-precheck.json
+docs/evidence/trading-to-payer-usdt-transfer-verified.json
 docs/evidence/trading-wallet-public.json
 docs/evidence/usdt-*.json
 docs/evidence/yetitrade-*.json

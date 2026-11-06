@@ -14,6 +14,7 @@ interface ForkVm {
     function addr(uint256) external returns (address);
     function sign(uint256, bytes32) external returns (uint8, bytes32, bytes32);
     function prank(address) external;
+    function expectRevert() external;
     function expectRevert(bytes4) external;
     function expectRevert(bytes calldata) external;
 }
@@ -152,7 +153,7 @@ contract OfficialTokenForkTest {
         bytes memory orderSig = sign(poc.orderDigest(order));
         vm.expectRevert(bytes("TetherToken: invalid signature"));
         poc.settle(order, orderSig, tokenSig);
-        require(!poc.settled(order.orderId), "order marked settled");
+        require(!poc.settled(order.payer, order.orderId), "order marked settled");
     }
 
     function testOfficialTokenBlockedReceiverRollsBack() public {
@@ -163,7 +164,7 @@ contract OfficialTokenForkTest {
         token.addToBlockedList(address(poc));
         vm.expectRevert(bytes("Blocked: msg.sender is blocked"));
         poc.settle(order, orderSig, tokenSig);
-        require(!poc.settled(order.orderId), "order consumed");
+        require(!poc.settled(order.payer, order.orderId), "order consumed");
         require(token.balanceOf(payer) == 20_000_000, "payer debit after revert");
     }
 
@@ -180,7 +181,7 @@ contract OfficialTokenForkTest {
         require(token.balanceOf(merchant) == merchantBefore, "partial merchant payout");
         require(token.balanceOf(payer) == 20_000_000, "payer funds not restored");
         require(token.balanceOf(address(poc)) == 0, "receiver retained funds");
-        require(!poc.settled(order.orderId), "order consumed after revert");
+        require(!poc.settled(order.payer, order.orderId), "order consumed after revert");
         require(!token.authorizationState(payer, nonce), "token nonce consumed after revert");
     }
 
@@ -192,7 +193,119 @@ contract OfficialTokenForkTest {
         bytes32 nonce = poc.orderDigest(order);
         vm.expectRevert(bytes("ERC20: transfer amount exceeds balance"));
         poc.settle(order, orderSig, tokenSig);
-        require(!poc.settled(order.orderId), "order consumed");
+        require(!poc.settled(order.payer, order.orderId), "order consumed");
         require(!token.authorizationState(payer, nonce), "nonce consumed");
+    }
+
+    function testReviewEveryMutableOrderFieldRejectsOriginalSignature() public {
+        WhitePayAuthorizationPoC.Order memory original = terms();
+        bytes memory orderSig = sign(poc.orderDigest(original));
+        bytes memory tokenSig = tokenSignature(original);
+        for (uint256 field; field < 9; ++field) {
+            WhitePayAuthorizationPoC.Order memory changed = terms();
+            if (field == 0) changed.orderId = keccak256("changed order");
+            if (field == 1) changed.payer = address(0xB10);
+            if (field == 2) changed.merchant = address(0xB11);
+            if (field == 3) changed.amount += 1;
+            if (field == 4) changed.fee += 1;
+            if (field == 5) changed.feeRecipient = address(0xB12);
+            if (field == 6) changed.validAfter -= 1;
+            if (field == 7) changed.validBefore += 1;
+            if (field == 8) changed.quoteId = keccak256("changed quote");
+            vm.expectRevert(WhitePayAuthorizationPoC.InvalidOrderSignature.selector);
+            poc.settle(changed, orderSig, tokenSig);
+            require(!poc.settled(changed.payer, changed.orderId), "rejected order consumed");
+        }
+        require(token.balanceOf(payer) == 20_000_000, "tampering debited payer");
+        require(!token.authorizationState(payer, poc.orderDigest(original)), "original authorization consumed");
+    }
+
+    function testReviewZeroFeePaysMerchantWithoutResidual() public {
+        WhitePayAuthorizationPoC.Order memory order = terms();
+        order.fee = 0;
+        uint256 treasuryBefore = token.balanceOf(treasury);
+        uint256 merchantBefore = token.balanceOf(merchant);
+        poc.settle(order, sign(poc.orderDigest(order)), tokenSignature(order));
+        require(token.balanceOf(payer) == 15_000_000, "payer debit");
+        require(token.balanceOf(merchant) == merchantBefore + order.amount, "merchant credit");
+        require(token.balanceOf(treasury) == treasuryBefore, "unexpected fee credit");
+        require(token.balanceOf(address(poc)) == 0, "receiver residual");
+    }
+
+    function testReviewMalformedSignatureDoesNotConsumeState() public {
+        WhitePayAuthorizationPoC.Order memory order = terms();
+        bytes memory tokenSig = tokenSignature(order);
+        vm.expectRevert();
+        poc.settle(order, hex"01", tokenSig);
+        require(!poc.settled(order.payer, order.orderId), "order consumed");
+        require(!token.authorizationState(payer, poc.orderDigest(order)), "nonce consumed");
+        require(token.balanceOf(payer) == 20_000_000, "payer debited");
+    }
+
+    /// @dev A copied orderId with another payer must not block the victim's signed order.
+    function testDifferentPayerCannotBlockSignedOrder() public {
+        WhitePayAuthorizationPoC.Order memory victimOrder = terms();
+        bytes memory victimOrderSig = sign(poc.orderDigest(victimOrder));
+        bytes memory victimTokenSig = tokenSignature(victimOrder);
+        uint256 attackerKey = 0xBAD123; // Public LOCAL FORK fixture only.
+        address attacker = vm.addr(attackerKey);
+        vm.prank(token.owner());
+        token.mint(attacker, 1);
+
+        WhitePayAuthorizationPoC.Order memory attack = terms();
+        attack.payer = attacker;
+        attack.merchant = address(0xB21);
+        attack.feeRecipient = address(0xB22);
+        attack.amount = 1;
+        attack.fee = 0;
+        attack.quoteId = keccak256("attacker quote");
+        bytes memory attackOrderSig = reviewSignWithKey(attackerKey, poc.orderDigest(attack));
+        bytes memory attackTokenSig = reviewTokenSignature(attack, attackerKey);
+        vm.prank(attacker);
+        poc.settle(attack, attackOrderSig, attackTokenSig);
+
+        require(poc.settled(attacker, attack.orderId), "attacker order not recorded");
+        require(!poc.settled(payer, victimOrder.orderId), "attacker consumed victim order");
+        poc.settle(victimOrder, victimOrderSig, victimTokenSig);
+        require(poc.settled(payer, victimOrder.orderId), "victim order not recorded");
+        require(token.balanceOf(payer) == 14_995_000, "victim payment did not complete");
+        require(token.authorizationState(payer, poc.orderDigest(victimOrder)), "victim authorization not consumed");
+    }
+
+    function testSamePayerCannotReuseOrderIdWithFreshSignaturesAndTerms() public {
+        WhitePayAuthorizationPoC.Order memory order = terms();
+        poc.settle(order, sign(poc.orderDigest(order)), tokenSignature(order));
+        order.quoteId = keccak256("fresh quote for same order");
+        order.fee += 1;
+        bytes32 freshNonce = poc.orderDigest(order);
+        bytes memory orderSig = sign(freshNonce);
+        bytes memory tokenSig = tokenSignature(order);
+        vm.expectRevert(WhitePayAuthorizationPoC.OrderAlreadySettled.selector);
+        poc.settle(order, orderSig, tokenSig);
+        require(token.balanceOf(payer) == 14_995_000, "payer debited twice");
+        require(!token.authorizationState(payer, freshNonce), "fresh token nonce consumed");
+    }
+
+    function reviewSignWithKey(uint256 key, bytes32 digest) internal returns (bytes memory) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(key, digest);
+        return abi.encodePacked(r, s, v);
+    }
+
+    function reviewTokenSignature(WhitePayAuthorizationPoC.Order memory order, uint256 key)
+        internal
+        returns (bytes memory)
+    {
+        bytes32 receiveHash = keccak256(
+            abi.encode(
+                RECEIVE_TYPEHASH,
+                order.payer,
+                address(poc),
+                order.amount + order.fee,
+                order.validAfter,
+                order.validBefore,
+                poc.orderDigest(order)
+            )
+        );
+        return reviewSignWithKey(key, keccak256(abi.encodePacked(hex"1901", token.DOMAIN_SEPARATOR(), receiveHash)));
     }
 }

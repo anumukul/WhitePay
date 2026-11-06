@@ -111,7 +111,7 @@ contract AuthorizationPoCTest {
         require(token.balanceOf(merchant) == 5_000_000, "merchant credit");
         require(token.balanceOf(treasury) == 5_000, "fee credit");
         require(token.balanceOf(address(poc)) == 0, "residual token balance");
-        require(poc.settled(order.orderId), "unsettled");
+        require(poc.settled(order.payer, order.orderId), "unsettled");
         require(token.authorizationState(payer, poc.orderDigest(order)), "wrong token nonce");
     }
 
@@ -147,7 +147,7 @@ contract AuthorizationPoCTest {
         poc.settle(order, sig, hex"00");
         require(token.balanceOf(payer) == 20_000_000, "payer not restored");
         require(token.balanceOf(merchant) == 0, "partial merchant payout");
-        require(!poc.settled(order.orderId), "order consumed after failure");
+        require(!poc.settled(order.payer, order.orderId), "order consumed after failure");
         require(!token.authorizationState(payer, poc.orderDigest(order)), "nonce consumed after failure");
     }
 

@@ -48,3 +48,11 @@ Build choice: experimental Solidity 0.8.24, Paris target, optimizer 200, OpenZep
 ## Operational funding update — user-reported DevRel recommendation
 
 User explicitly requested evaluating YetiTrade testnet to acquire the existing exact official USDT with test WBT. The isolated-wallet funding plan and read-only verified sample are in `docs/runbooks/step-02-yetitrade-funding.md` and `docs/evidence/yetitrade-funding-preview.json`. This changes the Step 02 asset-acquisition plan, not the payment authorization architecture or final checkout ABI. It does not add swaps to the WhitePay product or authorize any trading, token approvals, funding transfer, deployment or Git action.
+
+## Approved PoC correction — payer-scoped replay namespace
+
+At the user's request the assistant performed the unavailable teammate's review as an explicitly labeled AI review. A pinned official-token local-fork test reproduced R-01: any funded payer can copy a victim's public orderId into their own otherwise valid order, settle first and consume the globally keyed `settled[orderId]` flag. This denies the victim payment without transferring victim funds or consuming the victim token nonce. Deployment is on hold.
+
+User explicitly approved scoping replay protection to `(payer, orderId)`, regeneration of the deployment preview, and commit/push. Implemented a nested public mapping exposing `settled(address payer, bytes32 orderId)`. Existing signed fields/domains, total and token nonce digest remain unchanged. Updated PoC test readers/manual receipt checks to match payer plus orderId. RED: victim order failed with OrderAlreadySettled after a different payer copied its ID. GREEN: all 11 official-token fork tests pass, including both distinct-payer payments succeeding and same-payer reuse failing even with fresh signatures/terms. The final contract and downstream event reconciliation require separate corresponding correction/review in their milestones.
+
+This approves and records the PoC interface change only. The prior unsigned transaction is invalid because creation code changed; the replacement reviewed preview is recorded in `docs/progress/step-02.md`. AI review was substituted at the user's request and is not independent human review. Specific deployment/payment approval remains pending. Existing code/commit approval does not authorize those transactions.

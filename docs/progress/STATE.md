@@ -2,19 +2,46 @@
 
 Last confirmed implementation step: 01 — official token capabilities verified
 Current step: 02 — local authorization PoC and funding readiness work
-Status: INCOMPLETE — no WhitePay contract deployed and no live WhitePay payment performed
+Status: INCOMPLETE — PoC R-01 fixed and tested; regenerated deployment preview awaits specific transaction approval; live proof pending
 Current branch: main
-Previous published implementation commit: 013a87b (Step 01 token capability probes)
+Reviewed handoff base: d70b519 (teammate API/chain/relayer/worker integration; pulled after 6da644f)
 Current implementation report: docs/progress/step-02.md
 Authorized remote: https://github.com/anumukul/WhitePay.git
-Push policy: manual review and explicit approval required for each push. This cleanup push is specifically requested by the user.
+Git policy: user explicitly authorized implementation, commit and push of the payer-scoped PoC replay fix and associated review/tooling documentation to origin/main. This exception applies to this fix only. Other milestones still require manual testing/approval before commit/push; deployment and payment require separate transaction approval.
 Configured remote branch: origin/main
 Step 01 code/evidence commit: 013a87b — pushed to origin/main
 Step 01 review transition: user authorized Step 02 after receiving manual testing instructions.
 ADR 0001: experimental PoC evaluated in Step 02; final interface approval pending
 
+## Resumption plan after teammate handoff
+
+Preserve and review the existing implementation. Code presence or reported mock-test success does not complete a milestone. Resume at the earliest unmet acceptance gate, Step 02; later code is available for reuse but remains unaccepted. Each row requires manual user testing before its commit/push. Onchain transactions, deployments, publication, and other external writes retain their separate exact-preview approval gates.
+
+| Step  | Work to complete using the existing code                                                                                                                               | Manual acceptance before approval                                                                                                                                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 02    | Repair PoC tooling integration; refresh actual funding; complete the approved experimental zero-WBT proof with official USDT.                                          | Verify payer WBT remains zero, exact merchant/fee credits, relayer gas debit, successful receipt and replay rejection. Funding, deployment and payment each require their own preview/approval. |
+| 03    | Review existing final checkout contract and ABI against the proven PoC; repair demonstrated defects with regression tests; obtain second teammate security signoff.    | Inspect signed terms, decoded event, tamper/replay/expiry rejection and documented privileges.                                                                                                  |
+| 04    | Refresh final deployment estimate, approve/deploy/verify source, and separately approve the official-token live smoke payment.                                         | Explorer source/runtime/constructor match, exact balances and replay rejection.                                                                                                                 |
+| 05    | Finish API/data acceptance: decide and record SQLite-to-Postgres migration, versioned migrations, schemas, price/order immutability, auth/isolation and quote renewal. | Two merchants create/retrieve sessions; cross-merchant access and changed/expired terms fail; migrations recover cleanly.                                                                       |
+| 06    | Fix independent quote validation, actual transaction fee caps including L1 fee accounting, durable queue claiming, nonce/restart recovery and receipt reconciliation.  | Invalid input never broadcasts; approved payment survives worker restart within configured spend limits.                                                                                        |
+| 07    | Fix event processing crash recovery and full order/log reconciliation; implement transactional webhook outbox, delayed retries and replay protection.                  | Restart between persistence/delivery, retry a failed webhook, reject mismatched events, fulfill duplicate deliveries once.                                                                      |
+| 08    | Complete Node SDK interfaces/errors/timeouts and package checks against the reviewed API.                                                                              | Install a tarball in a fresh independent Node app, create/retrieve a real session and verify webhook signature/freshness.                                                                       |
+| 09    | Build the missing hosted checkout and public session authorization path; add wallet connection, both signatures, price/fee disclosure and settlement status.           | Independent React app completes official-USDT checkout with zero payer WBT; rejection, expiry and wrong-chain cases are usable.                                                                 |
+| 10    | Extend the existing payments dashboard with products/prices, orders/receipt links, API-key and webhook management.                                                     | Two merchant accounts remain isolated; settings and versioned prices work.                                                                                                                      |
+| 11–12 | Locate/review teammate demo branch if available, otherwise implement the two independent integrations after their dependencies pass.                                   | SaaS credits and shop entitlement unlock only after verified payment; duplicate/forged callbacks do not duplicate fulfillment.                                                                  |
+| 13    | Implement deployment artifacts and persistent DB/worker configuration behind the existing runbook; approve actual hosting separately.                                  | Public HTTPS checkout works from another device and survives service restart.                                                                                                                   |
+| 14    | Add the docs site and compiled quickstart; validate tarballs; obtain separate publication approval.                                                                    | A fresh developer completes integration using only published docs/packages.                                                                                                                     |
+| 15    | Correct existing landing-page claims; add the planned deck and working links.                                                                                          | All claims and CTAs match actual deployed evidence.                                                                                                                                             |
+| 16    | Expand the small adversarial suite to the plan's security, recovery, quota and performance cases.                                                                      | Independent teammate review, fault/replay cases and secret exposure checks pass.                                                                                                                |
+| 17    | Complete qualification evidence and demo rehearsal using the existing script.                                                                                          | Actual demo/video, verified contract and real payment links satisfy the submission checklist.                                                                                                   |
+
+Immediate repair: the added production deployment script imports `src/WhitePayCheckout.sol`, which the default Foundry profile also compiled during Step 02 commands. That broke preflight with stack-too-deep before RPC checks. The default PoC profile now has its own script directory and the Step 03 profile explicitly retains `script/`. The initial failing preflight is recorded; `pnpm test:poc` now passes 10/10. The rebuilt read-only preflight reached RPC but exited 1 with `HTTP request failed`; no fresh balance or chain confirmation is claimed. Local output: `docs/evidence/poc-preflight-resume.json` (ignored). Next manual check: rerun Step 02's preflight from the user's terminal and inspect its public output before preparing any funding/deployment transaction.
+
+Earlier entries below retain the historical evidence and approval sequence; this resumption plan supersedes their stale current-status statements.
+
 Verified findings:
 
+- Resumption manual check completed by user: 10/10 PoC tests passed. Public manual preflight recorded chain 1874 at block 12363387, deployer 1.69978995799999224 WBT, relayer 0.1 WBT, payer exactly 0 WBT / 0 official USDT. Its only funding blocker is payer USDT (minimum 5.005 under configured terms; planned top-up 10). This supersedes the assistant's earlier RPC failure. No fresh transaction is approved by these test results.
 - Official USDT metadata: Tether USD, USDT, six decimals on chain 1874.
 - EIP-1967 implementation source verified and runtime matches RPC.
 - Permit and EIP-3009 valid-signature simulations pass; receive enforces recipient-only caller.
@@ -23,14 +50,14 @@ Verified findings:
 Unresolved blockers:
 
 - Genuine positive-value zero-WBT payment, fee split, and mined replay proof not performed.
-- Payer USDT transfer and read-only post-funding preflight remain pending.
+- Funding prerequisites passed at block 12364125; contract review and the live proof remain pending.
 - Step 02 deployment/broadcast requires a concrete preview and explicit authorization.
 - Wallet provider UX and backend hosting not validated.
 - Docker daemon unavailable locally.
 
-Current verified funding state: deployer and relayer received test WBT; isolated trading wallet acquired official test USDT. The trading wallet's swap and resulting token balances are recorded in the Step 02 report. A separate 10-USDT transfer to the payer was only previewed and remains unconfirmed here. The payer's required zero-WBT condition must be rechecked after funding.
+Current verified funding state: payer transfer 0xd447e993efc4a199c2a322a9079c8166cbeee27937882673e5d5a5d8d3d9caa4 succeeded at block 12363962. Payer holds 10 official USDT and exactly zero WBT; trading holds 1.019904 USDT. User wallet used priority cap 5.001 gwei instead of the approved 0.001 gwei; exact approved payload did not match, though actual total fee was 0.00030461591100276 WBT. Post-funding preflight passed at block 12364125: READY_FOR_DEPLOYMENT_REVIEW, no funding blockers. Deployer holds 1.69978995799999224 WBT and relayer 0.1 WBT.
 
-Next required human action: approve/perform the separately previewed 10-USDT transfer to the payer, then rerun read-only preflight and review the concrete deployment and payment plan. Step 02 still needs teammate source review, deployment/payment previews, and a successful live zero-WBT payment with replay rejection. Do not begin Step 03 before Step 02 is tested and approved.
+Next gate: review and specifically approve the regenerated experimental deployment transaction. User-authorized replay correction uses settled(address payer,bytes32 orderId); 11 official-token fork tests, 10 local PoC tests and 28 root Node tests pass. Block 12364742: deployer latest/pending nonce 2, predicted address 0x6ae4Ee53ac2b98ADf9EF89d03500848bC8405F45, estimated gas 1,311,670, proposed ceiling 2,000,000, max fee 20 gwei, priority cap 0.001 gwei, estimated total 0.006559661670115703 WBT. Old bytecode previews are obsolete. Nothing is deployed. Final WhitePayCheckout remains affected by R-01 and requires its own Step 03 correction before deployment.
 
 Step 02 local preparation:
 

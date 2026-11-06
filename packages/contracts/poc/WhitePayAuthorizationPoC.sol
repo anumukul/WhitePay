@@ -49,7 +49,9 @@ contract WhitePayAuthorizationPoC is EIP712, ReentrancyGuard {
         uint256 receiver;
     }
 
-    mapping(bytes32 => bool) public settled;
+    /// @notice Independent replay protection within each payer's order namespace.
+    /// Another payer cannot consume a visible orderId to block its intended payer.
+    mapping(address => mapping(bytes32 => bool)) public settled;
 
     error WrongChain();
     error MissingTokenCode();
@@ -100,7 +102,7 @@ contract WhitePayAuthorizationPoC is EIP712, ReentrancyGuard {
         nonReentrant
     {
         if (block.chainid != CHAIN_ID) revert WrongChain();
-        if (settled[order.orderId]) revert OrderAlreadySettled();
+        if (settled[order.payer][order.orderId]) revert OrderAlreadySettled();
         if (
             order.orderId == bytes32(0) || order.quoteId == bytes32(0) || order.amount == 0 || order.payer == address(0)
                 || order.merchant == address(0) || order.feeRecipient == address(0) || order.payer == order.merchant
@@ -122,7 +124,7 @@ contract WhitePayAuthorizationPoC is EIP712, ReentrancyGuard {
             token.balanceOf(address(this))
         );
 
-        settled[order.orderId] = true;
+        settled[order.payer][order.orderId] = true;
         IReceiveAuthorization(TOKEN)
             .receiveWithAuthorization(
                 order.payer, address(this), total, order.validAfter, order.validBefore, digest, tokenSignature

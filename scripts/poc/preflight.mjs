@@ -251,7 +251,7 @@ try {
     ? 'BLOCKED'
     : 'READY_FOR_DEPLOYMENT_REVIEW';
   report.approval =
-    'NOT AUTHORIZED: review source, second-teammate security review, exact signers, and gas budget before any deployment. Payment requires another preview after deployment and both payer signatures.';
+    'NOT AUTHORIZED: complete the documented source review (including any explicit user-approved review exception), and review exact signers and gas budget before specific deployment approval. Payment requires another preview after deployment and both payer signatures.';
   report.limitations = [
     'Configured budgets cover L2 gas only; reserve for L1 data fee and confirm funding before approved writes.',
     'This tool does not deploy, fund accounts, create keys, sign, or submit payments.',
