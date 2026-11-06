@@ -1,221 +1,58 @@
 # WhitePay implementation state
 
-Last approved implementation step: 05 — merchant API and PostgreSQL data layer (Step 04 explorer verification still open)
-Current step: 05 — merchant API and PostgreSQL data layer
-Status: STEP_05_MANUALLY_ACCEPTED — user confirmed checks passed and requested Step 06; commit/push under standing workflow. Step 04 source verification remains open.
+Current step: **11 — independent AI credits SaaS**. Step 07 and Step 08 local implementation/self-test gates passed in order. Step 09 SDK, secure merchant bridge and browser tests pass; its actual widget-driven official-USDT payment and visible read-only receipt have been verified in Chrome. Step 10 has not been substituted for that live gate.
 
-Live payment: 0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641, chain 1874, block 12366248, exact approved relayer nonce-0 payload. Payer 10 → 4.995 official USDT with exactly zero WBT before/after/latest. Merchant +5 USDT; fee recipient +0.005 USDT; receiver zero residual. Relayer 0.1 → 0.099029250888990698 WBT; exact total fee 0.000970749111009302 WBT (194111 gas at 5.001 gwei plus L1 9302 wei). Both order replay (OrderAlreadySettled) and token nonce replay (TetherToken: auth invalid) rejected through read-only calls, with zero extra broadcasts.
+Remote: `https://github.com/anumukul/WhitePay.git`, branch `main`. Last pushed commit: `e14ee21` (Step 05). Step 06–09 work is local and uncommitted. No new push or external publication is authorized. The teammate demo branch remains unmerged and unmodified.
 
-Current branch: main
-Reviewed handoff base: d70b519 (teammate API/chain/relayer/worker integration; pulled after 6da644f)
-Current implementation report: docs/progress/step-05.md
-Authorized remote: https://github.com/anumukul/WhitePay.git
-Git policy: user confirmed Step 03 tests successful and requested the next step, satisfying manual acceptance under the agreed commit/push-to-origin/main workflow. Step 03 published as 6f58f37. Step 04 changes remain uncommitted until manual acceptance. Actual deployment/payment approval remains separate.
-Configured remote branch: origin/main
-Step 01 code/evidence commit: 013a87b — pushed to origin/main
-Step 01 review transition: user authorized Step 02 after receiving manual testing instructions.
-ADR 0001: experimental PoC evaluated in Step 02; final interface approval pending
+The user explicitly authorized self-testing and advancing implementation, superseding earlier requirements to stop for manual implementation acceptance after each step. This does not authorize new live signatures/transactions, hosted migrations/deployments, external webhook delivery, registry publication or Git publication. Preserve exact-preview approval for those actions. Never print/request secrets, passwords, keys, seed phrases, executable authorizations or signed transactions.
 
-Step 04 preview: chain 1874, deployer nonce 3, predicted address 0x4d1761ABB4eD290F23fcDA00890039800E2e53f0. Gas estimate 1,251,708; limit 2,000,000; max fee 20 gwei; priority cap 0.001 gwei; estimated total 0.006259791708119273 WBT. Snapshot only: refresh before approved signing. Full preview and verification bundle are local/ignored. 43 deployment/contract tests passed. No final deployment or source publication submitted. Proposed later smoke: 1 USDT + 0.001 fee with payer remaining at zero WBT, separately approved.
+| Step | Current evidence/status                                                                                                                                                                                                                                                                                                                                                                  |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 00   | Accepted repository/toolchain baseline.                                                                                                                                                                                                                                                                                                                                                  |
+| 01   | Accepted official-USDT capability investigation; verified source, domain and authorization semantics.                                                                                                                                                                                                                                                                                    |
+| 02   | Accepted and published experimental zero-WBT PoC payment/replay evidence.                                                                                                                                                                                                                                                                                                                |
+| 03   | Accepted and published final checkout contract/ABI security fixes and unit/fork tests.                                                                                                                                                                                                                                                                                                   |
+| 04   | Final checkout deployed and runtime/constructor/live settlement verified. Explorer source publication remains **open**: official verifier returns temporarily unavailable.                                                                                                                                                                                                               |
+| 05   | Accepted/pushed PostgreSQL merchant API. Later migrations extend it without modifying accepted SQL checksums.                                                                                                                                                                                                                                                                            |
+| 06   | Actual approved relayer-engine payment confirmed with exact balances and replay rejection. Late-cutoff defect documented and corrected with failing-then-passing regressions; 62 relayer tests. No additional broadcast.                                                                                                                                                                 |
+| 07   | Actual confirmed payment indexed once; duplicate rejected, persisted state verified in another process. 27 worker tests cover reconciliation, recovery, signed retries and one-grant delivery. External delivery disabled by default.                                                                                                                                                    |
+| 08   | Node SDK complete locally; 23 tests and independent installed tarball runtime/type checks pass. Unpublished.                                                                                                                                                                                                                                                                             |
+| 09   | React SDK, merchant-server bridge and private encrypted-keystore operator page implemented. 25 unit/safety tests and six Chrome cases from an independently installed React tarball pass. **Real widget payment and visible receipt verified**. Automated browser test receipts remain simulated and labeled.                                                                            |
+| 10   | Merchant dashboard prototype exists; full onboarding/products/keys/webhook management and two-merchant acceptance remain.                                                                                                                                                                                                                                                                |
+| 11   | Independent AI credits SaaS implemented in `apps/demo-saas` on main working tree using real `@whitepay/node` + `@whitepay/react`. 4 unit/integration tests and 1 Chrome end-to-end test pass (callback grants 0, one signed webhook grants 100, duplicate grants nothing, spend 100→99, cross-customer 404). Browser harness wallet-init fix applied. READY_FOR_HUMAN_TEST; uncommitted. |
+| 12   | Digital shop prototype on teammate branch; not merged or accepted as live integration.                                                                                                                                                                                                                                                                                                   |
+| 13   | Hosted services/database/monitoring and restart/HTTPS acceptance pending; external approvals required.                                                                                                                                                                                                                                                                                   |
+| 14   | Documentation/public package publication pending; local package checks do not imply registry availability.                                                                                                                                                                                                                                                                               |
+| 15   | Marketing prototype exists; complete truthful landing/pitch deliverables pending.                                                                                                                                                                                                                                                                                                        |
+| 16   | Final adversarial/performance/release gate pending; existing regressions are not a substitute.                                                                                                                                                                                                                                                                                           |
+| 17   | Submission/video/rehearsal pending.                                                                                                                                                                                                                                                                                                                                                      |
 
-## Resumption plan after teammate handoff
+## Fixed chain identity and latest confirmed result
 
-Preserve and review the existing implementation. Code presence or reported mock-test success does not complete a milestone. Step 02 is now manually accepted; later code is available for reuse but remains unaccepted. Each row requires manual user testing before its commit/push. Onchain transactions, deployments, publication, and other external writes retain their separate exact-preview approval gates.
+Whitechain Sepolia **1874**, RPC `https://rpc.testnet.whitechain.io`. Official USDT: `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`, six decimals. Final checkout: `0x4d1761ABB4eD290F23fcDA00890039800E2e53f0`; runtime hash `0x3a9aa44166dd8ec13f12718f9b5c4515ea494622654761b1cb26f23c6c456efd`.
 
-| Step  | Work to complete using the existing code                                                                                                                               | Manual acceptance before approval                                                                                                                                                               |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 02    | Repair PoC tooling integration; refresh actual funding; complete the approved experimental zero-WBT proof with official USDT.                                          | Verify payer WBT remains zero, exact merchant/fee credits, relayer gas debit, successful receipt and replay rejection. Funding, deployment and payment each require their own preview/approval. |
-| 03    | Review existing final checkout contract and ABI against the proven PoC; repair demonstrated defects with regression tests; obtain second teammate security signoff.    | Inspect signed terms, decoded event, tamper/replay/expiry rejection and documented privileges.                                                                                                  |
-| 04    | Refresh final deployment estimate, approve/deploy/verify source, and separately approve the official-token live smoke payment.                                         | Explorer source/runtime/constructor match, exact balances and replay rejection.                                                                                                                 |
-| 05    | Finish API/data acceptance: decide and record SQLite-to-Postgres migration, versioned migrations, schemas, price/order immutability, auth/isolation and quote renewal. | Two merchants create/retrieve sessions; cross-merchant access and changed/expired terms fail; migrations recover cleanly.                                                                       |
-| 06    | Fix independent quote validation, actual transaction fee caps including L1 fee accounting, durable queue claiming, nonce/restart recovery and receipt reconciliation.  | Invalid input never broadcasts; approved payment survives worker restart within configured spend limits.                                                                                        |
-| 07    | Fix event processing crash recovery and full order/log reconciliation; implement transactional webhook outbox, delayed retries and replay protection.                  | Restart between persistence/delivery, retry a failed webhook, reject mismatched events, fulfill duplicate deliveries once.                                                                      |
-| 08    | Complete Node SDK interfaces/errors/timeouts and package checks against the reviewed API.                                                                              | Install a tarball in a fresh independent Node app, create/retrieve a real session and verify webhook signature/freshness.                                                                       |
-| 09    | Build the missing hosted checkout and public session authorization path; add wallet connection, both signatures, price/fee disclosure and settlement status.           | Independent React app completes official-USDT checkout with zero payer WBT; rejection, expiry and wrong-chain cases are usable.                                                                 |
-| 10    | Extend the existing payments dashboard with products/prices, orders/receipt links, API-key and webhook management.                                                     | Two merchant accounts remain isolated; settings and versioned prices work.                                                                                                                      |
-| 11–12 | Locate/review teammate demo branch if available, otherwise implement the two independent integrations after their dependencies pass.                                   | SaaS credits and shop entitlement unlock only after verified payment; duplicate/forged callbacks do not duplicate fulfillment.                                                                  |
-| 13    | Implement deployment artifacts and persistent DB/worker configuration behind the existing runbook; approve actual hosting separately.                                  | Public HTTPS checkout works from another device and survives service restart.                                                                                                                   |
-| 14    | Add the docs site and compiled quickstart; validate tarballs; obtain separate publication approval.                                                                    | A fresh developer completes integration using only published docs/packages.                                                                                                                     |
-| 15    | Correct existing landing-page claims; add the planned deck and working links.                                                                                          | All claims and CTAs match actual deployed evidence.                                                                                                                                             |
-| 16    | Expand the small adversarial suite to the plan's security, recovery, quota and performance cases.                                                                      | Independent teammate review, fault/replay cases and secret exposure checks pass.                                                                                                                |
-| 17    | Complete qualification evidence and demo rehearsal using the existing script.                                                                                          | Actual demo/video, verified contract and real payment links satisfy the submission checklist.                                                                                                   |
+Latest confirmed payment: `0x77784da3835084852e0f3904ba6845011725ffade891175b4b4a96d93948b41c`, block **12383593**, relayer nonce **3**, timestamp **15:46:01 UTC**, before the **15:51:23 UTC** cutoff. Payer **1.992 official USDT / exactly zero WBT**; merchant **8 USDT**, fee recipient **0.008 USDT**, checkout zero residual. Relayer **0.096640583250954836 WBT** after exact debit **0.000796229214013135 WBT** (including L1 13135 wei). Both historical consumed-state replay calls rejected; no replay broadcast. Worker persisted one exact matched settlement/payment and rejected a duplicate actual event.
 
-Immediate repair: the added production deployment script imports `src/WhitePayCheckout.sol`, which the default Foundry profile also compiled during Step 02 commands. That broke preflight with stack-too-deep before RPC checks. The default PoC profile now has its own script directory and the Step 03 profile explicitly retains `script/`. The initial failing preflight is recorded; `pnpm test:poc` now passes 10/10. The rebuilt read-only preflight reached RPC but exited 1 with `HTTP request failed`; no fresh balance or chain confirmation is claimed. Local output: `docs/evidence/poc-preflight-resume.json` (ignored). Next manual check: rerun Step 02's preflight from the user's terminal and inspect its public output before preparing any funding/deployment transaction.
+Previous payment `0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e` exposed a password-wait cutoff defect. That defect was fixed with regressions; the latest approved widget payment was mined before its cutoff. See existing Step 06/09 evidence for both results without hiding the earlier limitation.
 
-Earlier entries below retain the historical evidence and approval sequence; this resumption plan supersedes their stale current-status statements.
+## Continue here
 
-Verified findings:
+1. Review the fresh Step 09 public signing preview; retain user-selected 1 USDT + .001 fee, 15-minute validity and 120-second cutoff.
+2. Obtain explicit approval for the exact two payer digests, then use the private localhost widget and hidden Foundry password prompts. No key import into a browser extension is required.
+3. After signatures are verified/queued, refresh exact payment simulation/nonce/fee limits and obtain separate broadcast approval. Never automatically renew approval or broadcast.
+4. Reconcile/index the actual receipt, verify exact official-USDT split, payer WBT zero, replay rejection and widget confirmation. Only then close the live Step 09 gate and continue to Step 10.
+5. Keep explorer verification and external deployment/publication gates visible; never claim them complete from local tests.
 
-- Live official-token receipt: one matching PaymentSettled, three exact USDT Transfer logs and one matching AuthorizationUsed log; exact historical balance and fee reconciliation passed.
-- Corrected PoC at 0x6ae4Ee53ac2b98ADf9EF89d03500848bC8405F45; deployment tx 0x3d972265aaa0dbfd05a7a6c63896564b80c2fc2c6deb8029bf421ae5f8057ac8. Full runtime independently matches historical constructor execution including domain immutables; source commit 64c5aa9.
-- Payer-scoped settled getter and token authorizationState are true for the paid order/digest. Read-only replay fails for the intended reasons.
-- Latest local checks: 28 root Node tests, 10 PoC tests and 11 official-token fork tests passed. Full formatting still has 63 inherited issues. User substituted AI review for unavailable teammate review.
+Detailed evidence and runnable checks: `docs/progress/step-06.md`, `step-07.md`, `step-08.md`, `step-09.md` and their runbooks. Earlier deployment/PoC records remain in the existing per-step documentation. Wallets, private authorizations, local API fixtures and operator context JSON stay ignored; public Step 07 receipt-index evidence contains no credentials.
 
-Step 02 manual acceptance and publication completed at 5fec28d. User requested the next step, authorizing Step 03. Current gate: run the manual commands in docs/progress/step-03.md, inspect payer-scoped replay, event/domain checks and matching reader ABI, then approve the reviewed source/docs before commit/push. Do not proceed to Step 04 or broadcast.
+Step 09 payer signing specifically approved for context `step-09-live-dac2c9658456633e1444fe768f2e803a0a090582764547113887ece3fd16cafb.json`, order digest `0xe46b741a2cb111518a510fd20157f0c541aea7801b0035c30d2189037565a5c7` and token digest `0x63e09daa845a0048f1c9b5f10d40f0ff6bd219c7180cc9445ed29802e30ffd4e`. Expiry 21:23:23 IST, cutoff 21:21:23 IST on 6 November 2026. Await private terminal/widget signing; no broadcast approval. All 211 local automated tests, both independent package checks, typechecks and credential scan pass after the worker test-fixture lock correction.
 
-Known limits/follow-up: final WhitePayCheckout R-01 is corrected in the Step 03 candidate, with 39 Solidity tests, 11 official-token local-fork tests and 14 chain/Anvil tests; it still needs manual acceptance and the final security-review gate; offchain services and wallet UX remain prototypes; no explorer source publication or Ethereum-finality claim is made. Payer's remaining 4.995 USDT is below the default 5.005-USDT proof amount; do not rerun payment/signing launchers or infer that another payment is funded/approved. Prior trading-wallet approvals remain, with no revocation authorized.
+Step 09 widget authorizations verified/queued. Specific broadcast approval recorded for nonce 3, gas limit 222471, max fee 20 gwei, priority .001 gwei, unsigned hash `0x82a13f575d5e0ceb6e54ca0fe6d0a903dfbf9ad1234255b0c0791c0187baf03f` and calldata hash `0x788262adbbc29c9d0816e3e13dcc9250d61541f2985c787cd2386f79d5aeead1`, cutoff 21:21:23 IST. Await private relayer signing/execution result; no replacement or additional payment approved.
 
-Historical Step 02 preparation and funding snapshots (superseded by current live result above):
+Latest continuation: the specifically approved Step 09 payment is confirmed and indexed; receipt, signed terms, exact zero-WBT balance changes and historical replay rejection all verified. Direct browser inspection was unavailable/timed out; await the user's visible Payment confirmed / View receipt response before closing that last UI check and starting Step 10. No extra payment or publication is approved.
 
-Step 02 local preparation:
+Step 09 final gate passed: the local server had stopped, so added a non-signing receipt mode and verified the actual paid page in Chrome at `http://127.0.0.1:54824`. It displays Payment confirmed and the exact explorer receipt, with no signing buttons and a denied wallet endpoint. Screenshot saved. Proceeding in order to Step 10; no replacement transaction or new signing.
 
-- Latest recorded checks: 26 Node tests, 10 mock-based Foundry tests, and 6 official-token fork tests passed.
-- Fork funding/minting is synthetic and local; no onchain payment or relayer gas evidence.
-- Public config preflight refuses empty addresses and unfunded fixtures.
-- Second-teammate security review and explicit deploy/payment consent still required.
+Step 10 gate passed. See `docs/progress/step-10.md` and `docs/runbooks/step-10-dashboard.md`. Continuing in order to Step 11, selectively reusing the teammate SaaS app only; do not overwrite accepted API/contract/relayer/SDK code from the older branch. Hosted deployment/publication remains separate.
 
-Wallet-setup follow-up:
-
-- User requested secure local wallet-creation guidance and explicitly prohibited all broadcasts/deployments without specific approval.
-- Added encrypted-keystore public metadata export, explicit payer balance checks, and a read-only deployment/L1-fee quote tool.
-- User created and privately verified all five encrypted keystores; the assistant created/decrypted none. Public-address export still pending.
-- Read-only example deployment quote: 1,283,551 gas, about 0.00641904 WBT including quoted L1 fee at observed 5.001 gwei. Actual signer/nonce quote pending.
-- Official WBT funding is documented; exact official USDT funding still requires verified DevRel/holder assistance.
-- Guide: docs/runbooks/step-02-wallets.md. No commit, push, or Step 03 authorized.
-
-Wallet helper follow-up checks: 16 Node tests passed; lint/typecheck/diff checks passed. User-wallet balances remain UNVERIFIED until local creation/public config.
-
-Wallet-config regression:
-
-- Actual Foundry files omit address metadata (only crypto/id/version, v3, 0600).
-- Added explicit prefix normalization, derived-public manifest fallback, mismatch/duplicate validation, and user-terminal Cast public-address exporter.
-- RED: four new regression failures; GREEN: 23 Node tests passed with end-to-end public-only output checks.
-- Actual wallet-config and initial preflight safely remain blocked until private-terminal public-address export; real five-address matching and RPC balances are not yet verified by assistant.
-- Current report: docs/progress/step-02-wallet-config-fix.md. No commit, push, onchain writes, or Step 03.
-
-Public-wallet review completed:
-
-- User ran private-terminal exporter, wallet-config, and initial preflight.
-- All five distinct normalized addresses match the exporter manifest, public config, initial evidence, and fresh read-only RPC snapshot.
-- Fresh RPC snapshot: chain 1874, block 12307110; all five wallets hold 0 WBT and 0 official USDT. None is blocklisted or has contract code.
-- Payer WBT exactly 0 confirmed. Payer USDT is insufficient: needs at least 5.005 (default amount 5 + fee 0.005).
-- Only expected funding blockers remain: payer USDT, deployer WBT, relayer WBT. Review evidence: docs/evidence/poc-wallet-review.json.
-- Recommended funding buffer: 0.10 test WBT each for deployer/relayer; request 10 official USDT for payer, with no WBT sent to payer.
-- No keystores opened in this review; no funding, deployment, broadcast, Git action, or Step 03 performed.
-
-Relayer funding preview — awaiting specific approval:
-
-- Read-only RPC snapshot block 12307642 on chain 1874 independently confirmed deployer 2 WBT, relayer 0 WBT, payer 0 WBT.
-- Deployer latest/pending nonce both 0; sender and recipient have no contract code. Addresses match explicit user request, public config and Cast-derived manifest.
-- Proposed native transfer: exactly 0.10 WBT deployer → relayer, empty data, nonce 0, estimated/limited gas 21,000, EIP-1559 maxFeePerGas 20 gwei, priority cap 0.001 gwei.
-- Estimated total fee 0.00010502100000308 WBT (includes current L1 quote); L2 fee cap 0.00042 WBT plus variable L1 data fee.
-- Encrypted deployer keystore path/0600 permission verified without reading/decrypting its contents. No signing or broadcasting performed.
-- Preview: docs/evidence/relayer-funding-preview.json. Revalidate before any approved action; actual signing must keep the password in the user's private terminal.
-- No checkout deployment, commit/push, or Step 03 authorized.
-
-Relayer transfer specifically APPROVED by user:
-
-- User approved the exact 0.10 WBT deployer-to-relayer transfer on chain 1874 with nonce 0, gas 21,000, max fee 20 gwei, priority cap 0.001 gwei.
-- Final read-only recheck at block 12307818 passed: deployer 2 WBT, relayer 0 WBT, latest/pending nonce 0, gas estimate 21,000, estimated fee 0.00010502100000308 WBT including current L1 quote.
-- Evidence: docs/evidence/relayer-funding-approved-precheck.json.
-- Status: APPROVED — waiting for user-private terminal keystore signing/broadcast. Assistant has not unlocked a wallet or sent a transaction. No further transfer approval is needed if the exact approved fields remain valid.
-- Next: user runs the exact approved Cast command with hidden local password prompt, supplies only transaction hash; assistant verifies receipt and both native balances. Never request password in chat.
-- No checkout deployment, Git mutation, or Step 03 authorized.
-
-APPROVED relayer funding transfer VERIFIED:
-
-- Transaction 0x42f193df0f084dc6ed8a2b7ae1c364315c5ae8263065fc7e1a88539b5b2604db succeeded on chain 1874 at block 12307940. Actual transaction matches the approved unsigned payload exactly, including sender, recipient, value 0.10 WBT, nonce 0, empty input, 21,000 gas limit and both fee caps.
-- Deployer: 2 → 1.89989497899999676 WBT. Relayer: 0 → 0.10 WBT. Payer WBT remains exactly zero before/after/latest query.
-- Actual total fee 0.00010502100000324 WBT: L2 0.000105021 WBT plus reported L1 fee 3240 wei. Historical balance deltas reconcile exactly.
-- Evidence: docs/evidence/relayer-funding-verified.json. Canonical successful L2 receipt verified; Ethereum finality not asserted.
-- Native funding is complete. The nonce-0 contract-address prediction in old preflight files is now stale: funding consumed nonce 0. Regenerate deployment preview using the current nonce before any deployment approval.
-- Next unresolved proof prerequisites: verify sufficient official payer USDT, teammate source review, and separate explicit deployment/payment approval. No deployment, commit/push, or Step 03 performed.
-
-YetiTrade funding plan update — READY_FOR_REVIEW:
-
-- User reports DevRel recommended https://testnet.yetitrade.fi/ for exact official USDT acquisition.
-- Verified chain-1874 app token list, published router address, actual router runtime against explorer source, factory pools, and independent QuoterV2 output for sample native WBT route.
-- Sample: 0.15 WBT → 11.028196 official USDT; encoded minimum 10.973329 at 0.5% slippage. Native calldata wraps inside router and requires no ERC-20 approvals.
-- Synthetic-balance-only swap estimate 256,688 gas; sample token transfer estimate 61,736 gas. Actual wallet quotes/allowances/gas remain to be reviewed after its public address is supplied.
-- Propose a separately approved 0.20 WBT trading-wallet top-up, then separate swap approval and separate 10-USDT transfer approval. No new wallet created, funding transfer, approval, swap, token transfer, deployment, Git action or Step 03.
-- Current payer still 0 WBT / 0 USDT at read-only check. Guide: docs/runbooks/step-02-yetitrade-funding.md. Evidence: docs/evidence/yetitrade-funding-preview.json.
-- No longer blocked solely on DevRel supplying a faucet: a swap quote/path exists. Blocked on actual temporary-wallet setup and per-transaction approvals before execution.
-
-Temporary trading wallet funding preview — awaiting explicit approval:
-
-- User supplied dedicated public address 0xeBd86998e8C765F92CC5022ff94eB093eFCFa8a4. Checksum valid; distinct from all five WhitePay roles; no recipient contract code.
-- Independent chain 1874 snapshot at block 12310328: deployer 1.89989497899999676 WBT, trading wallet 0 WBT, payer 0 WBT. Latest/pending deployer nonce both 1.
-- Proposed exact transfer: 0.20 WBT, empty input, nonce 1, 21,000 gas, max fee 20 gwei, priority cap 0.001 gwei.
-- Estimated total fee 0.00010502100000356 WBT including current L1 quote; L2 ceiling 0.00042 WBT plus variable L1 fee. Expected deployer 1.6997899579999932 WBT, trading wallet 0.20 WBT.
-- Preview docs/evidence/trading-wallet-funding-preview.json; only keystore path/type/0600 permissions checked, no contents opened or signing attempted.
-- No funding broadcast, swap, approval, USDT transfer, deployment, commit/push, or Step 03. Refresh YetiTrade quote only after approved funding and receipt verification.
-
-Trading funding transfer specifically APPROVED:
-
-- User approved 0.20 WBT deployer → 0xeBd86998e8C765F92CC5022ff94eB093eFCFa8a4, chain 1874, nonce 1, gas 21,000, max fee 20 gwei, priority cap 0.001 gwei.
-- Final read-only checks at block 12310449 passed. Latest/pending nonce both 1; deployer 1.89989497899999676 WBT; trading wallet 0 WBT; 21,000 gas estimate.
-- Refreshed total fee estimate 0.00010502100000468 WBT includes current L1 quote (4680 wei); L1 amount remains variable within previously disclosed terms.
-- Evidence: docs/evidence/trading-wallet-funding-approved-precheck.json.
-- Status: approved; waiting for user-private terminal Cast signing and broadcasting. Assistant has not unlocked or broadcast. Next: verify actual transaction/receipt/balances, then prepare a fresh YetiTrade quote for separate review; no swap or token-transfer approval inferred.
-- No deployment, commit, push, or Step 03 authorized.
-
-Trading wallet native funding VERIFIED:
-
-- Approved transaction 0xf170b0f3d39d7b638a6688fd1398b2e2d7364df47294fa2f31c62f1bc07aafda succeeded on chain 1874. Exact approved unsigned payload matched (0.20 WBT, deployer → trading wallet, nonce 1, empty data, 21,000 gas, max fee 20 gwei, tip cap 0.001 gwei).
-- Deployer 1.89989497899999676 → 1.69978995799999224 WBT; trading wallet 0 → 0.20 WBT. Total fee 0.00010502100000452 WBT; reported L1 fee reconciles with historical balance debit.
-- Evidence: docs/evidence/trading-wallet-funding-verified.json. Funding consumed deployer nonce 1; older deployment predictions must be refreshed before any deployment approval.
-
-Fresh actual-wallet YetiTrade preview — awaiting separate approval:
-
-- Trading wallet 0xeBd86998e8C765F92CC5022ff94eB093eFCFa8a4 holds 0.20 WBT / 0 USDT. Payer remains 0 WBT / 0 USDT.
-- Native input 0.15 WBT; quote 11.023732 official USDT; encoded minimum 10.968887, 0.5% slippage, output to trading wallet. Quote expires 2026-11-05T19:38:27.272222883Z.
-- Actual-wallet simulation passed without state overrides. Estimated gas 263,697; proposed gas ceiling 350,000, max fee 20 gwei, priority cap 0.001 gwei, trading nonce 0. Estimated total fee 0.001318748697009102 WBT including L1 quote; max L2 fee 0.007 WBT plus variable L1 fee.
-- Factory pools, independent QuoterV2, exact output token/decimals, router runtime and decoded native calldata all verified. WWBT and USDT allowances to Permit2 are zero; reviewed native route requires no ERC-20 approval.
-- Evidence: docs/evidence/yetitrade-trading-wallet-swap-preview.json. Quote must still be unexpired/valid when signing; if changed or expired, refresh and review new terms. No swap or USDT-transfer approval received.
-- No swap, token approval, USDT transfer, deployment, commit/push or Step 03 performed.
-
-Refreshed swap final-review preview — NOT APPROVED:
-
-- User accepted the proposal in principle but explicitly required a fresh quote and final approval before any swap.
-- Evidence: docs/evidence/yetitrade-final-swap-preview.json. Chain 1874 at block 12310821; trading wallet 0.20 WBT / 0 USDT, latest/pending nonce 0; payer 0 WBT / 0 USDT.
-- Exact input 0.15 native WBT; quoted output 11.023732 official USDT; encoded minimum 10.968887 at 0.5% slippage. Recipient is the isolated trading wallet; router is the published Universal Router.
-- Encoded deadline 1793907789 (06/11/2026, 01:13:09 IST). New unsigned payload hash 0x95bc6d8b0ac8d88f4d9e7dd520f7fe3e4f174573eeca2ffa554f15d81b885a89.
-- Verified actual calldata commands/recipient/path/minimum/deadline and absence of partner/allow-failure operations; source/runtime and canonical factory pools match; independent QuoterV2 output matches.
-- Actual-wallet simulation (no overrides) passed at 263,697 gas. Proposed limit 350,000; max fee 20 gwei, priority cap 0.001 gwei. Estimated fee 0.001318748697007368 WBT including current L1 quote; L2 ceiling 0.007 WBT plus variable L1 fee.
-- No ERC-20 approval is needed. Isolated wallet signing remains private and pending explicit final swap approval. After confirmed swap, prepare a separate 10-USDT transfer for another approval.
-- No transaction signed/broadcast, no deployment, commit, push, or Step 03.
-
-Exact refreshed swap APPROVED by user:
-
-- User approved the stored 0.15 WBT swap, minimum 10.968887 official USDT, chain 1874, nonce 0, exact displayed deadline 1793907789 and fee limits.
-- Read-only recheck at block 12310991 passed: balance 0.20 WBT, latest/pending nonce 0, gas estimate 263,697; deadline remained valid. Saved docs/evidence/yetitrade-approved-swap-precheck.json, bound to the approved unsigned payload hash.
-- Prepared user-private browser-wallet signing launcher scripts/poc/send-approved-yeti-swap.mjs. It pins the approved transaction, revalidates RPC state, refuses near/expired deadline, and invokes Cast --browser --browser-disable-open. No secret/key import or keystore decryption; user must open the displayed local URL in the isolated trading profile and confirm there.
-- Launcher has not been run by assistant; no transaction signed or broadcast. Syntax check and existing three quote validation/tampering tests passed. Current restrictions remain: no token transfer, deployment, commit/push, or Step 03.
-- After user executes only the exact approved swap, verify receipt and balances, then prepare a separate 10-USDT transfer for another approval.
-
-Browser-launcher handoff did not complete; user requested direct wallet UI:
-
-- Read-only check at block 12311443: trading latest/pending nonce both 0, 0.20 WBT / 0 official USDT; payer WBT still 0. No mined or pending swap observed.
-- The specifically approved deadline 1793907789 (01:13:09 IST) has passed. Do not execute or silently refresh that approval.
-- User should cancel the old terminal process and any wallet request, then prepare a fresh YetiTrade UI quote with the isolated trading wallet. Stop at confirmation for review of the new quote/minimum/calldata/gas before a fresh explicit approval.
-- No swap, token transfer, deployment, commit/push or Step 03 performed.
-
-User-executed YetiTrade UI swap VERIFIED:
-
-- Swap 0xf80c7700eb3ed402155cd82cd482a91973b5696434ca911ecc52be338ed2df0c succeeded on chain 1874 and credited exactly 11.019904 of required official USDT to trading wallet.
-- User executed four transactions independently: WWBT approval nonce 0, Permit2 approval nonce 1, wrap 0.15 WBT nonce 2, router swap nonce 3. Actual path differs from the old native-input preview; no claim that old exact calldata/approval matched these UI transactions.
-- Actual encoded minimum 10.803827 USDT (lower than reviewed 10.968887). Actual received amount exceeded both. Do not assert that the UI used reviewed 0.5% slippage solely from the mined output.
-- UI left unlimited ERC20 WWBT→Permit2 allowance and maximum uint160 Permit2→router allowance. These are actual remaining approvals, not automatically revoked. WWBT balance currently zero. Cleanup/revocation requires a separate preview and approval.
-- Trading balance: 0.048655711195984281 WBT / 11.019904 USDT / 0 WWBT; payer: 0 WBT / 0 USDT. Four fees total 0.001344288804015719 WBT and reconcile with the wrapped-native debit.
-- Evidence: docs/evidence/yetitrade-ui-swap-verified.json. Successful canonical L2 receipts checked; Ethereum finality not asserted.
-
-Separate 10-USDT payer funding preview — awaiting explicit approval:
-
-- From trading wallet; transaction target exact official token, call transfer(payer, 10000000), native value 0, nonce 4 (latest/pending match), estimated gas 61,736 / proposed limit 80,000, max fee 20 gwei, tip 0.001 gwei.
-- Estimated total fee 0.00030874173600326 WBT including L1 quote; L2 ceiling 0.0016 WBT plus variable L1 fees. No allowance needed for this own-token direct transfer.
-- Expected payer 10 USDT / 0 WBT; trading 1.019904 USDT and approximately 0.048346969459981021 WBT.
-- Evidence: docs/evidence/trading-to-payer-usdt-transfer-preview.json. No transfer submitted, approval changed, deployment, commit/push, or Step 03.
-
-Final checkout deployed: 0x4d1761ABB4eD290F23fcDA00890039800E2e53f0, tx 0x69bda8c980dc515222d432219394ba9f7362034d6bb8ecdb8eaf28f8c8e85d95, block 12369576, chain 1874. Exact approved payload/runtime/constructor/domain verified. Cost 0.006204710694119297 WBT. Source POST attempted under approval but explorer says verification temporarily unavailable; independent is_verified=false. Retry approved source submission when service recovers; do not redeploy or rerun nonce-3 launcher. Step 04 remains incomplete, no payment/commit/push/Step 05.
-
-Next Step 04 action: fresh 1-USDT + 0.001-USDT fee signing preview prepared at block 12369844, expiry 2026-11-06T12:56:52.000Z. Awaiting specific signing approval; no signatures or payment broadcast. Observed relayer nonce 1; payer 4.995 USDT / 0 WBT. Full public preview local/ignored docs/evidence/step-04-payment-signing-preview.json.
-
-Payer signing approved for final 1 USDT + 0.001 fee, expiry 2026-11-06T12:56:52Z, existing displayed digests. Prepared private-terminal launcher /private/tmp/whitepay-sign-approved-final-payment.mjs; 17 guard checks passed. Await user signing success summary, then simulate and request separate payment approval. No broadcast approval.
-
-Signed final payment simulation passed at block 12370167: both signatures verified, exact calldata eth_call succeeded; relayer nonce 1, gas estimate 185367 / limit 500000, maxfee 20 / priority 0.001 gwei. Estimated cost 0.000927020367010475 WBT including L1 quote 10475 wei. Expiry 2026-11-06T12:56:52Z. Await specific payment broadcast approval; source verification still pending. Public preview docs/evidence/step-04-payment-simulation-preview.json.
-
-Final payment broadcast specifically approved: 1 USDT + 0.001 fee / chain 1874 / relayer nonce 1 / exact reviewed calldata hash, expiry and caps. Prepared /private/tmp/whitepay-send-approved-final-payment.mjs; 12 guard checks passed; pending fresh --check and user-private --send. No automatic nonce/expiry/fee changes allowed. Await receipt, then verify balances/events/replay; no Step 05 or commit/push.
-
-Final checkout payment verified: tx 0x866f70f7b80f2e5e2766e7b2782b86c85f33f61754dbb00daa11ad55e50d90be / block 12370345 / chain 1874 / relayer nonce 1, exact approved payload. Payer 4.995 -> 3.994 USDT / exactly zero WBT; merchant 5 -> 6; fee recipient .005 -> .006; receiver zero. Gas 159190 at 5.001 gwei + L1 10773 wei = .000796109190010773 WBT, relayer .098233141698979925 WBT after. Both replay calls rejected without state/balance/nonce changes or broadcasts. Source verification retried, same temporary-unavailability rejection. Step 04 still awaits manual acceptance and source verification; no commit/push/Step 05. Manual commands in docs/progress/step-04.md.
-
-Step 05 implemented under user next-steps instruction: PostgreSQL API with versioned rollback-tested migrations, strict Zod requests, product/immutable price versions, session snapshots, bound atomic idempotency, full persisted quote domains, explicit expired-unsigned renewal and verified two-signature admission. Real PostgreSQL 37 API tests / 7 SDK / 3 dashboard; all three typechecks and 28 root tests pass; frozen install passes. Owner-only synthetic merchant fixtures and manual guide docs/runbooks/step-05-api.md ready. No real wallets/transactions, commit/push or Step 06. Relayer/worker remain unintegrated SQLite prototypes until Steps 06–07. Step 04 source-verification issue remains explicitly open; not marked complete.
+Step 11 local gate ready: `apps/demo-saas` now has accurate docs, 4 passing unit/integration tests and 1 passing Chrome end-to-end test against the real API/worker/webhook. A test-harness defect (Playwright init script broken by tsx/esbuild `keepNames`) was fixed by injecting the wallet mock as a string; no product source changed. See `docs/progress/step-11.md`. Await human `APPROVE STEP 11` / `FAIL STEP 11`; no commit, push, deploy or new chain transaction performed.

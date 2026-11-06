@@ -1,0 +1,30 @@
+{
+  "name": "@whitepay/demo-saas",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3300",
+    "build": "next build",
+    "start": "next start -p 3300",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --import tsx/esm test/*.test.ts",
+    "test:browser": "node --test --import tsx/esm test/browser.e2e.ts"
+  },
+  "dependencies": {
+    "@whitepay/node": "workspace:*",
+    "@whitepay/react": "workspace:*",
+    "next": "15.0.3",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.9.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@whitepay/api": "workspace:*",
+    "tsx": "4.19.2",
+    "typescript": "5.9.3"
+  }
+}

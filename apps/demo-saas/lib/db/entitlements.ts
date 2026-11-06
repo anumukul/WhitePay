@@ -1,0 +1,4 @@
+import {getDb} from './index';
+export function creditBalance(customerId:string){return Number((getDb().prepare('SELECT COALESCE(SUM(delta),0) AS balance FROM credit_ledger WHERE customer_id=?').get(customerId) as any).balance);}
+export function spendOneCredit(customerId:string){const db=getDb();db.exec('BEGIN IMMEDIATE');try{const balance=creditBalance(customerId);if(balance<=0){db.exec('ROLLBACK');return {ok:false,balance};}db.prepare('INSERT INTO credit_ledger(customer_id,delta,order_id,created_at) VALUES(?,-1,NULL,?)').run(customerId,Date.now());db.exec('COMMIT');return {ok:true,balance:balance-1};}catch(e){db.exec('ROLLBACK');throw e;}}
+export function getEntitlement(orderId:string,customerId:string){return getDb().prepare('SELECT order_id AS orderId,payment_id AS paymentId,credits_granted AS creditsGranted FROM entitlements WHERE order_id=? AND customer_id=?').get(orderId,customerId);}

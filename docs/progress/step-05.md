@@ -2,7 +2,7 @@
 
 STATUS: MANUALLY_ACCEPTED — user confirmed manual checks passed and requested further work. Commit/push authorized under the standing milestone workflow.
 
-User requested the next steps after final checkout deployment, live official-USDT payment and read-only replay verification. Started Step 05 under that instruction. Step 04 explorer source verification is still an explicitly open external dependency; it is not silently marked complete or verified. Last accepted/published implementation milestone remains Step 03 (6f58f37). Step 04 and Step 05 changes are still local.
+User requested the next steps after final checkout deployment, live official-USDT payment and read-only replay verification. Started Step 05 under that instruction. Step 04 explorer source verification is still an explicitly open external dependency; it is not silently marked complete or verified. Step 05 was subsequently manually accepted and published as e14ee21; Step 04 live proof was published as 47d10e7 with the explorer limitation retained.
 
 ## Problems reproduced before implementation
 
@@ -71,3 +71,5 @@ pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard
 Stop for user manual testing and approval before commit/push and before Step 06. Keep old relayer/worker stopped: their SQLite queue adapters are incompatible with PostgreSQL until their milestones. No real wallet signing or testnet payment is required for Step 05 testing. Source verification of the already deployed final checkout remains pending explorer recovery, with the existing approval still applying to identical-source retries.
 
 Manual acceptance: user explicitly reported "yes manual checks passed please proceed further". Publish reviewed Step 04/05 work under the standing commit/push workflow, retaining the unresolved explorer source-verification limitation. No new transaction authorization inferred.
+
+Publication: e14ee21 pushed to origin/main after explicit manual acceptance. Step 06 migration subsequently adds a separate relay-attempt ledger without modifying accepted 001 SQL.

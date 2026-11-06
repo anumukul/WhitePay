@@ -4,14 +4,14 @@ Gas-sponsored USDT checkout infrastructure for merchants on Whitechain. Buyers p
 
 ## Submission status (testnet)
 
-**Step 02 live proof verified and manually approved:** the experimental PoC settled 5 USDT to the merchant plus a 0.005-USDT fee, with exactly zero payer WBT and relayer-paid gas. [Payment receipt](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) and [manual acceptance checks](docs/progress/step-02.md) document exact balances, fees and read-only replay rejection. The final WhitePayCheckout is deployed at `0x4d1761ABB4eD290F23fcDA00890039800E2e53f0`; runtime matches the approved build and a final-contract 1-USDT payment plus 0.001-USDT fee succeeded with zero payer WBT and replay rejection, but explorer source verification is temporarily unavailable; Step 03 payer-scoped replay and ABI reader changes were manually accepted. Step 05 API testing is now ready for manual review. Future deployments and payments require separate explicit transaction approval.
+**Step 02 live proof verified and manually approved:** the experimental PoC settled 5 USDT to the merchant plus a 0.005-USDT fee, with exactly zero payer WBT and relayer-paid gas. [Payment receipt](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) and [manual acceptance checks](docs/progress/step-02.md) document exact balances, fees and read-only replay rejection. The final WhitePayCheckout is deployed at `0x4d1761ABB4eD290F23fcDA00890039800E2e53f0`; runtime matches the approved build and a final-contract 1-USDT payment plus 0.001-USDT fee succeeded with zero payer WBT and replay rejection, but explorer source verification is temporarily unavailable; Step 03 payer-scoped replay and ABI reader changes were manually accepted. Step 05 PostgreSQL API was manually accepted and pushed; Step 06 relayer local testing is ready for manual review. Future deployments and payments require separate explicit transaction approval.
 
 | Component                     | Status                   | Tests                                                                         | Note                                                                       |
 | ----------------------------- | ------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Contract — `WhitePayCheckout` | STEP 03 APPROVED         | 35 contract tests (two 256-run fuzz tests), plus 11 official-token fork tests | Step 03, `docs/progress/step-03.md`; deployed; source verification pending |
 | Deploy script + smoke         | DEPLOYED, source pending | 8/8                                                                           | Step 04, `docs/runbooks/step-04-deploy.md`                                 |
 | Merchant API                  | MANUAL TEST PENDING      | 37/37                                                                         | Step 05 PostgreSQL, `docs/progress/step-05.md`                             |
-| Relayer logic                 | GREEN (mock chain)       | 11/11                                                                         | Step 06, `services/relayer/`                                               |
+| Relayer logic                 | LOCAL TEST PENDING       | 43/43                                                                         | Step 06, `docs/progress/step-06.md`                                        |
 | Indexer + signed webhooks     | GREEN                    | 7/7                                                                           | Step 07, `services/worker/`                                                |
 | `@whitepay/node` SDK          | GREEN, packable          | 6/6                                                                           | Step 08, `packages/sdk-node/`                                              |
 | `@whitepay/react` widget      | GREEN, packable          | 5/5                                                                           | Step 09, `packages/sdk-react/`                                             |
@@ -43,7 +43,7 @@ bash scripts/vendor-oz.sh
 cd packages/contracts && FOUNDRY_PROFILE=step03 forge test
 ```
 
-Use the [Step 05 manual API guide](docs/runbooks/step-05-api.md) for database setup and two-merchant curl checks. Keep the old SQLite relayer/worker stopped until their PostgreSQL integration milestones.
+Use the [Step 05 manual API guide](docs/runbooks/step-05-api.md) for database setup and two-merchant curl checks. The relayer is now preview-only on PostgreSQL; keep the old SQLite worker stopped until Step 07.
 
 ## Original Step 02 context
 
@@ -66,7 +66,7 @@ Copy `.env.example` to `.env` only when needed; never commit credentials.
 ### References
 
 - [Implementation state](docs/progress/STATE.md)
-- Step reports: [00](docs/progress/step-00.md), [01](docs/progress/step-01.md), [02](docs/progress/step-02.md), [03](docs/progress/step-03.md), [04](docs/progress/step-04.md), [05](docs/progress/step-05.md)
+- Step reports: [00](docs/progress/step-00.md), [01](docs/progress/step-01.md), [02](docs/progress/step-02.md), [03](docs/progress/step-03.md), [04](docs/progress/step-04.md), [05](docs/progress/step-05.md), [06](docs/progress/step-06.md)
 - Runbooks: [Step 04 deploy](docs/runbooks/step-04-deploy.md), [Step 13 service deploy](docs/runbooks/step-13-deploy.md), [Step 14 publish](docs/runbooks/step-14-publish.md)
 - [Architecture](docs/architecture.md) · [Security](docs/security.md) · [Limitations](docs/limitations.md) · [Demo script](docs/demo-script.md)
 

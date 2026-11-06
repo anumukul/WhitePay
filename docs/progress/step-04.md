@@ -1,6 +1,6 @@
 # Step 04 — Final checkout deployment and proof
 
-STATUS: LIVE_PAYMENT_AND_REPLAY_VERIFIED — deployment/runtime and final-contract payment confirmed; explorer source verification remains unavailable. Manual acceptance and source verification pending; no commit/push or Step 05.
+STATUS: LIVE_PAYMENT_AND_REPLAY_VERIFIED — live proof published 47d10e7; explorer source verification remains unavailable. User directed subsequent API work and accepted Step 05; no claim of complete source verification.
 
 ## Accepted prerequisite and review scope
 
