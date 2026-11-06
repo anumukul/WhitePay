@@ -3,18 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "node --experimental-sqlite --import tsx/esm src/server.ts",
+    "dev": "node --import tsx/esm src/server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --experimental-sqlite --test --import tsx/esm test/*.test.ts"
+    "test": "node --test --import tsx/esm test/*.test.ts",
+    "demo:local": "node --import tsx/esm test/manual-demo.ts",
+    "step06:live": "node --import tsx/esm scripts/step06-live.ts",
+    "test:terminal": "node --import tsx/esm test/terminal-regression.ts"
   },
   "dependencies": {
-    "@whitepay/chain": "workspace:*"
+    "@whitepay/chain": "workspace:*",
+    "@whitepay/api": "workspace:*",
+    "viem": "2.38.5"
   },
   "devDependencies": {
     "@types/node": "22.9.0",
-    "@whitepay/api": "workspace:*",
     "tsx": "4.19.2",
     "typescript": "5.9.3"
   }

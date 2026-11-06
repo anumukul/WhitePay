@@ -63,6 +63,10 @@ export class WhitePayChainClient {
     }
   }
 
+  configCheckoutAddress(): Hex {
+    return this.config.checkoutAddress;
+  }
+
   async getChainId(): Promise<number> {
     const id = await this.publicClient.getChainId();
     return Number(id);

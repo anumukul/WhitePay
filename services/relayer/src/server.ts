@@ -1,41 +1,52 @@
-// Standalone relayer daemon entrypoint.
-// Reads env config, builds a chain client, starts the poll loop.
-import { WhitePayChainClient } from "@whitepay/chain";
-import { startDaemon } from "./daemon.js";
-import type { RelayerConfig } from "./types.js";
-
-function requireEnv(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`${name} required`);
-  return v;
+import { WhitePayChainClient } from '@whitepay/chain';
+import { migrate, closeDb } from './db.js';
+import { startDaemon } from './daemon.js';
+import { createRelayerAdapter } from './chain.js';
+import type { RelayerConfig } from './types.js';
+import { isAddress, type Hex } from 'viem';
+function address(name: string): Hex {
+  const value = process.env[name];
+  if (!value || !isAddress(value))
+    throw new Error(`${name} public address required`);
+  return value as Hex;
 }
-
-function envBig(name: string, def: bigint): bigint {
-  const v = process.env[name];
-  return v ? BigInt(v) : def;
-}
-
-function envNum(name: string, def: number): number {
-  const v = process.env[name];
-  return v ? Number(v) : def;
-}
-
+// Deliberately no RELAYER_PRIVATE_KEY support and no automatic signing/broadcast.
+if (
+  process.env.RELAYER_EXECUTION_MODE &&
+  process.env.RELAYER_EXECUTION_MODE !== 'preview'
+)
+  throw new Error(
+    'Use preview; live execution needs a separately reviewed exact approval and secure signer',
+  );
+await migrate();
 const cfg: RelayerConfig = {
-  expectedChainId: envNum("WHITECHAIN_CHAIN_ID", 1874),
-  checkoutAddress: requireEnv("WHITEPAY_CHECKOUT_CONTRACT_ADDRESS"),
-  maxGasPerSettle: envBig("RELAYER_MAX_GAS_PER_SETTLE", 500_000n),
-  maxGasPriceWei: envBig("RELAYER_MAX_GAS_PRICE_WEI", 20_000_000_000n),
-  dailyBudgetWei: envBig("RELAYER_DAILY_BUDGET_WEI", 100_000_000_000_000_000n),
-  maxFeeBasisPointsDrift: envNum("RELAYER_MAX_FEE_BPS_DRIFT", 1),
+  expectedChainId: 1874,
+  checkoutAddress: address('WHITEPAY_CHECKOUT_CONTRACT_ADDRESS'),
+  tokenAddress: '0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',
+  feeRecipient: address('WHITEPAY_FEE_RECIPIENT'),
+  feeBasisPoints: Number(process.env.WHITEPAY_FEE_BASIS_POINTS ?? 10),
+  maxGasPerSettle: 500000n,
+  maxGasPriceWei: 20000000000n,
+  priorityFeeWei: 1000000n,
+  maxL1FeeWei: 1000000000000n,
+  dailyBudgetWei: 100000000000000000n,
+  minimumValiditySeconds: 120,
+  mode: 'preview',
 };
-
 const client = new WhitePayChainClient({
-  rpcUrl: requireEnv("WHITECHAIN_RPC_URL"),
-  expectedChainId: cfg.expectedChainId,
-  checkoutAddress: cfg.checkoutAddress as `0x${string}`,
-  relayerPrivateKey: requireEnv("RELAYER_PRIVATE_KEY") as `0x${string}`,
+  rpcUrl: process.env.WHITECHAIN_RPC_URL ?? 'https://rpc.testnet.whitechain.io',
+  expectedChainId: 1874,
+  checkoutAddress: cfg.checkoutAddress,
 });
-
-const intervalMs = envNum("RELAYER_POLL_INTERVAL_MS", 2_000);
-console.log(`[relayer] starting daemon, polling every ${intervalMs}ms against ${cfg.checkoutAddress}`);
-startDaemon(cfg, client.asChainAdapter(), intervalMs);
+const handle = startDaemon(
+  cfg,
+  createRelayerAdapter(
+    client,
+    address('RELAYER_PUBLIC_ADDRESS'),
+    '0x3a9aa44166dd8ec13f12718f9b5c4515ea494622654761b1cb26f23c6c456efd',
+  ),
+);
+for (const signal of ['SIGINT', 'SIGTERM'] as const)
+  process.once(signal, () => {
+    void handle.stop().then(() => closeDb());
+  });

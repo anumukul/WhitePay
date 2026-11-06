@@ -46,5 +46,17 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard typecheck
-      - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard test
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - run: bash scripts/vendor-oz.sh
+      - run: pnpm build:checkout
+      - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard --filter @whitepay/relayer --filter @whitepay/worker --filter @whitepay/react typecheck
+      - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard --filter @whitepay/relayer --filter @whitepay/worker --filter @whitepay/react test
+
+      - run: pnpm --filter @whitepay/node test:package
+      - run: pnpm --filter @whitepay/react exec playwright install --with-deps chromium
+      - run: pnpm --filter @whitepay/react test:browser
+      - run: pnpm --filter @whitepay/react exec tsc -p tsconfig.operator.json --noEmit
+      - run: pnpm --filter @whitepay/dashboard build
+      - run: pnpm --filter @whitepay/dashboard test:browser

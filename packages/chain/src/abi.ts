@@ -2,6 +2,13 @@
 // Kept here instead of re-reading forge output to make the chain package self-contained.
 
 export const whitepayCheckoutAbi = [
+  { type: 'error', name: 'WrongChain', inputs: [] },
+  { type: 'error', name: 'TokenNotAllowed', inputs: [] },
+  { type: 'error', name: 'InvalidTerms', inputs: [] },
+  { type: 'error', name: 'InvalidTimeWindow', inputs: [] },
+  { type: 'error', name: 'InvalidOrderSignature', inputs: [] },
+  { type: 'error', name: 'OrderAlreadySettled', inputs: [] },
+  { type: 'error', name: 'InexactTokenTransfer', inputs: [] },
   {
     type: 'constructor',
     stateMutability: 'nonpayable',

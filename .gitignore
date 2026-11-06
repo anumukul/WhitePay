@@ -42,3 +42,14 @@ docs/evidence/token-probe-manual.json
 
 # Local API credentials and development databases
 /data/
+
+# Preserve legacy local relayer SQLite fixtures without publishing them
+/services/relayer/data/
+
+# Step 06 public live previews and local verification artifacts
+docs/evidence/step-06-*.json
+
+# Preserved legacy local worker prototype data
+/services/worker/data/
+
+/docs/evidence/step-09-live-*.json

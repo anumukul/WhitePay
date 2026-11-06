@@ -1,35 +1,41 @@
-import type { RelayerConfig } from "./types.js";
-import type { ChainAdapter } from "@whitepay/chain";
-import { runOnce } from "./loop.js";
-
+import { runOnce } from './loop.js';
+import type { RelayerConfig, ChainAdapter } from './types.js';
 export interface DaemonHandle {
-  stop: () => void;
+  stop(): Promise<void>;
 }
-
-export function startDaemon(cfg: RelayerConfig, chain: ChainAdapter, intervalMs = 2_000): DaemonHandle {
-  let stopped = false;
-  let currentRun: Promise<unknown> | null = null;
-
+export function startDaemon(
+  cfg: RelayerConfig,
+  chain: ChainAdapter,
+  intervalMs = 2000,
+): DaemonHandle {
+  if (cfg.mode !== 'preview')
+    throw new Error(
+      'Daemon supports preview only; execution requires per-transaction approval and an operator-injected signer',
+    );
+  let stopped = false,
+    pending: Promise<void> | undefined,
+    timer: ReturnType<typeof setTimeout>;
   const tick = async () => {
     if (stopped) return;
-    try {
-      currentRun = runOnce(cfg, chain);
-      const r = await currentRun;
-      if (!stopped && r && (r as { processed: number }).processed > 0) {
-        console.log(`[relayer] ${JSON.stringify(r)}`);
+    pending = (async () => {
+      try {
+        const result = await runOnce(cfg, chain);
+        if (result.processed) console.log(JSON.stringify(result));
+      } catch {
+        console.error(
+          '[relayer] read-only scan failed; sensitive details withheld',
+        );
       }
-    } catch (e) {
-      console.error("[relayer] loop error", e);
-    } finally {
-      currentRun = null;
-      if (!stopped) setTimeout(tick, intervalMs);
-    }
+    })();
+    await pending;
+    if (!stopped) timer = setTimeout(tick, intervalMs);
   };
-  setTimeout(tick, intervalMs);
-
+  timer = setTimeout(tick, intervalMs);
   return {
-    stop: () => {
+    async stop() {
       stopped = true;
+      clearTimeout(timer);
+      await pending;
     },
   };
 }

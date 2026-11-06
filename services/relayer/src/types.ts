@@ -1,52 +1,85 @@
-export interface Order {
-  orderId: string;
-  payer: string;
-  merchant: string;
-  amount: bigint;
-  fee: bigint;
-  feeRecipient: string;
-  token: string;
-  validAfter: number;
-  validBefore: number;
-  quoteId: string;
-}
-
-export interface SignedSubmission {
-  order: Order;
-  orderSignature: string;
-  tokenSignature: string;
-  expectedPriceMinor: bigint;
-  expectedToken: string;
-  expectedMerchant: string;
-  expectedFeeBasisPoints: number;
-}
-
+import type { Hex, TransactionSerializableEIP1559 } from 'viem';
+export type UnsignedTransaction = TransactionSerializableEIP1559 & {
+  to: Hex;
+  data: Hex;
+  nonce: number;
+  gas: bigint;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+  chainId: 1874;
+  value: 0n;
+};
 export interface RelayerConfig {
-  expectedChainId: number;
-  checkoutAddress: string;
+  expectedChainId: 1874;
+  checkoutAddress: Hex;
+  tokenAddress: Hex;
+  feeRecipient: Hex;
+  feeBasisPoints: number;
   maxGasPerSettle: bigint;
   maxGasPriceWei: bigint;
+  priorityFeeWei: bigint;
+  maxL1FeeWei: bigint;
   dailyBudgetWei: bigint;
-  maxFeeBasisPointsDrift: number;
+  minimumValiditySeconds: number;
+  mode: 'preview' | 'execute' | 'reconcile';
 }
-
+export interface ApprovedPayment {
+  chainId: 1874;
+  relayer: Hex;
+  checkout: Hex;
+  orderDigest: Hex;
+  unsignedHash: Hex;
+}
+export interface ReceiptEvidence {
+  transactionHash: Hex;
+  status: 'success' | 'reverted';
+  gasUsed: bigint;
+  effectiveGasPrice: bigint;
+  l1Fee: bigint;
+  logs: readonly { address: string; data: Hex; topics: readonly Hex[] }[];
+}
 export interface ChainAdapter {
+  relayerAddress: Hex;
   chainId(): Promise<number>;
-  nowSeconds(): number;
+  nowSeconds(): Promise<number>;
   getRelayerBalance(): Promise<bigint>;
-  estimateSettleGas(order: Order, orderSig: string, tokenSig: string): Promise<bigint>;
-  sendSettle(order: Order, orderSig: string, tokenSig: string, gasLimit: bigint): Promise<string>;
+  getNonce(tag: 'latest' | 'pending'): Promise<number>;
+  simulate(data: Hex): Promise<bigint>;
+  gasPrice(): Promise<bigint>;
+  l1Fee(tx: UnsignedTransaction, signedRaw?: Hex): Promise<bigint>;
+  sign(tx: UnsignedTransaction): Promise<Hex>;
+  broadcast(raw: Hex): Promise<Hex>;
+  receipt(hash: Hex): Promise<ReceiptEvidence | null>;
+  transactionKnown(hash: Hex): Promise<boolean>;
 }
-
-export type SubmitError =
-  | { code: "wrong_chain" }
-  | { code: "token_mismatch" }
-  | { code: "merchant_mismatch" }
-  | { code: "amount_mismatch" }
-  | { code: "fee_out_of_band" }
-  | { code: "time_window_invalid" }
-  | { code: "time_expired" }
-  | { code: "already_submitted"; txHash: string }
-  | { code: "gas_exceeded"; estimate: string; cap: string }
-  | { code: "budget_exceeded"; spent: string; cap: string }
-  | { code: "insufficient_relayer_balance" };
+export interface Result {
+  id: string;
+  status:
+    | 'preview'
+    | 'submitted'
+    | 'pending'
+    | 'mined'
+    | 'failed'
+    | 'quarantined'
+    | 'locked';
+  reason?: string;
+  txHash?: string;
+  unsignedHash?: string;
+  gas?: string;
+  reserveWei?: string;
+  transactionPreview?: {
+    nonce: number;
+    gasLimit: string;
+    maxFeePerGasWei: string;
+    maxPriorityFeePerGasWei: string;
+    nativeValueWei: string;
+    calldataHash: Hex;
+    gasEstimate: string;
+    quotedL1FeeWei: string;
+    observedGasPriceWei: string;
+  };
+}
+export interface LoopResult {
+  processed: number;
+  details: Result[];
+}
