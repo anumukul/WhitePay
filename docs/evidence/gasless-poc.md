@@ -1,6 +1,6 @@
-# Step 02 proof evidence — local preparation only
+# Step 02 proof evidence — live zero-WBT payment verified
 
-Status: **R-01 FIXED; AWAITING SPECIFIC DEPLOYMENT APPROVAL; LIVE PAYMENT NOT VERIFIED**. User approved payer-scoped replay correction plus commit/push and substituted AI review for unavailable teammate review. Eleven official-token fork tests, ten local PoC tests and 28 root Node tests pass. Regenerated preview and review findings are in `docs/progress/step-02.md`; all pre-fix bytecode previews are obsolete. Nothing is deployed.
+Status: **APPROVED — LIVE PROOF VERIFIED AND MANUALLY ACCEPTED**. Approved experimental deployment 0x3d972265aaa0dbfd05a7a6c63896564b80c2fc2c6deb8029bf421ae5f8057ac8 and payment [0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) succeeded on chain 1874. Payer USDT 10 → 4.995, WBT exactly zero before/after/latest; merchant +5 USDT, fee recipient +0.005, receiver zero residual. Relayer paid exact total 0.000970749111009302 WBT. Approved unsigned payload, event, all token logs and historical balances match. Order/token replay rejected through read-only calls with no extra broadcast. Manual commands and full evidence: `docs/progress/step-02.md`. No source-publication or Ethereum-finality claim. Final checkout/product integration remains separate.
 
 ## Experimental implementation
 
@@ -34,7 +34,7 @@ An earlier preflight used **unfunded fixture addresses**, not user wallets: [fix
 
 The blank example also exits 1 locally for a missing deployer address: [output](poc-preflight-blocked.json).
 
-## Remaining live acceptance checks
+## Live-proof checklist (complete and manually accepted)
 
 1. Source review completed as AI review under the user's explicit exception for unavailable teammate review; payer-scoped R-01 correction is tested. Verify current public roles and official-token code hash/domain again before deployment. Payer funding of 10 official USDT and zero WBT is verified.
 2. Keep payer WBT exactly zero. Fund only deployer/relayer with WBT and payer with the exact official token. Any faucet claim/funding action requires separate authorization; never fund public test fixtures.

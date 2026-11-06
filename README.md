@@ -4,27 +4,27 @@ Gas-sponsored USDT checkout infrastructure for merchants on Whitechain. Buyers p
 
 ## Submission status (testnet)
 
-**On-chain gates still pending:** the WhitePayCheckout contract is prepared with 20 passing forge tests + fuzz, but **not yet deployed**. The Step 02 live settlement proof is also pending on payer USDT funding. Explicit "approve deploy" and "approve settlement" are required from the operator before broadcast.
+**Step 02 live proof verified and manually approved:** the experimental PoC settled 5 USDT to the merchant plus a 0.005-USDT fee, with exactly zero payer WBT and relayer-paid gas. [Payment receipt](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) and [manual acceptance checks](docs/progress/step-02.md) document exact balances, fees and read-only replay rejection. The final WhitePayCheckout is not deployed and still requires the corresponding payer-scoped replay correction/review in Step 03. Future deployments and payments require separate explicit transaction approval.
 
-| Component | Status | Tests | Note |
-|---|---|---|---|
-| Contract — `WhitePayCheckout` | GREEN on mocks | 20/20 + 256-run fuzz | Step 03, `docs/progress/step-03.md` |
-| Deploy script + smoke | PREPARED, not broadcast | 4/4 | Step 04, `docs/runbooks/step-04-deploy.md` |
-| Merchant API | GREEN | 8/8 | Step 05, `services/api/` |
-| Relayer logic | GREEN (mock chain) | 11/11 | Step 06, `services/relayer/` |
-| Indexer + signed webhooks | GREEN | 7/7 | Step 07, `services/worker/` |
-| `@whitepay/node` SDK | GREEN, packable | 6/6 | Step 08, `packages/sdk-node/` |
-| `@whitepay/react` widget | GREEN, packable | 5/5 | Step 09, `packages/sdk-react/` |
-| Dashboard | GREEN | 3/3 | Step 10, `apps/dashboard/` |
-| Demo SaaS | GREEN | 3/3 | Step 11, `apps/demo-saas/` (on branch `feat/step-11-12-demo-saas`) |
-| Demo Shop | GREEN | 3/3 | Step 12, `apps/demo-shop/` (same branch) |
-| Service deploy | PREPARED, not deployed | — | Step 13, `docs/runbooks/step-13-deploy.md` |
-| npm publish of SDKs | PREPARED, tarballs built | — | Step 14, `docs/runbooks/step-14-publish.md` |
-| Landing site | SHIPS | — | Step 15, `apps/website/` |
-| Adversarial regression | GREEN | 2/2 | Step 16, `tests/adversarial.test.mjs` |
-| Demo video script | PREPARED | — | Step 17, `docs/demo-script.md` |
+| Component                     | Status                   | Tests                | Note                                                               |
+| ----------------------------- | ------------------------ | -------------------- | ------------------------------------------------------------------ |
+| Contract — `WhitePayCheckout` | GREEN on mocks           | 20/20 + 256-run fuzz | Step 03, `docs/progress/step-03.md`                                |
+| Deploy script + smoke         | PREPARED, not broadcast  | 4/4                  | Step 04, `docs/runbooks/step-04-deploy.md`                         |
+| Merchant API                  | GREEN                    | 8/8                  | Step 05, `services/api/`                                           |
+| Relayer logic                 | GREEN (mock chain)       | 11/11                | Step 06, `services/relayer/`                                       |
+| Indexer + signed webhooks     | GREEN                    | 7/7                  | Step 07, `services/worker/`                                        |
+| `@whitepay/node` SDK          | GREEN, packable          | 6/6                  | Step 08, `packages/sdk-node/`                                      |
+| `@whitepay/react` widget      | GREEN, packable          | 5/5                  | Step 09, `packages/sdk-react/`                                     |
+| Dashboard                     | GREEN                    | 3/3                  | Step 10, `apps/dashboard/`                                         |
+| Demo SaaS                     | GREEN                    | 3/3                  | Step 11, `apps/demo-saas/` (on branch `feat/step-11-12-demo-saas`) |
+| Demo Shop                     | GREEN                    | 3/3                  | Step 12, `apps/demo-shop/` (same branch)                           |
+| Service deploy                | PREPARED, not deployed   | —                    | Step 13, `docs/runbooks/step-13-deploy.md`                         |
+| npm publish of SDKs           | PREPARED, tarballs built | —                    | Step 14, `docs/runbooks/step-14-publish.md`                        |
+| Landing site                  | SHIPS                    | —                    | Step 15, `apps/website/`                                           |
+| Adversarial regression        | GREEN                    | 2/2                  | Step 16, `tests/adversarial.test.mjs`                              |
+| Demo video script             | PREPARED                 | —                    | Step 17, `docs/demo-script.md`                                     |
 
-**Total:** 72 automated tests green across 10 workspaces.
+Component counts above are historical teammate reports, not a fresh full-stack certification. Latest Step 02 verification: 28 root Node tests, 10 local PoC tests, 11 official-token fork tests and the live payment/replay checks. Demo apps referenced on another branch are not present on current main.
 
 ## Why on-chain USDT on Whitechain
 
@@ -77,7 +77,7 @@ pnpm test:poc
 pnpm test:poc:fork
 ```
 
-10 local contract tests and 6 official-code fork tests. The fork uses synthetic local funding and performs no testnet writes. Solidity 0.8.24 and OpenZeppelin 5.4.0 are pinned.
+10 local contract tests and 11 official-code fork tests. The fork uses synthetic local funding and performs no testnet writes. Solidity 0.8.24 and OpenZeppelin 5.4.0 are pinned.
 
 For a real public-wallet readiness check, fill a copy of `docs/evidence/poc-config.example.json`, then run:
 
@@ -90,7 +90,7 @@ No commit or push before manual review and approval.
 ## External-write gates still needing operator approval
 
 1. **"approve deploy"** — broadcast `WhitePayCheckout` per `docs/runbooks/step-04-deploy.md`.
-2. **"approve settlement"** — sign + submit the first real USDT payment after funding lands.
+2. **"approve settlement"** — approve any future final-contract smoke payment separately. The Step 02 experimental payment already succeeded; do not rerun its consumed order/nonce.
 3. **"approve deploy services"** — push Docker images per `docs/runbooks/step-13-deploy.md`.
 4. **"approve publish"** — `npm publish` the alpha tarballs per `docs/runbooks/step-14-publish.md`.
 5. **"approve submit"** — post the ETHGlobal submission form (operator does this directly).

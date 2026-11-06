@@ -1,13 +1,16 @@
 # WhitePay implementation state
 
-Last confirmed implementation step: 01 — official token capabilities verified
-Current step: 02 — local authorization PoC and funding readiness work
-Status: INCOMPLETE — PoC R-01 fixed and tested; regenerated deployment preview awaits specific transaction approval; live proof pending
+Last approved implementation step: 02 — genuine live zero-WBT official-USDT proof
+Current step: 02 — genuine zero-WBT live proof verified
+Status: APPROVED — user explicitly accepted Step 02 and authorized its evidence commit/push to origin/main
+
+Live payment: 0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641, chain 1874, block 12366248, exact approved relayer nonce-0 payload. Payer 10 → 4.995 official USDT with exactly zero WBT before/after/latest. Merchant +5 USDT; fee recipient +0.005 USDT; receiver zero residual. Relayer 0.1 → 0.099029250888990698 WBT; exact total fee 0.000970749111009302 WBT (194111 gas at 5.001 gwei plus L1 9302 wei). Both order replay (OrderAlreadySettled) and token nonce replay (TetherToken: auth invalid) rejected through read-only calls, with zero extra broadcasts.
+
 Current branch: main
 Reviewed handoff base: d70b519 (teammate API/chain/relayer/worker integration; pulled after 6da644f)
 Current implementation report: docs/progress/step-02.md
 Authorized remote: https://github.com/anumukul/WhitePay.git
-Git policy: user explicitly authorized implementation, commit and push of the payer-scoped PoC replay fix and associated review/tooling documentation to origin/main. This exception applies to this fix only. Other milestones still require manual testing/approval before commit/push; deployment and payment require separate transaction approval.
+Git policy: user explicitly approved Step 02 and its reviewed evidence commit/push to origin/main. Later milestones still require manual testing/approval before commit/push; deployments/payments require separate exact transaction approval. No Step 03 implementation is authorized by the evidence publication.
 Configured remote branch: origin/main
 Step 01 code/evidence commit: 013a87b — pushed to origin/main
 Step 01 review transition: user authorized Step 02 after receiving manual testing instructions.
@@ -15,7 +18,7 @@ ADR 0001: experimental PoC evaluated in Step 02; final interface approval pendin
 
 ## Resumption plan after teammate handoff
 
-Preserve and review the existing implementation. Code presence or reported mock-test success does not complete a milestone. Resume at the earliest unmet acceptance gate, Step 02; later code is available for reuse but remains unaccepted. Each row requires manual user testing before its commit/push. Onchain transactions, deployments, publication, and other external writes retain their separate exact-preview approval gates.
+Preserve and review the existing implementation. Code presence or reported mock-test success does not complete a milestone. Step 02 is now manually accepted; later code is available for reuse but remains unaccepted. Each row requires manual user testing before its commit/push. Onchain transactions, deployments, publication, and other external writes retain their separate exact-preview approval gates.
 
 | Step  | Work to complete using the existing code                                                                                                                               | Manual acceptance before approval                                                                                                                                                               |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,23 +44,16 @@ Earlier entries below retain the historical evidence and approval sequence; this
 
 Verified findings:
 
-- Resumption manual check completed by user: 10/10 PoC tests passed. Public manual preflight recorded chain 1874 at block 12363387, deployer 1.69978995799999224 WBT, relayer 0.1 WBT, payer exactly 0 WBT / 0 official USDT. Its only funding blocker is payer USDT (minimum 5.005 under configured terms; planned top-up 10). This supersedes the assistant's earlier RPC failure. No fresh transaction is approved by these test results.
-- Official USDT metadata: Tether USD, USDT, six decimals on chain 1874.
-- EIP-1967 implementation source verified and runtime matches RPC.
-- Permit and EIP-3009 valid-signature simulations pass; receive enforces recipient-only caller.
-- Step 01 recorded 25 live read-only checks. The latest recorded Step 02 checks passed: 26 Node tests, 10 mock-based Foundry tests, and 6 official-token fork tests.
+- Live official-token receipt: one matching PaymentSettled, three exact USDT Transfer logs and one matching AuthorizationUsed log; exact historical balance and fee reconciliation passed.
+- Corrected PoC at 0x6ae4Ee53ac2b98ADf9EF89d03500848bC8405F45; deployment tx 0x3d972265aaa0dbfd05a7a6c63896564b80c2fc2c6deb8029bf421ae5f8057ac8. Full runtime independently matches historical constructor execution including domain immutables; source commit 64c5aa9.
+- Payer-scoped settled getter and token authorizationState are true for the paid order/digest. Read-only replay fails for the intended reasons.
+- Latest local checks: 28 root Node tests, 10 PoC tests and 11 official-token fork tests passed. Full formatting still has 63 inherited issues. User substituted AI review for unavailable teammate review.
 
-Unresolved blockers:
+Manual acceptance received: user replied APPROVE STEP 02 AND COMMIT/PUSH TO origin/main. Publish only the reviewed Step 02 public evidence/docs and local-artifact ignore rule. No more payment/replay transactions are needed. After the authorized push, STOP before Step 03; the user must request its start.
 
-- Genuine positive-value zero-WBT payment, fee split, and mined replay proof not performed.
-- Funding prerequisites passed at block 12364125; contract review and the live proof remain pending.
-- Step 02 deployment/broadcast requires a concrete preview and explicit authorization.
-- Wallet provider UX and backend hosting not validated.
-- Docker daemon unavailable locally.
+Known limits/follow-up: final WhitePayCheckout remains affected by R-01 and needs its own correction/review; offchain services and wallet UX remain prototypes; no explorer source publication or Ethereum-finality claim is made. Payer's remaining 4.995 USDT is below the default 5.005-USDT proof amount; do not rerun payment/signing launchers or infer that another payment is funded/approved. Prior trading-wallet approvals remain, with no revocation authorized.
 
-Current verified funding state: payer transfer 0xd447e993efc4a199c2a322a9079c8166cbeee27937882673e5d5a5d8d3d9caa4 succeeded at block 12363962. Payer holds 10 official USDT and exactly zero WBT; trading holds 1.019904 USDT. User wallet used priority cap 5.001 gwei instead of the approved 0.001 gwei; exact approved payload did not match, though actual total fee was 0.00030461591100276 WBT. Post-funding preflight passed at block 12364125: READY_FOR_DEPLOYMENT_REVIEW, no funding blockers. Deployer holds 1.69978995799999224 WBT and relayer 0.1 WBT.
-
-Next gate: review and specifically approve the regenerated experimental deployment transaction. User-authorized replay correction uses settled(address payer,bytes32 orderId); 11 official-token fork tests, 10 local PoC tests and 28 root Node tests pass. Block 12364742: deployer latest/pending nonce 2, predicted address 0x6ae4Ee53ac2b98ADf9EF89d03500848bC8405F45, estimated gas 1,311,670, proposed ceiling 2,000,000, max fee 20 gwei, priority cap 0.001 gwei, estimated total 0.006559661670115703 WBT. Old bytecode previews are obsolete. Nothing is deployed. Final WhitePayCheckout remains affected by R-01 and requires its own Step 03 correction before deployment.
+Historical Step 02 preparation and funding snapshots (superseded by current live result above):
 
 Step 02 local preparation:
 

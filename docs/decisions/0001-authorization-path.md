@@ -2,6 +2,8 @@
 
 Status: **PROPOSED — human approval and Step 02 live proof required**.
 
+Current evidence update: Step 02 live proof is now technically verified and manually accepted by the user. Experimental payment 0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641 on chain 1874 paid merchant 5 USDT and fee 0.005, kept payer WBT zero, charged relayer WBT, and consumed order/token nonce. Both replay checks rejected through read-only calls. This validates experimental Path A; final contract/API acceptance remains pending. See the Step 02 report for exact receipt/balances and review limitations.
+
 Date: 2026-11-05. Scope: authorization feasibility only; no checkout interface is approved or implemented.
 
 ## Evidence

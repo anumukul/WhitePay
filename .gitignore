@@ -27,6 +27,7 @@ docs/evidence/poc-preflight*.json
 docs/evidence/poc-unfunded-preflight.json
 docs/evidence/poc-wallet-review.json
 docs/evidence/poc-deployment-estimate*.json
+docs/evidence/poc-payment-*.json
 docs/evidence/*-funding-preview.json
 docs/evidence/*-funding-approved-precheck.json
 docs/evidence/*-funding-verified.json
