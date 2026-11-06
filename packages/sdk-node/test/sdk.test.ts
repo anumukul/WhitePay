@@ -76,9 +76,22 @@ test('webhooks.verify accepts correct signature', () => {
   const payload = JSON.stringify({
     id: 'evt_1',
     type: 'payment.succeeded',
-    data: {},
+    data: {
+      orderId: '0x' + '1'.repeat(64),
+      quoteId: '0x' + '2'.repeat(64),
+      paymentId: 'pay_test',
+      sessionId: 'cs_test',
+      merchantId: 'mer_test',
+      amountMinor: '1000000',
+      fee: '1000',
+      txHash: '0x' + '3'.repeat(64),
+      blockNumber: 1,
+      chainId: 1874,
+      currency: 'USDT',
+      token: '0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',
+    },
   });
-  const ts = '1700000000';
+  const ts = Math.floor(Date.now() / 1000).toString();
   const sig = createHmac('sha256', 'whsec_x')
     .update(`${ts}.${payload}`)
     .digest('hex');
@@ -100,9 +113,22 @@ test('webhooks.verify rejects tampered payload', () => {
   const payload = JSON.stringify({
     id: 'evt_1',
     type: 'payment.succeeded',
-    data: {},
+    data: {
+      orderId: '0x' + '1'.repeat(64),
+      quoteId: '0x' + '2'.repeat(64),
+      paymentId: 'pay_test',
+      sessionId: 'cs_test',
+      merchantId: 'mer_test',
+      amountMinor: '1000000',
+      fee: '1000',
+      txHash: '0x' + '3'.repeat(64),
+      blockNumber: 1,
+      chainId: 1874,
+      currency: 'USDT',
+      token: '0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',
+    },
   });
-  const ts = '1700000000';
+  const ts = Math.floor(Date.now() / 1000).toString();
   const sig = createHmac('sha256', 'whsec_x')
     .update(`${ts}.${payload}`)
     .digest('hex');
@@ -114,7 +140,8 @@ test('webhooks.verify rejects tampered payload', () => {
         timestamp: ts,
         secret: 'whsec_x',
       }),
-    /signature mismatch/,
+    (e: unknown) =>
+      e instanceof WhitePayAPIError && e.code === 'invalid_signature',
   );
 });
 
@@ -143,6 +170,54 @@ test('idempotency key reuse for changed terms raises 409', async () => {
         { priceId, externalOrderId: 'bound-b' },
         { idempotencyKey: 'bound-sdk' },
       ),
+    (e: unknown) => e instanceof WhitePayAPIError && e.status === 409,
+  );
+});
+
+test('customer reference survives creation and retrieval through the actual API', async () => {
+  const wp = new WhitePay({ secretKey: secret, apiBaseUrl: baseUrl });
+  const session = await wp.checkout.createSession({
+    priceId,
+    externalOrderId: 'customer-reference',
+    customerReference: 'customer-1',
+  });
+  const loaded = await wp.checkout.retrieve(session.id);
+  assert.equal(loaded.customerReference, 'customer-1');
+  assert.equal(loaded.id, session.id);
+});
+
+test('SDK product, price and payments methods agree with the real API', async () => {
+  const wp = new WhitePay({ secretKey: secret, apiBaseUrl: baseUrl });
+  const product = await wp.products.create({ name: 'SDK product' });
+  const price = await wp.prices.create({
+    productId: product.id,
+    amountMinor: 1000000,
+    currency: 'USDT',
+    tokenAddress: '0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7',
+  });
+  assert.equal((await wp.products.retrieve(product.id)).name, 'SDK product');
+  assert.equal((await wp.prices.retrieve(price.id)).amountMinor, 1000000);
+  assert.ok(Array.isArray((await wp.payments.list()).data));
+});
+
+test('idempotency binds customer reference and prevents silent reassignment', async () => {
+  const wp = new WhitePay({ secretKey: secret, apiBaseUrl: baseUrl });
+  const input = {
+    priceId,
+    externalOrderId: 'reference-idem',
+    customerReference: 'one',
+  };
+  await wp.checkout.createSession(input, { idempotencyKey: 'reference-idem' });
+  await assert.rejects(
+    () =>
+      wp.checkout.createSession(
+        { ...input, customerReference: 'two' },
+        { idempotencyKey: 'reference-idem' },
+      ),
+    (e: unknown) => e instanceof WhitePayAPIError && e.status === 409,
+  );
+  await assert.rejects(
+    () => wp.checkout.createSession({ ...input, customerReference: 'two' }),
     (e: unknown) => e instanceof WhitePayAPIError && e.status === 409,
   );
 });
