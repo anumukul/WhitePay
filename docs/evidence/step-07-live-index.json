@@ -1,0 +1,40 @@
+{
+  "status": "STEP07_CONFIRMED_PAYMENT_INDEXED_ONCE",
+  "mode": "inspect",
+  "chainId": 1874,
+  "txHash": "0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e",
+  "block": 12380070,
+  "payments": [
+    {
+      "id": "pay_8fe03dad-6692-4396-a0b2-295197ae5290",
+      "status": "succeeded",
+      "amount_minor": "1000000",
+      "tx_hash": "0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e",
+      "block_number": "12380070"
+    }
+  ],
+  "events": [
+    {
+      "event_id": "1874:0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e:4",
+      "state": "matched",
+      "payment_id": "pay_8fe03dad-6692-4396-a0b2-295197ae5290"
+    }
+  ],
+  "sessionStatus": "settled",
+  "cursors": [
+    {
+      "scope": "step07-proof:0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e",
+      "last_block": "12380070",
+      "last_block_hash": "0x509f63e0f280977e8ac739db609f7b9fa066dddeee716facc7a1e97a2e9c857d"
+    },
+    {
+      "scope": "step07-proof:0x579f92812ea2f5d8bbe67b49c33fb0a7a75fbe61ab98edc129e832b2ebca034e:duplicate",
+      "last_block": "12380070",
+      "last_block_hash": "0x509f63e0f280977e8ac739db609f7b9fa066dddeee716facc7a1e97a2e9c857d"
+    }
+  ],
+  "outbox": [],
+  "externalWebhooksSent": 0,
+  "transactionsBroadcast": 0,
+  "signaturesExposed": false
+}

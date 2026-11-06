@@ -1,82 +1,131 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { getDb } from "./db.js";
-
-export function signPayload(secret: string, timestamp: string, payload: string): string {
-  return createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest("hex");
+import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
+import { transaction, getDb } from './db.js';
+import { safeWebhookFetch, validateDestination } from './destination.js';
+export function signPayload(
+  secret: string,
+  timestamp: string,
+  payload: string,
+) {
+  return createHmac('sha256', secret)
+    .update(`${timestamp}.${payload}`)
+    .digest('hex');
 }
-
 export function verifySignature(input: {
   secret: string;
   timestamp: string;
   payload: string;
   signature: string;
-}): boolean {
-  const expected = signPayload(input.secret, input.timestamp, input.payload);
-  const a = Buffer.from(input.signature, "hex");
-  const b = Buffer.from(expected, "hex");
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-export interface DeliveryAttempt {
-  ok: boolean;
-  status: number;
-}
-
-export type FetchLike = (url: string, init: { method: string; headers: Record<string, string>; body: string }) => Promise<DeliveryAttempt>;
-
-export async function deliverWebhook(input: {
-  eventId: string;
-  url: string;
-  secret: string;
-  payload: string;
-  maxAttempts?: number;
-  fetchImpl: FetchLike;
   nowMs?: number;
-}): Promise<{ delivered: boolean; attempts: number; lastStatus: number | null }> {
-  const db = getDb();
-  const max = input.maxAttempts ?? 5;
-  const now = input.nowMs ?? Date.now();
-
-  db.prepare(
-    `INSERT OR IGNORE INTO webhook_deliveries (event_id, url, status, attempts, last_attempt_at) VALUES (?, ?, 'pending', 0, ?)`,
-  ).run(input.eventId, input.url, now);
-
-  const row = db
-    .prepare("SELECT attempts, status FROM webhook_deliveries WHERE event_id = ? AND url = ?")
-    .get(input.eventId, input.url) as { attempts: number; status: string };
-  if (row.status === "delivered") return { delivered: true, attempts: row.attempts, lastStatus: 200 };
-
-  const timestamp = Math.floor(now / 1000).toString();
-  const signature = signPayload(input.secret, timestamp, input.payload);
-  let attempts = row.attempts;
-  let lastStatus: number | null = null;
-  while (attempts < max) {
-    attempts++;
-    let attempt: DeliveryAttempt;
-    try {
-      attempt = await input.fetchImpl(input.url, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-whitepay-timestamp": timestamp,
-          "x-whitepay-signature": signature,
-          "x-whitepay-event-id": input.eventId,
-        },
-        body: input.payload,
-      });
-    } catch {
-      attempt = { ok: false, status: 0 };
-    }
-    lastStatus = attempt.status;
-    if (attempt.ok) {
-      db.prepare(
-        "UPDATE webhook_deliveries SET status = 'delivered', attempts = ?, last_response_code = ?, last_attempt_at = ? WHERE event_id = ? AND url = ?",
-      ).run(attempts, attempt.status, Date.now(), input.eventId, input.url);
-      return { delivered: true, attempts, lastStatus };
-    }
-  }
-  db.prepare(
-    "UPDATE webhook_deliveries SET status = 'failed', attempts = ?, last_response_code = ?, last_attempt_at = ? WHERE event_id = ? AND url = ?",
-  ).run(attempts, lastStatus, Date.now(), input.eventId, input.url);
-  return { delivered: false, attempts, lastStatus };
+  maxAgeSeconds?: number;
+}) {
+  if (
+    !/^\d{1,12}$/.test(input.timestamp) ||
+    !/^([a-f0-9]{64})$/i.test(input.signature)
+  )
+    return false;
+  const time = Number(input.timestamp),
+    now = Math.floor((input.nowMs ?? Date.now()) / 1000);
+  if (
+    !Number.isSafeInteger(time) ||
+    Math.abs(now - time) > (input.maxAgeSeconds ?? 300)
+  )
+    return false;
+  const expected = Buffer.from(
+      signPayload(input.secret, input.timestamp, input.payload),
+      'hex',
+    ),
+    actual = Buffer.from(input.signature, 'hex');
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+export type FetchLike = (
+  url: string,
+  init: { method: string; headers: Record<string, string>; body: string },
+) => Promise<{ ok: boolean; status: number }>;
+export interface DeliveryConfig {
+  allowedOrigins: string[];
+  allowLocal?: boolean;
+  fetchImpl?: FetchLike;
+  nowMs?: number;
+  maxAttempts?: number;
+  leaseMs?: number;
+}
+export async function dispatchOnce(cfg: DeliveryConfig) {
+  const now = cfg.nowMs ?? Date.now(),
+    max = cfg.maxAttempts ?? 5,
+    lease = cfg.leaseMs ?? 30000;
+  if (
+    !Number.isSafeInteger(max) ||
+    max < 1 ||
+    max > 20 ||
+    !Number.isSafeInteger(lease) ||
+    lease < 1000 ||
+    !cfg.allowedOrigins.length
+  )
+    throw new Error('invalid_delivery_configuration');
+  const token = randomUUID();
+  const row = await transaction(async (c) => {
+    await c.query(
+      "UPDATE webhook_outbox SET state='dead',lease_token=NULL,lease_until=NULL WHERE attempts>=$1 AND (state='pending' OR (state='delivering' AND lease_until<=$2))",
+      [max, now],
+    );
+    const next = (
+      await c.query(
+        "SELECT * FROM webhook_outbox WHERE attempts<$1 AND ((state='pending' AND next_attempt_at<=$2) OR (state='delivering' AND lease_until<=$2)) ORDER BY next_attempt_at,id FOR UPDATE SKIP LOCKED LIMIT 1",
+        [max, now],
+      )
+    ).rows[0];
+    if (!next) return null;
+    return (
+      await c.query(
+        "UPDATE webhook_outbox SET state='delivering',attempts=attempts+1,lease_token=$1,lease_until=$2 WHERE id=$3 RETURNING *",
+        [token, now + lease, next.id],
+      )
+    ).rows[0];
+  });
+  if (!row) return { processed: 0 };
+  const merchant = (
+    await getDb().query('SELECT webhook_secret FROM merchants WHERE id=$1', [
+      row.merchant_id,
+    ])
+  ).rows[0];
+  let result = { ok: false, status: 0 };
+  try {
+    validateDestination(row.url, cfg.allowedOrigins, cfg.allowLocal);
+    const timestamp = Math.floor(now / 1000).toString();
+    const signature = signPayload(
+      merchant.webhook_secret,
+      timestamp,
+      row.payload,
+    );
+    result = await (
+      cfg.fetchImpl ?? safeWebhookFetch(cfg.allowedOrigins, cfg.allowLocal)
+    )(row.url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-whitepay-event-id': row.event_id,
+        'x-whitepay-timestamp': timestamp,
+        'x-whitepay-signature': signature,
+      },
+      body: row.payload,
+    });
+  } catch {}
+  const delivered = result.ok && result.status >= 200 && result.status < 300;
+  const state = delivered
+    ? 'delivered'
+    : row.attempts >= max
+      ? 'dead'
+      : 'pending';
+  const delay = Math.min(60000, 1000 * 2 ** (row.attempts - 1));
+  const updated = await getDb().query(
+    'UPDATE webhook_outbox SET state=$1,next_attempt_at=$2,lease_token=NULL,lease_until=NULL,last_response_code=$3,delivered_at=$4 WHERE id=$5 AND lease_token=$6',
+    [state, now + delay, result.status, delivered ? now : null, row.id, token],
+  );
+  return {
+    processed: 1,
+    eventId: row.event_id,
+    state: updated.rowCount ? state : 'lease_lost',
+    attempts: row.attempts,
+    responseStatus: result.status,
+  };
 }

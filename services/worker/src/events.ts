@@ -1,8 +1,8 @@
-import type { SettledLog } from "@whitepay/chain";
+import type { SettledLog } from '@whitepay/chain';
 
 export interface PaymentSucceededEvent {
   id: string;
-  type: "payment.succeeded";
+  type: 'payment.succeeded';
   data: {
     orderId: string;
     paymentId: string;
@@ -10,7 +10,7 @@ export interface PaymentSucceededEvent {
     merchantId: string;
     amountMinor: string;
     fee: string;
-    currency: "USDT";
+    currency: 'USDT';
     txHash: string;
     blockNumber: number;
     chainId: number;
@@ -29,7 +29,7 @@ export function buildPaymentSucceededEvent(input: {
 }): PaymentSucceededEvent {
   return {
     id: input.eventId,
-    type: "payment.succeeded",
+    type: 'payment.succeeded',
     data: {
       orderId: input.log.orderId,
       paymentId: input.paymentId,
@@ -37,7 +37,7 @@ export function buildPaymentSucceededEvent(input: {
       merchantId: input.merchantId,
       amountMinor: input.log.amount.toString(),
       fee: input.log.fee.toString(),
-      currency: "USDT",
+      currency: 'USDT',
       txHash: input.log.txHash,
       blockNumber: input.log.blockNumber,
       chainId: input.chainId,
