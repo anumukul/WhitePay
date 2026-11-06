@@ -12,6 +12,9 @@ export function getDb(): Pool {
       'DATABASE_URL must identify PostgreSQL; SQLite files are not migrated automatically',
     );
   singleton = new Pool({ connectionString: url, max: 10 });
+  // Idle-client failures (for example a database restart) must surface through
+  // readiness, not crash the API process. Diagnostics stay sanitized.
+  singleton.on('error', () => {});
   return singleton;
 }
 export async function transaction<T>(
@@ -104,6 +107,7 @@ export async function resetDbForTests(scope: string): Promise<Pool> {
     options: `-c search_path=${schema}`,
     max: 10,
   });
+  singleton.on('error', () => {});
   testSchema = schema;
   await migrate();
   return singleton;

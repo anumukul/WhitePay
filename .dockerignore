@@ -1,0 +1,15 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+**/.next
+**/data
+**/.env
+**/.env.*
+!**/.env.example
+docs
+packages/contracts/cache
+packages/contracts/out
+packages/contracts/broadcast
+*.tsbuildinfo
+.DS_Store

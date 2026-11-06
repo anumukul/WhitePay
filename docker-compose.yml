@@ -1,0 +1,145 @@
+# Local production-like stack for Step 13 acceptance work.
+#
+# This file is NOT a deployment. It runs the PostgreSQL-backed services on this
+# machine so health, readiness, CORS, startup migration and restart behaviour can
+# be exercised. No external host, domain or secret is configured here.
+#
+# Backend only:
+#   docker compose up -d postgres api
+# Include worker and the read-only relayer preview:
+#   docker compose --profile full up -d
+#
+# The relayer is preview-only by design. It has no private key and performs no
+# broadcast; a live hosted relayer needs a separately reviewed secure signer.
+
+name: whitepay-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: whitepay
+      POSTGRES_PASSWORD: whitepay_local_only
+      POSTGRES_DB: whitepay
+    ports:
+      - '55433:5432'
+    volumes:
+      - whitepay-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U whitepay -d whitepay']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE: api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://whitepay:whitepay_local_only@postgres:5432/whitepay
+      PORT: '3001'
+      HOST: 0.0.0.0
+      WHITEPAY_ALLOWED_ORIGINS: http://localhost:3200
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: unless-stopped
+
+  worker:
+    profiles: ['full']
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE: worker
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://whitepay:whitepay_local_only@postgres:5432/whitepay
+      WHITECHAIN_RPC_URL: https://rpc.testnet.whitechain.io
+      WHITEPAY_WEBHOOK_DELIVERY_ENABLED: '0'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'pnpm',
+          '--filter',
+          '@whitepay/worker',
+          'exec',
+          'node',
+          '--import',
+          'tsx/esm',
+          '-e',
+          "import('./src/db.js').then(async({getDb})=>{await getDb().query('SELECT 1');process.exit(0)}).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  relayer:
+    profiles: ['full']
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        SERVICE: relayer
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://whitepay:whitepay_local_only@postgres:5432/whitepay
+      WHITECHAIN_RPC_URL: https://rpc.testnet.whitechain.io
+      WHITEPAY_CHECKOUT_CONTRACT_ADDRESS: 0x4d1761ABB4eD290F23fcDA00890039800E2e53f0
+      WHITEPAY_FEE_RECIPIENT: 0x2F51C76D37BA9118ce8D5b9377329965ddb411c2
+      WHITEPAY_FEE_BASIS_POINTS: '10'
+      RELAYER_PUBLIC_ADDRESS: 0xba780C2e4e79e4109EC53b52fCE9982f33962A92
+      RELAYER_EXECUTION_MODE: preview
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'pnpm',
+          '--filter',
+          '@whitepay/relayer',
+          'exec',
+          'node',
+          '--import',
+          'tsx/esm',
+          '-e',
+          "import('./src/db.js').then(async({getDb})=>{await getDb().query('SELECT 1');process.exit(0)}).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  whitepay-pg:

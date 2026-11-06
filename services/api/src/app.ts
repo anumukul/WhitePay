@@ -20,7 +20,7 @@ import {
 import { createHash } from 'node:crypto';
 import { z, ZodError } from 'zod';
 import { authenticate } from './auth.js';
-import { transaction } from './db.js';
+import { getDb, transaction } from './db.js';
 import {
   createSession,
   getSession,
@@ -68,14 +68,66 @@ function send(res: ServerResponse, status: number, body?: unknown) {
   });
   res.end(body === undefined ? undefined : JSON.stringify(body));
 }
+function applyCors(req: IncomingMessage, res: ServerResponse): boolean {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  const allowed = (process.env.WHITEPAY_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (!allowed.includes(origin)) return false;
+  res.setHeader('access-control-allow-origin', origin);
+  res.setHeader('vary', 'Origin');
+  res.setHeader(
+    'access-control-allow-methods',
+    'GET,POST,PATCH,DELETE,OPTIONS',
+  );
+  res.setHeader(
+    'access-control-allow-headers',
+    'authorization,content-type,idempotency-key',
+  );
+  res.setHeader('access-control-max-age', '600');
+  return true;
+}
 export function createApp() {
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', 'http://localhost'),
         path = url.pathname,
         method = req.method;
+      const originAllowed = applyCors(req, res);
+      if (method === 'OPTIONS')
+        return originAllowed
+          ? send(res, 204)
+          : send(res, 403, { error: 'cors_origin_denied' });
+      if (!originAllowed)
+        return send(res, 403, { error: 'cors_origin_denied' });
       if (path === '/health' && method === 'GET')
-        return send(res, 200, { ok: true });
+        return send(res, 200, { ok: true, service: 'api' });
+      if (path === '/ready' && method === 'GET') {
+        try {
+          const db = getDb();
+          await db.query('SELECT 1');
+          const migrations = Number(
+            (
+              await db.query(
+                'SELECT COUNT(*)::int AS n FROM schema_migrations',
+              )
+            ).rows[0].n,
+          );
+          return send(res, 200, {
+            ok: true,
+            service: 'api',
+            checks: { database: 'up', migrations },
+          });
+        } catch {
+          return send(res, 503, {
+            ok: false,
+            service: 'api',
+            checks: { database: 'down' },
+          });
+        }
+      }
       const merchantId = await authenticate(req.headers.authorization);
       if (!merchantId) return send(res, 401, { error: 'unauthorized' });
       const body =
