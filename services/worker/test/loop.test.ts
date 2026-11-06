@@ -8,6 +8,8 @@ import { scanAndPersist } from "../src/loop.js";
 import { resetDbForTests, closeDb, getCursor } from "../src/db.js";
 import { resetApiDbForTests, closeApiDb, getApiDb, countPaymentsForMerchant } from "../src/api-queue.js";
 import type { ChainReader, SettledLog } from "@whitepay/chain";
+import type { FetchLike } from "../src/webhooks.js";
+import { verifySignature } from "../src/webhooks.js";
 
 let tmp: string;
 
@@ -17,6 +19,14 @@ function freshDbs(): void {
   resetApiDbForTests(join(tmp, "api.db"));
   // Create the API schema the worker expects to read/write.
   getApiDb().exec(`
+    CREATE TABLE merchants (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      payout_address TEXT NOT NULL,
+      webhook_url TEXT,
+      webhook_secret TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
     CREATE TABLE submissions (
       id TEXT PRIMARY KEY,
       merchant_id TEXT NOT NULL,
@@ -52,6 +62,15 @@ function freshDbs(): void {
       created_at INTEGER NOT NULL
     );
   `);
+}
+
+function seedMerchant(id: string, webhookUrl: string | null, secret = "whsec_test"): void {
+  getApiDb()
+    .prepare(
+      `INSERT OR IGNORE INTO merchants (id, name, payout_address, webhook_url, webhook_secret, created_at)
+       VALUES (?, ?, '0x', ?, ?, ?)`,
+    )
+    .run(id, `M ${id}`, webhookUrl, secret, Date.now());
 }
 
 function cleanup(): void {
@@ -126,6 +145,7 @@ after(() => { cleanup(); });
 test("scanAndPersist inserts a payments row and marks submission settled", async () => {
   freshDbs();
   const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, null);
   const log = fakeLog(10, seeded.orderId);
   const r = await scanAndPersist({ scope: "test1", confirmations: 2, batchSize: 100 }, reader([log]));
   assert.equal(r.processed, 1);
@@ -214,9 +234,137 @@ test("merchant isolation preserved: scan writes to the right merchant's payments
   freshDbs();
   const a = seedSubmission({ merchantId: "mer_A" });
   const b = seedSubmission({ merchantId: "mer_B" });
+  seedMerchant("mer_A", null);
+  seedMerchant("mer_B", null);
   // Different scopes so cursors are independent.
   await scanAndPersist({ scope: "iso-a", confirmations: 2 }, reader([fakeLog(10, a.orderId)]));
   await scanAndPersist({ scope: "iso-b", confirmations: 2 }, reader([fakeLog(11, b.orderId)]));
   assert.equal(countPaymentsForMerchant("mer_A"), 1);
   assert.equal(countPaymentsForMerchant("mer_B"), 1);
+});
+
+// ─────────────────── S5 webhook delivery tests ───────────────────
+
+test("S5: merchant with webhook_url receives a signed delivery once", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, "http://merchant.local/hook", "whsec_merchant");
+  const calls: Array<{ url: string; headers: Record<string, string>; body: string }> = [];
+  const fetchImpl: FetchLike = async (url, init) => {
+    calls.push({ url, headers: init.headers, body: init.body });
+    return { ok: true, status: 200 };
+  };
+  const log = fakeLog(10, seeded.orderId);
+  const r = await scanAndPersist({ scope: "wh1", confirmations: 2, fetchImpl }, reader([log]));
+  assert.equal(r.webhooksDelivered, 1);
+  assert.equal(r.webhooksFailed, 0);
+  assert.equal(r.webhooksSkipped, 0);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "http://merchant.local/hook");
+
+  // Sig header is HMAC-SHA256 over timestamp.payload with merchant secret.
+  const { headers, body } = calls[0];
+  assert.ok(headers["x-whitepay-signature"]);
+  assert.ok(headers["x-whitepay-timestamp"]);
+  assert.equal(headers["x-whitepay-event-id"], `${log.txHash}:${log.logIndex}`);
+  assert.equal(
+    verifySignature({
+      secret: "whsec_merchant",
+      timestamp: headers["x-whitepay-timestamp"],
+      payload: body,
+      signature: headers["x-whitepay-signature"],
+    }),
+    true,
+    "the delivered signature must verify under the merchant's secret",
+  );
+  // Payload shape
+  const parsed = JSON.parse(body);
+  assert.equal(parsed.type, "payment.succeeded");
+  assert.equal(parsed.data.orderId, log.orderId);
+  assert.equal(parsed.data.amountMinor, "5000000");
+  assert.equal(parsed.data.merchantId, seeded.merchantId);
+});
+
+test("S5: merchant with no webhook_url → delivery skipped (payment still recorded)", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, null);
+  const fetchImpl: FetchLike = async () => ({ ok: true, status: 200 });
+  const log = fakeLog(10, seeded.orderId);
+  const r = await scanAndPersist({ scope: "wh2", confirmations: 2, fetchImpl }, reader([log]));
+  assert.equal(r.persisted, 1);
+  assert.equal(r.webhooksDelivered, 0);
+  assert.equal(r.webhooksSkipped, 1);
+});
+
+test("S5: 500 responses retried up to max then counted as failed; payment stays recorded", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, "http://merchant.local/hook");
+  let calls = 0;
+  const fetchImpl: FetchLike = async () => {
+    calls++;
+    return { ok: false, status: 500 };
+  };
+  const log = fakeLog(10, seeded.orderId);
+  const r = await scanAndPersist(
+    { scope: "wh3", confirmations: 2, fetchImpl, webhookMaxAttempts: 3 },
+    reader([log]),
+  );
+  assert.equal(r.persisted, 1);
+  assert.equal(r.webhooksDelivered, 0);
+  assert.equal(r.webhooksFailed, 1);
+  assert.equal(calls, 3);
+});
+
+test("S5: duplicate on-chain log → payment inserted once AND webhook delivered once", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, "http://merchant.local/hook");
+  const sends: string[] = [];
+  const fetchImpl: FetchLike = async (_url, init) => {
+    sends.push(init.headers["x-whitepay-event-id"]);
+    return { ok: true, status: 200 };
+  };
+  const log = fakeLog(10, seeded.orderId);
+  const dup = { ...log, logIndex: 1 }; // distinct eventId → both go through onSettlement
+  const r = await scanAndPersist({ scope: "wh4", confirmations: 2, fetchImpl }, reader([log, dup]));
+  assert.equal(r.persisted, 1);
+  assert.equal(r.duplicates, 1);
+  // Payment inserted once; webhook delivered once (the duplicate short-circuits before webhook).
+  assert.equal(r.webhooksDelivered, 1);
+  assert.equal(sends.length, 1);
+});
+
+test("S5: worker restart (cursor rewind) does not re-deliver already-delivered webhook", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, "http://merchant.local/hook");
+  const sends: string[] = [];
+  const fetchImpl: FetchLike = async (_url, init) => {
+    sends.push(init.headers["x-whitepay-event-id"]);
+    return { ok: true, status: 200 };
+  };
+  const log = fakeLog(10, seeded.orderId);
+  await scanAndPersist({ scope: "wh5", confirmations: 2, fetchImpl }, reader([log]));
+  // Simulate restart: rewind cursor, scan same log again.
+  const { setCursor } = await import("../src/db.js");
+  setCursor("wh5", 0);
+  const r2 = await scanAndPersist({ scope: "wh5", confirmations: 2, fetchImpl }, reader([log]));
+  assert.equal(r2.persisted, 0, "worker's eventId dedup prevents re-persist");
+  assert.equal(sends.length, 1, "webhook delivered exactly once across restarts");
+});
+
+test("S5: fetch throws → counted as failed, not propagated", async () => {
+  freshDbs();
+  const seeded = seedSubmission();
+  seedMerchant(seeded.merchantId, "http://merchant.local/hook");
+  const fetchImpl: FetchLike = async () => { throw new Error("DNS failure"); };
+  const log = fakeLog(10, seeded.orderId);
+  const r = await scanAndPersist(
+    { scope: "wh6", confirmations: 2, fetchImpl, webhookMaxAttempts: 2 },
+    reader([log]),
+  );
+  assert.equal(r.persisted, 1);
+  assert.equal(r.webhooksFailed, 1);
 });

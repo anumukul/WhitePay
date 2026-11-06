@@ -10,6 +10,9 @@ export {
   findSubmissionByOrderId,
   recordSettlement,
   countPaymentsForMerchant,
+  getMerchantWebhookInfo,
   type MatchedSubmission,
   type SettlementRecord,
+  type MerchantWebhookInfo,
 } from "./api-queue.js";
+export { buildPaymentSucceededEvent, type PaymentSucceededEvent } from "./events.js";

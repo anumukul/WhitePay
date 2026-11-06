@@ -1,11 +1,16 @@
 import { scanOnce } from "./indexer.js";
 import type { ChainReader, SettledLog } from "@whitepay/chain";
-import { findSubmissionByOrderId, recordSettlement } from "./api-queue.js";
+import { findSubmissionByOrderId, recordSettlement, getMerchantWebhookInfo } from "./api-queue.js";
+import { deliverWebhook, type FetchLike } from "./webhooks.js";
+import { buildPaymentSucceededEvent } from "./events.js";
 
 export interface WorkerLoopConfig {
   scope: string;
   batchSize?: number;
   confirmations?: number;
+  chainId?: number;
+  fetchImpl?: FetchLike;
+  webhookMaxAttempts?: number;
 }
 
 export interface WorkerLoopResult {
@@ -14,6 +19,9 @@ export interface WorkerLoopResult {
   persisted: number;
   unmatched: number;
   duplicates: number;
+  webhooksDelivered: number;
+  webhooksFailed: number;
+  webhooksSkipped: number;
 }
 
 export async function scanAndPersist(
@@ -23,6 +31,12 @@ export async function scanAndPersist(
   let persisted = 0;
   let unmatched = 0;
   let duplicates = 0;
+  let webhooksDelivered = 0;
+  let webhooksFailed = 0;
+  let webhooksSkipped = 0;
+
+  const fetchImpl = cfg.fetchImpl ?? defaultFetchImpl;
+  const chainId = cfg.chainId ?? 1874;
 
   const { processed, advancedTo } = await scanOnce({
     scope: cfg.scope,
@@ -32,7 +46,7 @@ export async function scanAndPersist(
     },
     batchSize: cfg.batchSize,
     confirmations: cfg.confirmations,
-    onSettlement: async (log) => {
+    onSettlement: async (log, eventId) => {
       const match = findSubmissionByOrderId(log.orderId);
       if (!match) {
         unmatched++;
@@ -46,9 +60,59 @@ export async function scanAndPersist(
         txHash: log.txHash,
         blockNumber: log.blockNumber,
       });
-      if (result.alreadyExists) duplicates++;
-      else persisted++;
+      if (result.alreadyExists) {
+        duplicates++;
+        return;
+      }
+      persisted++;
+
+      // Deliver signed webhook to merchant.
+      const merchant = getMerchantWebhookInfo(match.merchantId);
+      if (!merchant || !merchant.webhookUrl) {
+        webhooksSkipped++;
+        return;
+      }
+      const event = buildPaymentSucceededEvent({
+        eventId,
+        log,
+        paymentId: result.paymentId,
+        sessionId: match.sessionId,
+        merchantId: match.merchantId,
+        chainId,
+      });
+      try {
+        const delivery = await deliverWebhook({
+          eventId,
+          url: merchant.webhookUrl,
+          secret: merchant.webhookSecret,
+          payload: JSON.stringify(event),
+          maxAttempts: cfg.webhookMaxAttempts,
+          fetchImpl,
+        });
+        if (delivery.delivered) webhooksDelivered++;
+        else webhooksFailed++;
+      } catch {
+        webhooksFailed++;
+      }
     },
   });
-  return { processed, advancedTo, persisted, unmatched, duplicates };
+  return {
+    processed,
+    advancedTo,
+    persisted,
+    unmatched,
+    duplicates,
+    webhooksDelivered,
+    webhooksFailed,
+    webhooksSkipped,
+  };
 }
+
+const defaultFetchImpl: FetchLike = async (url, init) => {
+  try {
+    const res = await fetch(url, init);
+    return { ok: res.ok, status: res.status };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+};

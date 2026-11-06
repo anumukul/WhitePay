@@ -134,6 +134,10 @@ before(async () => {
   resetDbForTests(join(tmp, "worker.db"));
   resetApiDbForTests(join(tmp, "api.db"));
   getApiDb().exec(`
+    CREATE TABLE merchants (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, payout_address TEXT NOT NULL,
+      webhook_url TEXT, webhook_secret TEXT NOT NULL, created_at INTEGER NOT NULL
+    );
     CREATE TABLE submissions (
       id TEXT PRIMARY KEY,
       merchant_id TEXT NOT NULL,
@@ -155,6 +159,8 @@ before(async () => {
       external_order_id TEXT NOT NULL, status TEXT NOT NULL, redirect_url TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
+    INSERT INTO merchants (id, name, payout_address, webhook_url, webhook_secret, created_at)
+      VALUES ('mer_integration', 'M integration', '0x0000000000000000000000000000000000000000', NULL, 'whsec_int', 0);
     INSERT INTO checkout_sessions (id, merchant_id, price_id, external_order_id, status, redirect_url, created_at)
       VALUES ('cs_integration', 'mer_integration', 'price_1', 'ord_1', 'open', 'http://x', 0);
   `);

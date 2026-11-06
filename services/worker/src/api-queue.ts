@@ -115,3 +115,15 @@ export function countPaymentsForMerchant(merchantId: string): number {
     .get(merchantId) as { n: number };
   return row.n;
 }
+
+export interface MerchantWebhookInfo {
+  webhookUrl: string | null;
+  webhookSecret: string;
+}
+
+export function getMerchantWebhookInfo(merchantId: string): MerchantWebhookInfo | null {
+  const row = getApiDb()
+    .prepare("SELECT webhook_url as webhookUrl, webhook_secret as webhookSecret FROM merchants WHERE id = ?")
+    .get(merchantId) as MerchantWebhookInfo | undefined;
+  return row ?? null;
+}
