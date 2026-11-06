@@ -1,0 +1,20 @@
+# Troubleshooting
+
+| Symptom                               | Check and safe next action                                                                            |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Package install fails                 | Use exact 0.1.0-alpha.0 or @alpha on the public npm registry; Node 20+, React 18+                     |
+| SDK refuses API URL                   | Provide explicit HTTPS URL, or loopback HTTP for development; no URL credentials/query/hash           |
+| Session returns 401/404               | Check server key and customer ownership; do not bypass authorizeSession                               |
+| Wallet unavailable                    | Connect a supported EVM wallet on chain 1874; no keys/seeds should be entered into the app            |
+| Wrong network/account                 | Switch to Whitechain Sepolia and re-review exact terms before signing                                 |
+| Quote expired / near cutoff           | Request a fresh reviewed quote; do not alter signed expiry or fees                                    |
+| Signing stopped while loading context | Inspect local public context path/hash and expiry; do not print signatures or RPC internals           |
+| Submitted but no receipt              | Read submission/receipt/indexer state; reconcile before retry; do not broadcast a replacement blindly |
+| Paid but no credits/download          | Check verified webhook delivery, merchant event deduplication and order/customer matching             |
+| Duplicate webhook                     | Verify it again, acknowledge already handled event, grant nothing extra                               |
+| Signature invalid                     | Verify unchanged raw webhook bytes, configured secret and timestamp clock skew                        |
+| Tests require TEST_DATABASE_URL       | Supply a disposable isolated PostgreSQL database, never the operator's live schema                    |
+
+For private local Foundry wallet setup, public addresses may be prefixed or unprefixed in keystores; the helper normalizes valid 20-byte addresses and rejects duplicates. Never print the full keystore, encryption parameters, passwords or signing output to diagnose it.
+
+Share public error codes, chain ID, session/payment IDs and confirmed transaction hashes only. Do not attach API credentials, private authorization files, private keys, raw signed transactions or recovery phrases to an issue.

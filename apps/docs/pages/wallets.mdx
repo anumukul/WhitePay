@@ -1,0 +1,11 @@
+# Wallets and signatures
+
+The current browser integration uses an existing EVM wallet with EIP-1193 requests and EIP-712 typed-data signing on Whitechain Sepolia. It checks chain and account before authorization, checks the exact quote, and refuses signing if account/chain changes or the validity window is too short. Provider compatibility is not universal; test your intended wallet.
+
+The payer signs an order binding payer, merchant, token, amount, fee, fee recipient, order ID, quote ID, validity window and checkout domain. A second signature authorizes the official USDT receiver to take exactly amount plus fee. The checkout uses receive authorization with contract-recipient semantics and distributes both payouts atomically.
+
+The payer does not broadcast, hold WBT, or submit a token allowance transaction for this path. The relayer holds its own WBT and broadcasts only the reviewed settlement call. Signing authorizes value movement even though it is not a transaction: show the terms first and keep signatures private.
+
+Encrypted Foundry keystores are available through the project's private local operator tooling. That adapter is not included in the public browser package and does not expose private keys to the browser. The public SDK does not create wallets or manage seeds.
+
+Embedded email/social wallet onboarding has not been verified. Do not promise seedless, chain-invisible onboarding or universal wallet support. Read [prerequisites](/prerequisites) and [limitations](/limitations).

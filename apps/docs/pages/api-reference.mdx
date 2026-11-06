@@ -1,0 +1,35 @@
+# API and typed errors
+
+All v1 API routes require the merchant's server-side bearer key. Browser customers use the authenticated same-origin merchant bridge. Health endpoints disclose only service readiness information.
+
+| Method | Route                             | Purpose                                               |
+| ------ | --------------------------------- | ----------------------------------------------------- |
+| GET    | /health, /ready                   | API liveness and database/migration-count observation |
+| POST   | /v1/products                      | Create product                                        |
+| POST   | /v1/prices                        | Create immutable price version                        |
+| POST   | /v1/checkout/sessions             | Create merchant-scoped session                        |
+| GET    | /v1/checkout/sessions/:id         | Retrieve owned session                                |
+| GET    | /v1/checkout/sessions/:id/payment | Confirmed session payment, if any                     |
+| POST   | /v1/checkout/sessions/:id/order   | Create or retrieve canonical quote                    |
+| POST   | /v1/checkout/sessions/:id/renew   | Explicit safe quote renewal                           |
+| POST   | /v1/submissions/:id/signatures    | Persist the two verified signatures                   |
+| GET    | /v1/submissions/:id               | Public-safe owned submission status                   |
+| GET    | /v1/payments, /v1/payments/:id    | Merchant payment list/detail                          |
+| GET    | /v1/merchant                      | Merchant profile                                      |
+
+```ts
+import { WhitePay, WhitePayAPIError } from '@whitepay/node';
+
+export async function paymentOrMissing(client: WhitePay, paymentId: string) {
+  try {
+    return await client.payments.retrieve(paymentId);
+  } catch (error) {
+    if (error instanceof WhitePayAPIError && error.status === 404) return null;
+    throw error;
+  }
+}
+```
+
+Errors expose a status and bounded code. Examples include `unauthorized`, `not_found`, `invalid_request`, `idempotency_conflict`, `quote_expired`, `invalid_signature`, `rate_limited`, `network_error` and `timeout`. Unknown upstream error bodies are not echoed as trusted SDK messages. Transport errors use status 0. Treat a timeout as uncertain execution, not permission to charge again.
+
+The current API returns exact validated integer minor-unit numbers within safe bounds. There is no claim of a published/generated OpenAPI contract yet. Read [limitations](/limitations) before hosting publicly.

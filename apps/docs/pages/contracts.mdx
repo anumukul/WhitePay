@@ -1,0 +1,17 @@
+# Contracts and live evidence
+
+Whitechain Sepolia **chain ID 1874**. Official USDT uses **6 decimals** at `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`.
+
+- [Official token explorer](https://explorer.testnet.whitechain.io/address/0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7)
+- [Final checkout](https://explorer.testnet.whitechain.io/address/0x4d1761abb4ed290f23fcda00890039800e2e53f0)
+- [Final checkout deployment](https://explorer.testnet.whitechain.io/tx/0x69bda8c980dc515222d432219394ba9f7362034d6bb8ecdb8eaf28f8c8e85d95)
+- [Actual widget payment](https://explorer.testnet.whitechain.io/tx/0x77784da3835084852e0f3904ba6845011725ffade891175b4b4a96d93948b41c)
+- [Final contract source in the repository](https://github.com/anumukul/WhitePay/blob/main/packages/contracts/src/WhitePayCheckout.sol)
+
+The widget payment at block 12383593 debited 1.001 official USDT, paid 1 USDT to the merchant and 0.001 USDT to the fee recipient, left the payer at exactly zero WBT and charged the funded relayer. Historical evidence verifies exact balances, matching event and read-only replay rejection. No replay transaction was broadcast.
+
+The checkout runtime hash is `0x3a9aa44166dd8ec13f12718f9b5c4515ea494622654761b1cb26f23c6c456efd`.
+
+**Explorer source verification remains open** because the official verifier was unavailable. Deployed code/runtime verification and a successful payment do not imply explorer source verification or a third-party audit. Local unit/fork security tests and an AI review are not an independent human security audit.
+
+Do not send assets on another network or to the experimental PoC contract. No deployment, signature or broadcast is performed by browsing this page.

@@ -1,0 +1,18 @@
+# Install
+
+Install the exact public alpha versions in your merchant app:
+
+```bash
+npm install @whitepay/node@0.1.0-alpha.0
+npm install @whitepay/react@0.1.0-alpha.0 react react-dom
+```
+
+The packages are ESM with TypeScript declarations. The Node SDK is server-only and requires Node 20+. The React SDK requires React 18+ and includes viem 2.38.5. Use `@alpha` for subsequent alpha installs; do not interpret npm's automatically assigned `latest` tag as a stable release designation.
+
+- [Node package](https://www.npmjs.com/package/@whitepay/node/v/0.1.0-alpha.0)
+- [React package](https://www.npmjs.com/package/@whitepay/react/v/0.1.0-alpha.0)
+- [Versioned source](https://github.com/anumukul/WhitePay/commit/8704393)
+
+The release tarballs were audited, their registry integrity matched the reviewed archives, and fresh installs passed runtime/type/browser smoke checks. Installing a package does not start an API or fund a relayer.
+
+Provide an explicit API URL to the Node SDK. HTTPS is required except for localhost development. Never put `WHITEPAY_SECRET_KEY` or a webhook secret into a browser bundle or a `NEXT_PUBLIC_` variable. Next: [server integration](/server).

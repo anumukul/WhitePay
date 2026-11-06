@@ -1,0 +1,11 @@
+# Idempotency and replay protection
+
+Use a stable idempotency key for retried session creation with the same merchant order and exact request. Keys are scoped by merchant. Reusing a key for changed terms returns `idempotency_conflict`; do not hide that conflict by generating another key automatically. External order uniqueness also prevents accidental reassignment of an existing order/customer reference.
+
+Session and price snapshots, persistent signature submissions, durable nonce management and reconciliation protect different failure boundaries. Database idempotency does not replace onchain authorization nonces or payer-scoped consumed order IDs.
+
+On chain, replaying the same settled order is rejected. Another payer cannot consume your payer/order namespace simply by copying a public order ID. Test cases cover reuse with fresh signatures and altered terms as well as exact authorization replay.
+
+Webhooks are at least once. Independently deduplicate the event in your merchant database and grant an entitlement exactly once; do not assume a successful first HTTP response prevents future retries. See [webhooks](/webhooks) and [payment states](/statuses).
+
+After a crash or uncertain broadcast, reconcile stored attempt/hash/nonce and chain state before retrying. Never broadcast a second payment as a generic timeout retry.

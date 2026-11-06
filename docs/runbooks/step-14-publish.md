@@ -77,3 +77,28 @@ npm install @whitepay/react@alpha react react-dom
 ```
 
 These are testnet SDK packages, not a hosted API deployment. Configure a WhitePay API URL and implement customer authorization on the merchant server. The package READMEs contain the current API examples, including the required explicit apiBaseUrl; the old example relying on an implicit hosted endpoint is obsolete.
+
+## Documentation website and manual review
+
+The SDK release work is pushed as 8704393. The remaining docs implementation is a local Nextra website at apps/docs, with a static out/ build and no hosted deployment. It consumes exact registry SDK packages so copied examples cannot accidentally depend on unshipped workspace APIs.
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm --filter @whitepay/docs test
+pnpm --filter @whitepay/docs typecheck
+pnpm --filter @whitepay/docs build
+pnpm --filter @whitepay/docs dev
+```
+
+1. Open http://localhost:3400. Confirm Testnet only/Public alpha and no hosted API claim.
+2. Follow Install → React quickstart → Merchant server bridge → Verify webhooks. The small frontend example must point to authenticated ownership checks; fulfillment comes from verified webhook evidence, never a browser callback.
+3. Open API & typed errors at /api-reference, Contracts & evidence and Limitations. Confirm chain 1874, exact official token, actual explorer payment link, outstanding source verification, hosting gaps and npm latest-tag caveat.
+4. Navigate the sidebar and mobile menu. Type webhook into search and follow a result. Inspect code blocks, pagination and readable mobile layout. No wallet should connect merely by reading docs.
+5. Run the static browser check after building. It verifies all 19 content pages, 24 internal links/anchors, snippet display, mobile overflow and browser errors. External links are references, not a certification of remote uptime.
+
+```sh
+CHROME_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' \
+  pnpm --filter @whitepay/docs test:browser
+```
+
+On CI/Linux, install Playwright Chromium and omit CHROME_EXECUTABLE_PATH. The CI docs job contains that setup. Local checks passed; remote CI for the new docs work has not run yet. The shell examples are syntax checked without executing authenticated requests. A fresh developer's actual payment walkthrough remains a separate acceptance action with exact signing/broadcast approvals. Do not begin new payment execution or publish hosting to satisfy documentation tests automatically.

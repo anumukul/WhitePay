@@ -18,3 +18,5 @@ services/relayer/data/
 
 **/.next/
 services/worker/data/
+apps/docs/out/
+apps/docs/public/search-index.json

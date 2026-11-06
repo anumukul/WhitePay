@@ -1,0 +1,32 @@
+{
+  "name": "@whitepay/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/build-search.mjs",
+    "prebuild": "node scripts/build-search.mjs",
+    "dev": "next dev -p 3400",
+    "build": "next build",
+    "start": "next start -p 3400",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs && node scripts/check-snippets.mjs",
+    "test:browser": "node --test test/browser.e2e.mjs"
+  },
+  "dependencies": {
+    "next": "15.5.12",
+    "nextra": "3.3.1",
+    "nextra-theme-docs": "3.3.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "22.9.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@whitepay/node": "0.1.0-alpha.0",
+    "@whitepay/react": "0.1.0-alpha.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,46 @@
+# Products, prices and sessions
+
+Create products and immutable price versions using the authenticated merchant backend. Amounts are integer token minor units: 1 USDT is 1,000,000 units. Never calculate payment units with floating-point currency math.
+
+```ts
+import { WhitePay } from '@whitepay/node';
+
+export async function createCheckout(
+  whitepay: WhitePay,
+  externalOrderId: string,
+) {
+  const product = await whitepay.products.create({
+    name: 'Credits test purchase',
+  });
+  const price = await whitepay.prices.create({
+    productId: product.id,
+    amountMinor: 1_000_000,
+    currency: 'USDT',
+    tokenAddress: '0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7',
+  });
+  return whitepay.checkout.createSession(
+    {
+      priceId: price.id,
+      externalOrderId,
+      customerReference: 'your-authenticated-customer-reference',
+    },
+    { idempotencyKey: `checkout-${externalOrderId}` },
+  );
+}
+```
+
+For a real catalog, create the product and price once and reuse the stored price ID for later checkouts. Save the session-to-customer association in your application before exposing the session to the browser. The customer reference is metadata; it does not authenticate customer ownership by itself.
+
+The API snapshots token, amount and payout per session. A later catalog or configuration change cannot silently rewrite an issued quote. See [idempotency](/idempotency) and [statuses](/statuses).
+
+Equivalent authenticated HTTP request (placeholders only; syntax checked, not executed):
+
+```bash
+curl --fail-with-body "$WHITEPAY_API_URL/v1/checkout/sessions" \
+  -H "Authorization: Bearer $WHITEPAY_SECRET_KEY" \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: your-unique-merchant-order-key' \
+  --data '{"priceId":"your_price_id","externalOrderId":"your_order_id"}'
+```
+
+Set the URL and secret only in your private server environment. Do not run this using shell tracing or paste its authenticated output into public evidence.

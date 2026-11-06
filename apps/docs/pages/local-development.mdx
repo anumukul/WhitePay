@@ -1,0 +1,20 @@
+# Local development and demos
+
+Clone the existing repository and use Node 24/25 and pnpm 10.25.0. Install packages without enabling secret-bearing lifecycle tooling:
+
+```bash
+git clone https://github.com/anumukul/WhitePay.git
+cd WhitePay
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm --filter @whitepay/docs test
+pnpm --filter @whitepay/docs build
+pnpm --filter @whitepay/docs dev
+```
+
+Docs serve at http://localhost:3400. Building them produces a static `apps/docs/out` export; no public deployment is performed. The docs tests compile the literal snippets against the published SDK versions, check planned pages/internal links and verify testnet limitations/evidence text. Shell examples are syntax-checked only.
+
+For the API, use the dedicated local PostgreSQL helper and the existing [Step 05 runbook](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-05-api.md). Follow the [Step 06 relayer](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-06-relayer.md), [Step 07 worker](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-07-worker.md) and [Step 13 stack](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-13-deploy.md) runbooks rather than pointing tests at a real database or enabling a signer accidentally.
+
+The independent [SaaS README](https://github.com/anumukul/WhitePay/blob/main/apps/demo-saas/README.md) covers credit purchase/consumption and its customer ownership model. The [shop README](https://github.com/anumukul/WhitePay/blob/main/apps/demo-shop/README.md) covers download entitlements. Configure separate merchant credentials, prices, databases and customer sessions. Their browser tests use controlled settlement receipts, not new live broadcasts.
+
+No checkout can execute from docs alone: a configured API, funded operator, customer authorization and separately reviewed execution are required. New live payments, public hosting and external webhook delivery require specific approval.

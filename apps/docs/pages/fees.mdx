@@ -1,0 +1,11 @@
+# Gas and sponsorship fees
+
+The relayer pays native WBT network gas. The payer transfers official USDT only. The merchant sees the exact price, and the fee recipient receives the exact disclosed USDT sponsorship fee atomically in the same checkout transaction.
+
+The demonstrated policy is 10 basis points (0.1%): for a 1-USDT price, the fee is 0.001 USDT and the signed total is 1.001 USDT. Express these as 1,000,000 + 1,000 = 1,001,000 minor units. Rounding/policy belongs to the API's canonical quote, not browser calculations.
+
+This is a testnet service fee; it is not a live WBT/USDT price feed or automatic gas exchange. USDT received by the treasury does not replenish relayer WBT. The operator must fund and monitor WBT separately. Failed/reverted execution can burn WBT with no fee payment.
+
+Approved preview settings use a 15-minute quote window and a two-minute safety cutoff. The operator must recheck time, nonce, fees and calldata before signing/broadcasting. Do not silently change reviewed terms when a quote becomes unsafe; obtain a new reviewed quote instead.
+
+The contract binds exact fee terms. The widget reviews the canonical quote and refuses unsafe expiry. Testnet gas varies, including L1 data fees; estimates are previews rather than guarantees. Historical actual gas is recorded in the [real settlement evidence](/contracts), not presented as a fixed future price.

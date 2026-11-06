@@ -1,0 +1,18 @@
+# Payment states
+
+Business sessions and execution attempts have different lifecycles. An API request succeeding does not mean the chain payment succeeded.
+
+| Observation                                          | Meaning and safe action                                                             |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Session open                                         | Ready for canonical quote and customer authorization                                |
+| Signatures accepted / queued                         | Authorizations verified and persisted; payment is still pending                     |
+| Attempt submitted / transaction hash                 | Broadcast attempted; reconcile before any retry                                     |
+| Successful receipt plus exact matching event indexed | Session/payment can become settled/succeeded under the configured L2 receipt policy |
+| Verified signed webhook handled once                 | Merchant can grant its separate entitlement                                         |
+| Failed or expired attempt                            | No entitlement; inspect authoritative status before retry or renewal                |
+
+The Node SDK can retrieve session, payment and submission state. The React widget polls and validates a confirmed payment before invoking `onComplete`; your application still fulfills only on a verified webhook or equivalent independent settlement verification.
+
+An uncertain broadcast must be reconciled by the operator; never issue a new order or nonce merely because an HTTP request timed out. A reverted transaction can cost relayer WBT without producing USDT reimbursement. [Troubleshooting](/troubleshooting) covers stuck attempts.
+
+Current low-value testnet fulfillment uses a successful L2 receipt and matched event. It is not proof of Ethereum finality. Reorg/reconciliation and operational limitations remain described in [security](/security).

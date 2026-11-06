@@ -1,0 +1,19 @@
+# Architecture and trust model
+
+The merchant backend uses the Node SDK and its secret API key to create a price-backed checkout session. The browser calls a same-origin merchant bridge that verifies customer ownership with `authorizeSession`. It receives limited public session data and canonical quotes; merchant secrets remain on the server.
+
+The customer signs two EIP-712 authorizations: the checkout order terms and the official token's receive authorization. The relayer validates, simulates and executes those exact terms. The checkout atomically pays the merchant and fee recipient. Consumed orders are scoped by payer and order ID.
+
+PostgreSQL stores the durable queue and order state. The indexer matches a successful receipt and exact configured contract event to stored terms. The outbox delivers HMAC-signed webhooks at least once. The independent merchant application verifies the raw webhook and grants its entitlement once in a database transaction.
+
+## Trust boundaries
+
+| Component            | Responsibility                                                                |
+| -------------------- | ----------------------------------------------------------------------------- |
+| Customer wallet      | Inspect exact terms and approve two narrowly scoped signatures                |
+| Merchant server      | Authenticate the customer, own API credentials and authorize session access   |
+| API and relayer      | Issue canonical terms, enforce policy, fund WBT, execute and reconcile safely |
+| Checkout contract    | Enforce signatures, expiry, payer-scoped replay and atomic exact payouts      |
+| Indexer and merchant | Verify settlement evidence; authenticate and deduplicate fulfillment          |
+
+A valid authorization allows its exact transfer until expiry; keep signatures private. The operator can delay or refuse execution. The USDT implementation and its administrative restrictions remain external dependencies. Receipt-based L2 fulfillment is not Ethereum finality. Read [security](/security) and [limitations](/limitations).

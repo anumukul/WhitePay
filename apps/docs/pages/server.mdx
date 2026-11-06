@@ -1,0 +1,36 @@
+# Merchant server bridge
+
+Create the client on the server. `apiBaseUrl` points to your running API, not a fictional hosted endpoint. Inject secrets privately.
+
+```ts
+import { WhitePay } from '@whitepay/node';
+
+export function merchantClient(secretKey: string, apiBaseUrl: string) {
+  return new WhitePay({ secretKey, apiBaseUrl, timeoutMs: 15_000 });
+}
+```
+
+For a Fetch-compatible server, create one bridge handler with your actual customer/session ownership callback. Mount it at `/api/whitepay`; in Next.js export it as the GET and POST route handler. `authorizeSession` must authenticate the request and check ownership in your merchant database, returning false for unknown/unowned sessions. Never use a universal `return true` in a public app.
+
+```ts
+import { WhitePay, createCheckoutFetchBridge } from '@whitepay/node';
+
+export function merchantBridge(
+  whitepay: WhitePay,
+  origin: string,
+  authorizeSession: (request: Request, sessionId: string) => Promise<boolean>,
+) {
+  return createCheckoutFetchBridge({
+    whitepay,
+    origin,
+    authorizeSession,
+    checkoutAddress: '0x4d1761abb4ed290f23fcda00890039800e2e53f0',
+    feeRecipient: '0x2F51C76D37BA9118ce8D5b9377329965ddb411c2',
+    feeBasisPoints: 10,
+  });
+}
+```
+
+The exact checkout and fee settings must match your API's reviewed configuration. Ten basis points is the demonstrated testnet fee, not a market gas conversion. The bridge rejects unauthorized session access, cross-origin writes and client-supplied prices. It exposes canonical quote/status/signature-submission routes while retaining the merchant key server-side. A Node HTTP server can instead use `createCheckoutBridge`.
+
+Sessions and prices come from [server-side operations](/sessions). Fulfillment belongs in your [webhook handler](/webhooks).

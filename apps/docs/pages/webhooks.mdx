@@ -1,0 +1,22 @@
+# Verify webhooks before fulfillment
+
+The worker emits `payment.succeeded` only after matching settlement evidence. Delivery is at least once: the same event can arrive repeatedly. Verify the timestamp and HMAC over `timestamp + '.' + rawBody`, then atomically deduplicate `event.id` in the same merchant database transaction as fulfillment.
+
+```ts
+import { verifyWebhook } from '@whitepay/node';
+
+export async function verifiedEvent(request: Request, secret: string) {
+  return verifyWebhook({
+    payload: await request.text(),
+    signature: request.headers.get('x-whitepay-signature') ?? '',
+    timestamp: request.headers.get('x-whitepay-timestamp') ?? '',
+    secret,
+  });
+}
+```
+
+Keep the raw request bytes/text unchanged. Do not parse and reserialize JSON before verification. The verifier uses constant-time signature comparison, a maximum 300-second freshness window, event-envelope validation and official-USDT settlement schema checks. `whitepay.webhooks.verify` exposes the same verifier.
+
+After verification, check that the event's order/session/payment belongs to your customer and expected catalog purchase. Use a unique event/order constraint and one transaction: record the event and grant the credits/download once. Return success on an already handled valid duplicate. A browser callback must grant nothing.
+
+The SaaS and shop integrations implement these checks and duplicate-delivery tests. Webhook target validation rejects unsafe/private destinations in deployed delivery mode. External delivery, resend and production egress configuration need their own operator review. This docs example verifies only; it deliberately does not invent a merchant database schema or perform fulfillment for you.

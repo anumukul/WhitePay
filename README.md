@@ -13,14 +13,14 @@ Gas-sponsored USDT checkout infrastructure for merchants on Whitechain. Buyers p
 | Merchant API                  | GREEN                             | 50/50                                                                         | Steps 05 + 13, `services/api/`; readiness + CORS verified                  |
 | Relayer logic                 | LOCAL TEST PENDING                | 43/43                                                                         | Step 06, `docs/progress/step-06.md`                                        |
 | Indexer + signed webhooks     | GREEN                             | 7/7                                                                           | Step 07, `services/worker/`                                                |
-| `@whitepay/node` SDK          | GREEN, packable                   | 6/6                                                                           | Step 08, `packages/sdk-node/`                                              |
-| `@whitepay/react` widget      | GREEN, packable                   | 5/5                                                                           | Step 09, `packages/sdk-react/`                                             |
+| `@whitepay/node` SDK          | PUBLIC ALPHA 0.1.0-alpha.0        | 23/23                                                                         | Step 08, `packages/sdk-node/`                                              |
+| `@whitepay/react` widget      | PUBLIC ALPHA 0.1.0-alpha.0        | 25/25                                                                         | Step 09, `packages/sdk-react/`                                             |
 | Dashboard                     | GREEN                             | 3/3                                                                           | Step 10, `apps/dashboard/`                                                 |
 | Demo SaaS                     | GREEN, human review pending       | 4 + 1 Chrome E2E                                                              | Step 11, `apps/demo-saas/` (on `main`)                                     |
 | Demo Shop                     | GREEN, human review pending       | 5 + 1 Chrome E2E                                                              | Step 12, `apps/demo-shop/` (on `main`)                                     |
 | Service deploy                | LOCAL STACK GREEN, hosted pending | 5 deploy tests                                                                | Step 13, `docs/progress/step-13.md`                                        |
-| npm publish of SDKs           | PREPARED, tarballs built          | —                                                                             | Step 14, `docs/runbooks/step-14-publish.md`                                |
-| Landing site                  | SHIPS                             | —                                                                             | Step 15, `apps/website/`                                                   |
+| npm publish of SDKs           | PUBLISHED, registry verified      | —                                                                             | Step 14, `docs/runbooks/step-14-publish.md`                                |
+| Landing site                  | PROTOTYPE, Step 15 pending        | —                                                                             | Step 15, `apps/website/`                                                   |
 | Adversarial regression        | GREEN                             | 2/2                                                                           | Step 16, `tests/adversarial.test.mjs`                                      |
 | Demo video script             | PREPARED                          | —                                                                             | Step 17, `docs/demo-script.md`                                             |
 
@@ -28,7 +28,17 @@ Component counts above are historical teammate reports, not a fresh full-stack c
 
 ## Why on-chain USDT on Whitechain
 
-Whitechain settles official Tether USD natively. WhitePay turns that into a Stripe-shaped merchant integration: a hosted checkout, a Node SDK, a React widget, signed webhooks — the same shape developers already know, but settled in real dollars on an L2 their buyers are already on. The payer never needs WBT; the merchant gets instant on-chain receipt.
+WhitePay demonstrates direct merchant-controlled settlement in the exact official Whitechain Sepolia test USDT, with programmable authorization and independently auditable receipts. The customer can hold zero WBT while a separately funded relayer sponsors native gas. Both test assets are valueless; this is not real-dollar settlement. The API, Node SDK, React widget and signed webhooks are implemented; public hosted infrastructure remains pending.
+
+## Published SDKs and documentation
+
+```sh
+npm install @whitepay/node@0.1.0-alpha.0
+npm install @whitepay/react@0.1.0-alpha.0 react react-dom
+pnpm --filter @whitepay/docs dev
+```
+
+[Node SDK](https://www.npmjs.com/package/@whitepay/node/v/0.1.0-alpha.0) · [React SDK](https://www.npmjs.com/package/@whitepay/react/v/0.1.0-alpha.0) · [Docs source and verification](apps/docs/README.md). Local docs: http://localhost:3400. Configure your own merchant API and authenticated server bridge; package installation does not provide hosted infrastructure. Registry hashes and fresh-consumer checks are recorded in [Step 14](docs/progress/step-14.md). npm auto-assigned latest as well as alpha; cleanup returned HTTP 400, so use exact alpha versions. The docs site has not been deployed publicly.
 
 ## Run local checks
 

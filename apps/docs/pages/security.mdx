@@ -1,0 +1,13 @@
+# Threat model and operating boundaries
+
+The checkout signs exact order fields and the EIP-712 chain/contract domain. It enforces expiry, payer-scoped replay protection, official-token allowlisting, reentrancy protection and atomic exact payouts. Tests cover tampering, wrong signer/domain, duplicate orders, receiver failures, rollback and third-party token authorization invocation.
+
+The service must protect API keys, webhook secrets, customer session ownership and the relayer signer independently. Merchant keys remain server-side; the bridge fails closed when ownership is not established. Webhook verification must use the raw body, freshness checks and deduplicated fulfillment. Untrusted callbacks and transaction hashes are insufficient evidence.
+
+The relayer uses durable attempts/nonces, simulation, bounded fee/gas policies and a safety cutoff. An operator must fund WBT, monitor unresolved attempts, and reconcile before retry. Price/fee/nonce changes require a new review; do not auto-sign whatever an RPC suggests.
+
+## Known release-review findings
+
+The prior review identified broad local PostgreSQL port binding in compose, readiness that counts migrations without validating the expected set/checksums, healthchecks that test database connectivity rather than process progress, and missing demo CI coverage. These findings are not fixed by publishing SDKs or adding docs. Do not expose the local stack publicly before the adversarial release and deployment gates address them.
+
+Receipt-based L2 fulfillment and token issuer/admin restrictions are additional dependencies. The system has no independent third-party security audit. Read the [repository threat model](https://github.com/anumukul/WhitePay/blob/main/docs/threat-model.md) and [limitations](/limitations).

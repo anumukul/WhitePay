@@ -1,0 +1,14 @@
+# Current limitations
+
+**Testnet only.** Official test USDT and WBT have no real-money value. No mainnet support or production security certification is claimed.
+
+- A public hosted API is **not** deployed by this SDK release. Persistent hosting, HTTPS, managed database, live signer service and monitoring remain deployment work. The local compose stack has unresolved release-review findings.
+- Explorer source verification remains open; the official verifier was unavailable. Code/runtime matching and live transaction evidence do not close that sponsor requirement.
+- SDK versions are public alpha. npm automatically assigned both alpha and latest during processing; deleting latest returned HTTP 400. Use explicit alpha versions and do not equate latest with stable.
+- The browser path uses an existing EVM wallet and two typed-data prompts. Embedded social/email login, universal provider compatibility and chain-invisible onboarding are not established.
+- Two independent demo apps have automated fulfillment tests using controlled receipts. Those tests are not evidence of two separately live merchant payments.
+- Current fulfillment uses the documented L2 receipt policy, not Ethereum finality. Operators must monitor funding, reconciliation and token restrictions.
+- Public onboarding, deployment hardening, full release/performance adversarial checks, video and qualification evidence remain incomplete. No generated OpenAPI distribution is claimed.
+- Refunds, recurring subscriptions, fiat, bridges and mainnet are outside this MVP.
+
+The [contracts page](/contracts) separates real settlement evidence from test fixtures. See [troubleshooting](/troubleshooting) for safe failure handling.

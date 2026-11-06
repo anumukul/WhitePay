@@ -1,0 +1,18 @@
+# Testnet prerequisites
+
+Use dedicated testnet-only wallets and encrypted keystores or a supported browser wallet. Never paste keys, seeds, passwords or executable signatures into chat, source code, logs or screenshots.
+
+| Setting       | Required value                             |
+| ------------- | ------------------------------------------ |
+| Network       | Whitechain Sepolia                         |
+| Chain ID      | 1874 (hex 0x752)                           |
+| RPC           | https://rpc.testnet.whitechain.io          |
+| Gas asset     | Native WBT                                 |
+| Official USDT | 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7 |
+| USDT decimals | 6, verified for this exact deployed token  |
+
+The payer needs sufficient official USDT for price plus fee and **exactly zero WBT** for the gasless proof. Fund the relayer with WBT separately. Test assets have no real-money value.
+
+Use the [official WBT faucet](https://faucet.testnet.whitechain.io). DevRel directed this project to [YetiTrade testnet](https://testnet.yetitrade.fi/) for WBT-to-official-USDT funding. Availability and quotes can change: independently verify chain, output token, router, recipient, minimum output, deadline, allowance and gas before approving any swap. Prefer an isolated trading wallet; transfer only USDT to the payer so its WBT balance stays zero. These funding actions require separate approval and are outside the checkout SDK.
+
+You also need Node 20+ for the packages, React 18+ for the widget, your own running WhitePay API and authenticated merchant setup. Repository development uses Node 24/25, pnpm 10.25.0 and PostgreSQL 15+. Continue to [local development](/local-development).

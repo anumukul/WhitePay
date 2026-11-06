@@ -1,0 +1,26 @@
+# React quickstart
+
+This is the complete frontend component; the merchant server creates `sessionId` first. The default widget backend uses a same-origin `/api/whitepay` bridge. Implement `authorizeSession` on that bridge using your application's customer identity and order ownership; see [server integration](/server).
+
+```tsx
+'use client';
+import { WhitePayCheckout } from '@whitepay/react';
+
+export function BuyCredits({ sessionId }: { sessionId: string }) {
+  return (
+    <WhitePayCheckout
+      sessionId={sessionId}
+      onComplete={() => window.location.assign('/receipt')}
+      onError={() => {
+        /* Display a retry message in your app. */
+      }}
+    />
+  );
+}
+```
+
+The widget reviews merchant, official token, price, fee, total, network and expiry before requesting two signatures. It never asks the payer to send a transaction or approve an ERC-20 allowance.
+
+**The callback must never authorize fulfillment.** `/receipt` is your application route: query your own backend for confirmed entitlement. Only a verified [webhook](/webhooks) or independently verified settlement can unlock credits/downloads. `publishableKey` is reserved for compatibility; it does not replace customer authorization.
+
+For a running integration, follow the repository's [local demos](/local-development). Their checkout handlers and webhook routes demonstrate the server code excluded from this small component.

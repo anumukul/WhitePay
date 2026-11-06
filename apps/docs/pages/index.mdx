@@ -1,0 +1,15 @@
+# Accept USDT with a zero-WBT payer
+
+**Testnet only · Public alpha.** WhitePay is gas-sponsored checkout infrastructure for Whitechain Sepolia, chain ID **1874**. Your customer authorizes official test USDT; a separately funded relayer pays the WBT network fee. A disclosed USDT sponsorship fee can be included in the signed total.
+
+Start with [prerequisites](/prerequisites), [install the SDKs](/install), then add the [React checkout](/quickstart) and [merchant server bridge](/server). Complete [webhook verification](/webhooks) before delivering anything to a customer.
+
+Both SDKs are published as **0.1.0-alpha.0**. This documentation is locally runnable; a public hosted API, public docs deployment and unrestricted automated signing service are not provided by this release. See [limitations](/limitations).
+
+## What has been demonstrated
+
+- Official-USDT payment with an exactly zero-WBT payer, atomic merchant/fee payouts and replay rejection: [contract and real transaction evidence](/contracts).
+- React widget, merchant Node SDK, PostgreSQL API, durable execution/reconciliation and signed webhook delivery are implemented and tested.
+- Two independent merchant applications implement credits and download fulfillment. Their automated tests use controlled receipts; they do not establish two separate live merchant settlements.
+
+Learn the [trust model](/architecture), [payment states](/statuses) and [security boundaries](/security). Do not treat a wallet signature, browser callback or transaction hash as confirmed payment.
