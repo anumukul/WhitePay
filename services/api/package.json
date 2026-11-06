@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "node --experimental-sqlite --import tsx/esm src/server.ts",
+    "seed": "node --experimental-sqlite --import tsx/esm scripts/seed-demo-merchant.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --experimental-sqlite --test --import tsx/esm test/*.test.ts"
   },
