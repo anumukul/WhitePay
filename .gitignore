@@ -28,6 +28,7 @@ docs/evidence/poc-unfunded-preflight.json
 docs/evidence/poc-wallet-review.json
 docs/evidence/poc-deployment-estimate*.json
 docs/evidence/poc-payment-*.json
+docs/evidence/step-04-*.json
 docs/evidence/*-funding-preview.json
 docs/evidence/*-funding-approved-precheck.json
 docs/evidence/*-funding-verified.json
@@ -38,3 +39,6 @@ docs/evidence/trading-wallet-public.json
 docs/evidence/usdt-*.json
 docs/evidence/yetitrade-*.json
 docs/evidence/token-probe-manual.json
+
+# Local API credentials and development databases
+/data/

@@ -1,8 +1,8 @@
-import { hashTypedData, keccak256, toHex } from "viem";
-import { randomBytes } from "node:crypto";
-import { getDb } from "./db.js";
-import { getSession, HttpError } from "./sessions.js";
-import { getMerchant } from "./merchants.js";
+import { hashTypedData, keccak256, toHex, recoverTypedDataAddress } from 'viem';
+import { randomBytes } from 'node:crypto';
+import { getDb, transaction } from './db.js';
+import { HttpError } from './sessions.js';
+import { address, signatureSchema, USDT } from './validation.js';
 
 export type Hex = `0x${string}`;
 
@@ -20,8 +20,8 @@ export interface OrderPayload {
 }
 
 export interface OrderDomain {
-  name: "WhitePayCheckout";
-  version: "1";
+  name: 'WhitePayCheckout';
+  version: '1';
   chainId: number;
   verifyingContract: Hex;
 }
@@ -29,31 +29,31 @@ export interface OrderDomain {
 export interface OrderTypedData {
   domain: OrderDomain;
   types: {
-    EIP712Domain: Array<{ name: string; type: string }>;
-    Order: Array<{ name: string; type: string }>;
+    EIP712Domain: ReadonlyArray<{ name: string; type: string }>;
+    Order: ReadonlyArray<{ name: string; type: string }>;
   };
-  primaryType: "Order";
+  primaryType: 'Order';
   message: OrderPayload;
 }
 
 const ORDER_TYPES = {
   EIP712Domain: [
-    { name: "name", type: "string" },
-    { name: "version", type: "string" },
-    { name: "chainId", type: "uint256" },
-    { name: "verifyingContract", type: "address" },
+    { name: 'name', type: 'string' },
+    { name: 'version', type: 'string' },
+    { name: 'chainId', type: 'uint256' },
+    { name: 'verifyingContract', type: 'address' },
   ],
   Order: [
-    { name: "orderId", type: "bytes32" },
-    { name: "payer", type: "address" },
-    { name: "merchant", type: "address" },
-    { name: "amount", type: "uint256" },
-    { name: "fee", type: "uint256" },
-    { name: "feeRecipient", type: "address" },
-    { name: "token", type: "address" },
-    { name: "validAfter", type: "uint256" },
-    { name: "validBefore", type: "uint256" },
-    { name: "quoteId", type: "bytes32" },
+    { name: 'orderId', type: 'bytes32' },
+    { name: 'payer', type: 'address' },
+    { name: 'merchant', type: 'address' },
+    { name: 'amount', type: 'uint256' },
+    { name: 'fee', type: 'uint256' },
+    { name: 'feeRecipient', type: 'address' },
+    { name: 'token', type: 'address' },
+    { name: 'validAfter', type: 'uint256' },
+    { name: 'validBefore', type: 'uint256' },
+    { name: 'quoteId', type: 'bytes32' },
   ],
 } as const;
 
@@ -86,11 +86,13 @@ export function buildOrderTypedData(input: BuildOrderInput): {
 
   // orderId and quoteId bind the session + merchant + payer so the digest is unique per attempt.
   const orderId = keccak256(
-    toHex(`order:${input.merchant.id}:${input.session.id}:${input.payerAddress}`),
+    toHex(
+      `order:${input.merchant.id}:${input.session.id}:${input.payerAddress}`,
+    ),
   ) as Hex;
   const quoteId = keccak256(
     toHex(
-      `quote:${input.merchant.id}:${input.session.id}:${input.payerAddress}:${input.nowSec}`,
+      `quote:${input.merchant.id}:${input.session.id}:${input.payerAddress}:${input.nowSec}:${randomBytes(16).toString('hex')}`,
     ),
   ) as Hex;
 
@@ -109,20 +111,20 @@ export function buildOrderTypedData(input: BuildOrderInput): {
 
   const typedData: OrderTypedData = {
     domain: {
-      name: "WhitePayCheckout",
-      version: "1",
+      name: 'WhitePayCheckout',
+      version: '1',
       chainId: input.chainId,
       verifyingContract: input.checkoutContract,
     },
     types: ORDER_TYPES,
-    primaryType: "Order",
+    primaryType: 'Order',
     message,
   };
 
   const digest = hashTypedData({
     domain: typedData.domain,
     types: { Order: ORDER_TYPES.Order },
-    primaryType: "Order",
+    primaryType: 'Order',
     message: {
       ...message,
       amount,
@@ -135,153 +137,248 @@ export function buildOrderTypedData(input: BuildOrderInput): {
   return { typedData, digest };
 }
 
-function envInt(name: string, def: number): number {
-  const v = process.env[name];
-  return v ? Number(v) : def;
-}
-function envAddr(name: string, def: Hex): Hex {
-  const v = process.env[name];
-  return (v && /^0x[0-9a-fA-F]{40}$/.test(v) ? v : def) as Hex;
-}
-
 export interface OrderEndpointResult {
   submissionId: string;
   typedData: OrderTypedData;
+  tokenTypedData: any;
   orderDigest: Hex;
-  status: "awaiting_signature" | "queued" | "submitted" | "settled" | "failed";
+  status:
+    | 'awaiting_signature'
+    | 'queued'
+    | 'submitted'
+    | 'settled'
+    | 'failed'
+    | 'expired';
 }
-
-export function buildOrderForSession(input: {
+const RECEIVE = [
+  { name: 'from', type: 'address' },
+  { name: 'to', type: 'address' },
+  { name: 'value', type: 'uint256' },
+  { name: 'validAfter', type: 'uint256' },
+  { name: 'validBefore', type: 'uint256' },
+  { name: 'nonce', type: 'bytes32' },
+];
+function settings() {
+  const chainId = Number(process.env.WHITECHAIN_CHAIN_ID ?? 1874),
+    feeBasisPoints = Number(process.env.WHITEPAY_FEE_BASIS_POINTS ?? 10),
+    validitySeconds = Number(
+      process.env.WHITEPAY_QUOTE_VALIDITY_SECONDS ?? 900,
+    );
+  const checkoutContract = process.env.WHITEPAY_CHECKOUT_CONTRACT_ADDRESS,
+    feeRecipient = process.env.WHITEPAY_FEE_RECIPIENT;
+  if (
+    chainId !== 1874 ||
+    !Number.isInteger(feeBasisPoints) ||
+    feeBasisPoints < 0 ||
+    feeBasisPoints > 10000 ||
+    !Number.isInteger(validitySeconds) ||
+    validitySeconds < 60 ||
+    validitySeconds > 3600 ||
+    !address.safeParse(checkoutContract).success ||
+    !address.safeParse(feeRecipient).success
+  )
+    throw new HttpError(503, 'invalid_quote_configuration');
+  return {
+    chainId,
+    feeBasisPoints,
+    validitySeconds,
+    checkoutContract: checkoutContract as Hex,
+    feeRecipient: feeRecipient as Hex,
+  };
+}
+function result(row: any): OrderEndpointResult {
+  return {
+    submissionId: row.id,
+    typedData: row.order_typed_data,
+    tokenTypedData: row.token_typed_data,
+    orderDigest: row.order_digest,
+    status: row.status,
+  };
+}
+export async function buildOrderForSession(input: {
   sessionId: string;
   merchantId: string;
   payerAddress: string;
   nowMs?: number;
-}): OrderEndpointResult {
-  const session = getSession(input.sessionId, input.merchantId);
-  if (!session) throw new HttpError(404, "session_not_found");
-  const merchant = getMerchant(input.merchantId);
-  if (!merchant) throw new HttpError(404, "merchant_not_found");
-
-  const payerAddress = input.payerAddress.toLowerCase();
-  if (!/^0x[0-9a-f]{40}$/.test(payerAddress)) throw new HttpError(400, "invalid_payer_address");
-
-  const db = getDb();
-  const existing = db
-    .prepare(
-      "SELECT id, order_payload as orderPayload, order_digest as orderDigest, status FROM submissions WHERE session_id = ? AND payer_address = ?",
-    )
-    .get(input.sessionId, payerAddress) as
-    | { id: string; orderPayload: string; orderDigest: string; status: string }
-    | undefined;
-
-  if (existing) {
-    const message = JSON.parse(existing.orderPayload) as OrderPayload;
-    const typedData: OrderTypedData = {
-      domain: {
-        name: "WhitePayCheckout",
-        version: "1",
-        chainId: envInt("WHITECHAIN_CHAIN_ID", 1874),
-        verifyingContract: envAddr(
-          "WHITEPAY_CHECKOUT_CONTRACT_ADDRESS",
-          "0x0000000000000000000000000000000000000000",
-        ),
-      },
-      types: ORDER_TYPES,
-      primaryType: "Order",
-      message,
-    };
-    return {
-      submissionId: existing.id,
-      typedData,
-      orderDigest: existing.orderDigest as Hex,
-      status: existing.status as OrderEndpointResult["status"],
-    };
-  }
-
+  renew?: boolean;
+}): Promise<OrderEndpointResult> {
+  address.parse(input.payerAddress);
+  const payer = input.payerAddress.toLowerCase();
   const now = Math.floor((input.nowMs ?? Date.now()) / 1000);
-  const { typedData, digest } = buildOrderTypedData({
-    session: {
-      id: session.id,
-      priceId: session.priceId,
-      externalOrderId: session.externalOrderId,
-      amountMinor: session.amountMinor,
-      tokenAddress: session.tokenAddress,
-    },
-    merchant: { id: merchant.id, payoutAddress: merchant.payoutAddress },
-    payerAddress: payerAddress as Hex,
-    feeBasisPoints: envInt("WHITEPAY_FEE_BASIS_POINTS", 10),
-    validitySeconds: envInt("WHITEPAY_QUOTE_VALIDITY_SECONDS", 900),
-    checkoutContract: envAddr(
-      "WHITEPAY_CHECKOUT_CONTRACT_ADDRESS",
-      "0x0000000000000000000000000000000000000000",
-    ),
-    chainId: envInt("WHITECHAIN_CHAIN_ID", 1874),
-    feeRecipient: envAddr("WHITEPAY_FEE_RECIPIENT", merchant.payoutAddress as Hex),
-    nowSec: now,
+  return transaction(async (c) => {
+    const row = (
+      await c.query(
+        'SELECT * FROM checkout_sessions WHERE id=$1 AND merchant_id=$2 FOR UPDATE',
+        [input.sessionId, input.merchantId],
+      )
+    ).rows[0];
+    if (!row) throw new HttpError(404, 'session_not_found');
+    if (row.status !== 'open') throw new HttpError(409, 'session_not_open');
+    const old = (
+      await c.query(
+        'SELECT * FROM submissions WHERE session_id=$1 AND payer_address=$2',
+        [row.id, payer],
+      )
+    ).rows[0];
+    if (old) {
+      const expired = old.order_payload.validBefore <= now;
+      if (!input.renew) {
+        if (expired && old.status === 'awaiting_signature')
+          throw new HttpError(409, 'quote_expired');
+        return result(old);
+      }
+      if (!expired || !['awaiting_signature', 'expired'].includes(old.status))
+        throw new HttpError(409, 'quote_not_renewable');
+    }
+    const cfg = settings();
+    const roles = [
+      payer,
+      row.payout_address,
+      cfg.feeRecipient,
+      cfg.checkoutContract,
+    ].map((v) => v.toLowerCase());
+    if (new Set(roles).size !== 4)
+      throw new HttpError(400, 'invalid_payment_roles');
+    if (row.token_address.toLowerCase() !== USDT)
+      throw new HttpError(400, 'unsupported_token');
+    const { typedData, digest } = buildOrderTypedData({
+      session: {
+        id: row.id,
+        priceId: row.price_id,
+        externalOrderId: row.external_order_id,
+        amountMinor: Number(row.amount_minor),
+        tokenAddress: row.token_address,
+      },
+      merchant: { id: input.merchantId, payoutAddress: row.payout_address },
+      payerAddress: payer as Hex,
+      ...cfg,
+      nowSec: now,
+    });
+    const tokenTypedData = {
+      domain: {
+        name: 'Tether USD',
+        version: '1',
+        chainId: 1874,
+        verifyingContract: row.token_address,
+      },
+      types: {
+        EIP712Domain: ORDER_TYPES.EIP712Domain,
+        ReceiveWithAuthorization: RECEIVE,
+      },
+      primaryType: 'ReceiveWithAuthorization',
+      message: {
+        from: payer,
+        to: cfg.checkoutContract,
+        value: (
+          BigInt(typedData.message.amount) + BigInt(typedData.message.fee)
+        ).toString(),
+        validAfter: typedData.message.validAfter,
+        validBefore: typedData.message.validBefore,
+        nonce: digest,
+      },
+    };
+    const id = old?.id ?? `sub_${randomBytes(12).toString('hex')}`;
+    const values = [
+      id,
+      input.merchantId,
+      row.id,
+      payer,
+      JSON.stringify(typedData.message),
+      JSON.stringify(typedData),
+      JSON.stringify(tokenTypedData),
+      digest,
+      Date.now(),
+    ];
+    const out = await c.query(
+      `INSERT INTO submissions(id,merchant_id,session_id,payer_address,order_payload,order_typed_data,token_typed_data,order_digest,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'awaiting_signature',$9,$9) ON CONFLICT(session_id,payer_address) DO UPDATE SET order_payload=EXCLUDED.order_payload,order_typed_data=EXCLUDED.order_typed_data,token_typed_data=EXCLUDED.token_typed_data,order_digest=EXCLUDED.order_digest,status='awaiting_signature',order_signature=NULL,token_signature=NULL,updated_at=EXCLUDED.updated_at RETURNING *`,
+      values,
+    );
+    return result(out.rows[0]);
   });
-
-  const submissionId = `sub_${randomBytes(12).toString("hex")}`;
-  db.prepare(
-    `INSERT INTO submissions (id, merchant_id, session_id, payer_address, order_payload, order_digest, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'awaiting_signature', ?, ?)`,
-  ).run(
-    submissionId,
-    input.merchantId,
-    session.id,
-    payerAddress,
-    JSON.stringify(typedData.message),
-    digest.toLowerCase(),
-    Date.now(),
-    Date.now(),
-  );
-
-  return { submissionId, typedData, orderDigest: digest, status: "awaiting_signature" };
 }
-
-export function recordSignatures(input: {
+export async function recordSignatures(input: {
   submissionId: string;
   merchantId: string;
   orderSignature: string;
   tokenSignature: string;
-}): { ok: boolean; reason?: "not_found" | "already_signed" } {
-  if (!/^0x[0-9a-fA-F]+$/.test(input.orderSignature) || !/^0x[0-9a-fA-F]+$/.test(input.tokenSignature)) {
-    throw new HttpError(400, "invalid_signature_format");
-  }
-  const db = getDb();
-  const row = db
-    .prepare("SELECT status FROM submissions WHERE id = ? AND merchant_id = ?")
-    .get(input.submissionId, input.merchantId) as { status: string } | undefined;
-  if (!row) return { ok: false, reason: "not_found" };
-  if (row.status !== "awaiting_signature") return { ok: false, reason: "already_signed" };
-
-  db.prepare(
-    "UPDATE submissions SET order_signature = ?, token_signature = ?, status = 'queued', updated_at = ? WHERE id = ?",
-  ).run(input.orderSignature, input.tokenSignature, Date.now(), input.submissionId);
-  return { ok: true };
+}): Promise<{ ok: boolean; reason?: 'not_found' | 'already_signed' }> {
+  signatureSchema.parse({
+    orderSignature: input.orderSignature,
+    tokenSignature: input.tokenSignature,
+  });
+  return transaction(async (c) => {
+    // Match quote creation's lock order so renewals cannot race signature submission.
+    const lookup = (
+      await c.query(
+        'SELECT session_id FROM submissions WHERE id=$1 AND merchant_id=$2',
+        [input.submissionId, input.merchantId],
+      )
+    ).rows[0];
+    if (!lookup) return { ok: false, reason: 'not_found' };
+    const session = (
+      await c.query(
+        'SELECT status FROM checkout_sessions WHERE id=$1 AND merchant_id=$2 FOR UPDATE',
+        [lookup.session_id, input.merchantId],
+      )
+    ).rows[0];
+    if (session.status !== 'open') throw new HttpError(409, 'session_not_open');
+    const row = (
+      await c.query(
+        'SELECT * FROM submissions WHERE id=$1 AND merchant_id=$2 FOR UPDATE',
+        [input.submissionId, input.merchantId],
+      )
+    ).rows[0];
+    if (row.status !== 'awaiting_signature')
+      return { ok: false, reason: 'already_signed' };
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      row.order_payload.validBefore <= now ||
+      row.order_payload.validAfter >= now
+    )
+      throw new HttpError(409, 'quote_expired');
+    try {
+      for (const [data, signature] of [
+        [row.order_typed_data, input.orderSignature],
+        [row.token_typed_data, input.tokenSignature],
+      ] as const) {
+        const signer = await recoverTypedDataAddress({
+          ...data,
+          signature: signature as Hex,
+        });
+        if (signer.toLowerCase() !== row.payer_address)
+          throw new Error('wrong signer');
+      }
+    } catch {
+      throw new HttpError(400, 'invalid_signature');
+    }
+    await c.query(
+      "UPDATE submissions SET order_signature=$1,token_signature=$2,status='queued',updated_at=$3 WHERE id=$4",
+      [input.orderSignature, input.tokenSignature, Date.now(), row.id],
+    );
+    return { ok: true };
+  });
 }
-
 export interface SubmissionRow {
   id: string;
   sessionId: string;
   payerAddress: string;
   orderDigest: string;
   status: string;
-  orderSignature: string | null;
-  tokenSignature: string | null;
   txHash: string | null;
   errorReason: string | null;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: string;
+  updatedAt: string;
 }
-
-export function getSubmissionForMerchant(id: string, merchantId: string): SubmissionRow | null {
-  const row = getDb()
-    .prepare(
-      `SELECT id, session_id as sessionId, payer_address as payerAddress, order_digest as orderDigest,
-              status, order_signature as orderSignature, token_signature as tokenSignature,
-              tx_hash as txHash, error_reason as errorReason, created_at as createdAt, updated_at as updatedAt
-       FROM submissions WHERE id = ? AND merchant_id = ?`,
-    )
-    .get(id, merchantId) as SubmissionRow | undefined;
-  return row ?? null;
+export async function getSubmissionForMerchant(
+  id: string,
+  merchantId: string,
+): Promise<SubmissionRow | null> {
+  return (
+    (
+      await getDb().query(
+        'SELECT id,session_id AS "sessionId",payer_address AS "payerAddress",order_digest AS "orderDigest",status,tx_hash AS "txHash",error_reason AS "errorReason",created_at AS "createdAt",updated_at AS "updatedAt" FROM submissions WHERE id=$1 AND merchant_id=$2',
+        [id, merchantId],
+      )
+    ).rows[0] ?? null
+  );
 }

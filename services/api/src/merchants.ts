@@ -1,6 +1,7 @@
-import { randomBytes } from "node:crypto";
-import { getDb } from "./db.js";
-
+import { randomBytes } from 'node:crypto';
+import { getDb, transaction } from './db.js';
+import { address, text, priceSchema } from './validation.js';
+import { HttpError } from './sessions.js';
 export interface Merchant {
   id: string;
   name: string;
@@ -8,59 +9,112 @@ export interface Merchant {
   webhookUrl: string | null;
   webhookSecret: string;
 }
-
-export function createMerchant(input: {
+export async function createMerchant(input: {
   name: string;
   payoutAddress: string;
   webhookUrl?: string;
-}): Merchant {
-  const id = `mer_${randomBytes(10).toString("hex")}`;
-  const webhookSecret = `whsec_${randomBytes(24).toString("hex")}`;
-  getDb()
-    .prepare(
-      `INSERT INTO merchants (id, name, payout_address, webhook_url, webhook_secret, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-    .run(id, input.name, input.payoutAddress, input.webhookUrl ?? null, webhookSecret, Date.now());
-  return {
-    id,
+}): Promise<Merchant> {
+  text.parse(input.name);
+  address.parse(input.payoutAddress);
+  const m = {
+    id: `mer_${randomBytes(10).toString('hex')}`,
     name: input.name,
     payoutAddress: input.payoutAddress,
     webhookUrl: input.webhookUrl ?? null,
-    webhookSecret,
+    webhookSecret: `whsec_${randomBytes(24).toString('hex')}`,
   };
+  await getDb().query('INSERT INTO merchants VALUES($1,$2,$3,$4,$5,$6)', [
+    m.id,
+    m.name,
+    m.payoutAddress,
+    m.webhookUrl,
+    m.webhookSecret,
+    Date.now(),
+  ]);
+  return m;
 }
-
-export function getMerchant(id: string): Merchant | null {
-  const row = getDb()
-    .prepare(
-      "SELECT id, name, payout_address as payoutAddress, webhook_url as webhookUrl, webhook_secret as webhookSecret FROM merchants WHERE id = ?",
-    )
-    .get(id) as Merchant | undefined;
-  return row ?? null;
+export async function getMerchant(id: string): Promise<Merchant | null> {
+  return (
+    (
+      await getDb().query(
+        'SELECT id,name,payout_address AS "payoutAddress",webhook_url AS "webhookUrl",webhook_secret AS "webhookSecret" FROM merchants WHERE id=$1',
+        [id],
+      )
+    ).rows[0] ?? null
+  );
 }
-
-export function createPrice(input: {
+export async function createProduct(merchantId: string, name: string) {
+  text.parse(name);
+  const id = `prod_${randomBytes(10).toString('hex')}`;
+  await getDb().query('INSERT INTO products VALUES($1,$2,$3,$4)', [
+    id,
+    merchantId,
+    name,
+    Date.now(),
+  ]);
+  return { id, name };
+}
+export async function getProduct(id: string, merchantId: string) {
+  return (
+    (
+      await getDb().query(
+        'SELECT id,name FROM products WHERE id=$1 AND merchant_id=$2',
+        [id, merchantId],
+      )
+    ).rows[0] ?? null
+  );
+}
+export async function createPrice(input: {
   merchantId: string;
+  productId?: string;
   amountMinor: number;
   currency: string;
   tokenAddress: string;
-}): { id: string } {
-  const id = `price_${randomBytes(10).toString("hex")}`;
-  getDb()
-    .prepare(
-      `INSERT INTO prices (id, merchant_id, amount_minor, currency, token_address, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-    .run(id, input.merchantId, input.amountMinor, input.currency, input.tokenAddress, Date.now());
-  return { id };
+}) {
+  const { merchantId, ...fields } = input;
+  priceSchema.parse(fields);
+  return transaction(async (c) => {
+    let version = 1;
+    if (input.productId) {
+      const found = (
+        await c.query(
+          'SELECT id FROM products WHERE id=$1 AND merchant_id=$2 FOR UPDATE',
+          [input.productId, merchantId],
+        )
+      ).rows[0];
+      if (!found) throw new HttpError(404, 'product_not_found');
+      version = Number(
+        (
+          await c.query(
+            'SELECT COALESCE(MAX(version),0)+1 AS version FROM prices WHERE product_id=$1',
+            [input.productId],
+          )
+        ).rows[0].version,
+      );
+    }
+    const id = `price_${randomBytes(10).toString('hex')}`;
+    await c.query(
+      'INSERT INTO prices(id,merchant_id,product_id,version,amount_minor,currency,token_address,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',
+      [
+        id,
+        merchantId,
+        input.productId ?? null,
+        version,
+        input.amountMinor,
+        input.currency,
+        input.tokenAddress,
+        Date.now(),
+      ],
+    );
+    return { id, version };
+  });
 }
-
-export function getPrice(id: string, merchantId: string) {
-  const row = getDb()
-    .prepare(
-      "SELECT id, merchant_id as merchantId, amount_minor as amountMinor, currency, token_address as tokenAddress FROM prices WHERE id = ? AND merchant_id = ?",
+export async function getPrice(id: string, merchantId: string) {
+  const row = (
+    await getDb().query(
+      'SELECT id,merchant_id AS "merchantId",product_id AS "productId",version,amount_minor AS "amountMinor",currency,token_address AS "tokenAddress" FROM prices WHERE id=$1 AND merchant_id=$2',
+      [id, merchantId],
     )
-    .get(id, merchantId) as
-    | { id: string; merchantId: string; amountMinor: number; currency: string; tokenAddress: string }
-    | undefined;
-  return row ?? null;
+  ).rows[0];
+  return row ? { ...row, amountMinor: Number(row.amountMinor) } : null;
 }

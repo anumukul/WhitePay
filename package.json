@@ -27,7 +27,9 @@
     "poc:wallet-addresses": "pnpm build && node scripts/poc/export-wallet-addresses.mjs",
     "build:checkout": "FOUNDRY_PROFILE=step03 forge build --root packages/contracts",
     "test:checkout": "FOUNDRY_PROFILE=step03 forge test --root packages/contracts -vv",
-    "test:checkout:fork": "FOUNDRY_PROFILE=step03fork forge test --root packages/contracts --fork-url https://rpc.testnet.whitechain.io --fork-block-number 12300809 --match-contract OfficialCheckoutForkTest -vv"
+    "test:checkout:fork": "FOUNDRY_PROFILE=step03fork forge test --root packages/contracts --fork-url https://rpc.testnet.whitechain.io --fork-block-number 12300809 --match-contract OfficialCheckoutForkTest -vv",
+    "db:local": "node infra/local-postgres.mjs",
+    "test:api": "pnpm --filter @whitepay/api test"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "5.4.0",

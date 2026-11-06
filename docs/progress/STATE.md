@@ -1,20 +1,22 @@
 # WhitePay implementation state
 
-Last approved implementation step: 03 — final checkout correction and ABI reader tests
-Current step: 03 — final checkout correction, tests and ABI reader review
-Status: APPROVED — user confirmed Step 03 manual checks passed and requested Step 04 preparation; no deployment approval
+Last approved implementation step: 05 — merchant API and PostgreSQL data layer (Step 04 explorer verification still open)
+Current step: 05 — merchant API and PostgreSQL data layer
+Status: STEP_05_MANUALLY_ACCEPTED — user confirmed checks passed and requested Step 06; commit/push under standing workflow. Step 04 source verification remains open.
 
 Live payment: 0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641, chain 1874, block 12366248, exact approved relayer nonce-0 payload. Payer 10 → 4.995 official USDT with exactly zero WBT before/after/latest. Merchant +5 USDT; fee recipient +0.005 USDT; receiver zero residual. Relayer 0.1 → 0.099029250888990698 WBT; exact total fee 0.000970749111009302 WBT (194111 gas at 5.001 gwei plus L1 9302 wei). Both order replay (OrderAlreadySettled) and token nonce replay (TetherToken: auth invalid) rejected through read-only calls, with zero extra broadcasts.
 
 Current branch: main
 Reviewed handoff base: d70b519 (teammate API/chain/relayer/worker integration; pulled after 6da644f)
-Current implementation report: docs/progress/step-03.md
+Current implementation report: docs/progress/step-05.md
 Authorized remote: https://github.com/anumukul/WhitePay.git
-Git policy: user confirmed Step 03 tests successful and requested the next step, satisfying manual acceptance under the agreed commit/push-to-origin/main workflow. Publish only reviewed Step 03 files, then prepare Step 04. Actual deployment/payment approval remains separate.
+Git policy: user confirmed Step 03 tests successful and requested the next step, satisfying manual acceptance under the agreed commit/push-to-origin/main workflow. Step 03 published as 6f58f37. Step 04 changes remain uncommitted until manual acceptance. Actual deployment/payment approval remains separate.
 Configured remote branch: origin/main
 Step 01 code/evidence commit: 013a87b — pushed to origin/main
 Step 01 review transition: user authorized Step 02 after receiving manual testing instructions.
 ADR 0001: experimental PoC evaluated in Step 02; final interface approval pending
+
+Step 04 preview: chain 1874, deployer nonce 3, predicted address 0x4d1761ABB4eD290F23fcDA00890039800E2e53f0. Gas estimate 1,251,708; limit 2,000,000; max fee 20 gwei; priority cap 0.001 gwei; estimated total 0.006259791708119273 WBT. Snapshot only: refresh before approved signing. Full preview and verification bundle are local/ignored. 43 deployment/contract tests passed. No final deployment or source publication submitted. Proposed later smoke: 1 USDT + 0.001 fee with payer remaining at zero WBT, separately approved.
 
 ## Resumption plan after teammate handoff
 
@@ -203,3 +205,17 @@ Separate 10-USDT payer funding preview — awaiting explicit approval:
 - Estimated total fee 0.00030874173600326 WBT including L1 quote; L2 ceiling 0.0016 WBT plus variable L1 fees. No allowance needed for this own-token direct transfer.
 - Expected payer 10 USDT / 0 WBT; trading 1.019904 USDT and approximately 0.048346969459981021 WBT.
 - Evidence: docs/evidence/trading-to-payer-usdt-transfer-preview.json. No transfer submitted, approval changed, deployment, commit/push, or Step 03.
+
+Final checkout deployed: 0x4d1761ABB4eD290F23fcDA00890039800E2e53f0, tx 0x69bda8c980dc515222d432219394ba9f7362034d6bb8ecdb8eaf28f8c8e85d95, block 12369576, chain 1874. Exact approved payload/runtime/constructor/domain verified. Cost 0.006204710694119297 WBT. Source POST attempted under approval but explorer says verification temporarily unavailable; independent is_verified=false. Retry approved source submission when service recovers; do not redeploy or rerun nonce-3 launcher. Step 04 remains incomplete, no payment/commit/push/Step 05.
+
+Next Step 04 action: fresh 1-USDT + 0.001-USDT fee signing preview prepared at block 12369844, expiry 2026-11-06T12:56:52.000Z. Awaiting specific signing approval; no signatures or payment broadcast. Observed relayer nonce 1; payer 4.995 USDT / 0 WBT. Full public preview local/ignored docs/evidence/step-04-payment-signing-preview.json.
+
+Payer signing approved for final 1 USDT + 0.001 fee, expiry 2026-11-06T12:56:52Z, existing displayed digests. Prepared private-terminal launcher /private/tmp/whitepay-sign-approved-final-payment.mjs; 17 guard checks passed. Await user signing success summary, then simulate and request separate payment approval. No broadcast approval.
+
+Signed final payment simulation passed at block 12370167: both signatures verified, exact calldata eth_call succeeded; relayer nonce 1, gas estimate 185367 / limit 500000, maxfee 20 / priority 0.001 gwei. Estimated cost 0.000927020367010475 WBT including L1 quote 10475 wei. Expiry 2026-11-06T12:56:52Z. Await specific payment broadcast approval; source verification still pending. Public preview docs/evidence/step-04-payment-simulation-preview.json.
+
+Final payment broadcast specifically approved: 1 USDT + 0.001 fee / chain 1874 / relayer nonce 1 / exact reviewed calldata hash, expiry and caps. Prepared /private/tmp/whitepay-send-approved-final-payment.mjs; 12 guard checks passed; pending fresh --check and user-private --send. No automatic nonce/expiry/fee changes allowed. Await receipt, then verify balances/events/replay; no Step 05 or commit/push.
+
+Final checkout payment verified: tx 0x866f70f7b80f2e5e2766e7b2782b86c85f33f61754dbb00daa11ad55e50d90be / block 12370345 / chain 1874 / relayer nonce 1, exact approved payload. Payer 4.995 -> 3.994 USDT / exactly zero WBT; merchant 5 -> 6; fee recipient .005 -> .006; receiver zero. Gas 159190 at 5.001 gwei + L1 10773 wei = .000796109190010773 WBT, relayer .098233141698979925 WBT after. Both replay calls rejected without state/balance/nonce changes or broadcasts. Source verification retried, same temporary-unavailability rejection. Step 04 still awaits manual acceptance and source verification; no commit/push/Step 05. Manual commands in docs/progress/step-04.md.
+
+Step 05 implemented under user next-steps instruction: PostgreSQL API with versioned rollback-tested migrations, strict Zod requests, product/immutable price versions, session snapshots, bound atomic idempotency, full persisted quote domains, explicit expired-unsigned renewal and verified two-signature admission. Real PostgreSQL 37 API tests / 7 SDK / 3 dashboard; all three typechecks and 28 root tests pass; frozen install passes. Owner-only synthetic merchant fixtures and manual guide docs/runbooks/step-05-api.md ready. No real wallets/transactions, commit/push or Step 06. Relayer/worker remain unintegrated SQLite prototypes until Steps 06–07. Step 04 source-verification issue remains explicitly open; not marked complete.
