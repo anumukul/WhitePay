@@ -1,0 +1,58 @@
+
+> whitepay@0.0.0 test:checkout /Users/anubhavsingh/Desktop/EthGlobal/WhitePay
+> FOUNDRY_PROFILE=step03 forge test --root packages/contracts -vv
+
+Compiling 2 files with Solc 0.8.24
+Solc 0.8.24 finished in 4.11s
+Compiler run successful!
+
+Ran 8 tests for test/unit/DeploySmoke.t.sol:DeploySmokeTest
+[PASS] testDeploymentScriptAcceptsExactInputs() (gas: 1671250)
+[PASS] testDeploymentScriptRejectsDifferentTargetChain() (gas: 1674747)
+[PASS] testDeploymentScriptRejectsDifferentToken() (gas: 1674765)
+[PASS] testDeploymentScriptRunChecksInputsBeforeBroadcast() (gas: 1684407)
+[PASS] testEmptyAddressFailsSmoke() (gas: 2814)
+[PASS] testFreshDeploymentPassesSmoke() (gas: 1123660)
+[PASS] testWrongChainConstructorRejected() (gas: 60899)
+[PASS] testZeroTokenInAllowlistRejected() (gas: 61179)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 699.58µs (1.90ms CPU time)
+
+Ran 35 tests for test/unit/WhitePayCheckout.t.sol:WhitePayCheckoutTest
+[PASS] testAllRemainingSignedFieldsRejectTampering() (gas: 103335)
+[PASS] testAllowedTokenSubstitutionStillRejectsSignature() (gas: 1745880)
+[PASS] testAmountTamperRejected() (gas: 37895)
+[PASS] testCrossContractSignatureRejected() (gas: 1146282)
+[PASS] testDifferentPayerCannotBlockSignedOrder() (gas: 260292)
+[PASS] testDigestMatchesIndependentEIP712Encoding() (gas: 17139)
+[PASS] testDisallowedTokenRejected() (gas: 604137)
+[PASS] testExactAtomicSplit() (gas: 166088)
+[PASS] testExactSettlementEvent() (gas: 159559)
+[PASS] testExpiredBoundaryRejected() (gas: 33450)
+[PASS] testFeeRecipientTamperRejected() (gas: 37503)
+[PASS] testFeeTamperRejected() (gas: 37323)
+[PASS] testFeeTransferFailureRollsBack() (gas: 185410)
+[PASS] testFrontRunDifferentPayerRejected() (gas: 39838)
+[PASS] testFuzzExactMathHolds(uint64,uint64) (runs: 256, μ: 171894, ~: 174038)
+[PASS] testFuzzPayerReplayIsolation(bytes32,uint64) (runs: 256, μ: 245090, ~: 245090)
+[PASS] testInsufficientBalanceRollsBackAuthorization() (gas: 108489)
+[PASS] testInvalidRoleAndIdentifierCases() (gas: 155868)
+[PASS] testInvalidWindowRejected() (gas: 29996)
+[PASS] testMalformedSignatureDoesNotConsumeOrder() (gas: 45491)
+[PASS] testMerchantTamperRejected() (gas: 37459)
+[PASS] testPayerEqualsMerchantRejected() (gas: 31781)
+[PASS] testReentryBlocked() (gas: 555850)
+[PASS] testReplayRejected() (gas: 161497)
+[PASS] testSamePayerCannotReuseOrderIdWithNewTerms() (gas: 169947)
+[PASS] testShortFeeTransferRollsBack() (gas: 195608)
+[PASS] testShortMerchantTransferRollsBack() (gas: 194528)
+[PASS] testTokenTamperRejected() (gas: 604005)
+[PASS] testTotalOverflowDoesNotConsumeOrder() (gas: 41448)
+[PASS] testValidAfterBoundaryRejected() (gas: 33114)
+[PASS] testWrongChainSignatureRejectedOnCorrectChain() (gas: 38822)
+[PASS] testWrongRuntimeChainRejected() (gas: 26731)
+[PASS] testWrongSignerRejected() (gas: 37554)
+[PASS] testZeroAmountRejected() (gas: 31844)
+[PASS] testZeroFeeNoFeeTransfer() (gas: 135624)
+Suite result: ok. 35 passed; 0 failed; 0 skipped; finished in 27.53ms (58.99ms CPU time)
+
+Ran 2 test suites in 27.99ms (28.23ms CPU time): 43 tests passed, 0 failed, 0 skipped (43 total tests)

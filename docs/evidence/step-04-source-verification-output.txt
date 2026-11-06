@@ -1,0 +1,5 @@
+Approved explorer verification submission attempted with Forge, exact compiler 0.8.24+commit.e11b9ed9, Paris, optimizer 200, viaIR, and approved constructor args.
+Forge exit: 1.
+Explorer response: {"message":"Contract verification is temporarily unavailable."}
+Independent GET /api/v2/addresses/0x4d1761ABB4eD290F23fcDA00890039800E2e53f0 reports is_verified: false.
+Full source payload diagnostics omitted: exact standard JSON is already saved locally.

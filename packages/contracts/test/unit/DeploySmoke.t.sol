@@ -2,11 +2,14 @@
 pragma solidity 0.8.24;
 
 import {WhitePayCheckout} from "../../src/WhitePayCheckout.sol";
+import {DeployWhitePayCheckout} from "../../script/DeployWhitePayCheckout.s.sol";
 
 interface Vm {
     function chainId(uint256) external;
     function envOr(string calldata, uint256) external view returns (uint256);
     function envOr(string calldata, address) external view returns (address);
+    function setEnv(string calldata, string calldata) external;
+    function expectRevert(bytes calldata) external;
 }
 
 /// @notice Step 04 acceptance smoke test. Confirms a candidate deployment looks right:
@@ -81,5 +84,37 @@ contract DeploySmokeTest {
             reverted = true;
         }
         require(reverted, "zero token must revert");
+    }
+
+    function testDeploymentScriptRejectsDifferentToken() public {
+        DeployWhitePayCheckout script = new DeployWhitePayCheckout();
+        vm.expectRevert(bytes("Expected official Whitechain Sepolia USDT"));
+        script.validateDeploymentInputs(1874, address(0x1874));
+    }
+
+    function testDeploymentScriptRejectsDifferentTargetChain() public {
+        DeployWhitePayCheckout script = new DeployWhitePayCheckout();
+        vm.expectRevert(bytes("Expected Whitechain Sepolia chain 1874"));
+        script.validateDeploymentInputs(1, 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7);
+    }
+
+    function testDeploymentScriptAcceptsExactInputs() public {
+        DeployWhitePayCheckout script = new DeployWhitePayCheckout();
+        script.validateDeploymentInputs(1874, 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7);
+    }
+
+    function testDeploymentScriptRunChecksInputsBeforeBroadcast() public {
+        // Only this test mutates process env: separate concurrent setEnv tests can race.
+        DeployWhitePayCheckout script = new DeployWhitePayCheckout();
+        vm.chainId(1874);
+        vm.setEnv("EXPECTED_CHAIN_ID", "1874");
+        vm.setEnv("WHITECHAIN_USDT_ADDRESS", "0x0000000000000000000000000000000000001874");
+        vm.expectRevert(bytes("Expected official Whitechain Sepolia USDT"));
+        script.run();
+        vm.chainId(1);
+        vm.setEnv("EXPECTED_CHAIN_ID", "1");
+        vm.setEnv("WHITECHAIN_USDT_ADDRESS", "0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7");
+        vm.expectRevert(bytes("Expected Whitechain Sepolia chain 1874"));
+        script.run();
     }
 }

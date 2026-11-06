@@ -1,117 +1,60 @@
-# Step 04 — Deploy runbook (prepared, not executed)
+# Step 04 — Final checkout deployment runbook
 
-External-write gate. Nothing in this runbook has been broadcast. All commands below are intended to be run by a human operator after explicit approval in follow-up.
+Prepared, not executed. Deployment, public explorer source submission, payer signing and payment broadcast require explicit approval of their specific previews. Step 03 acceptance alone does not authorize these actions. Current preview and source review: [step-04.md](../progress/step-04.md). Review follows the user's earlier request for assistant source review; no independent human audit/signoff is claimed.
 
-## Pre-flight (one-time, human-confirmed)
+## 1. Reproduce local checks
 
-- Branch at `f91920e` or later (Step 03 GREEN).
-- Deployer keystore encrypted at the path recorded in `docs/progress/step-02.md`. **Do not paste the password into chat.** Refresh gas and L1 fees for the approved final candidate, constructor args and current nonce. Step 02's deployment estimate applied to the experimental PoC; it is not a quote for this changed final contract.
-- `WHITECHAIN_RPC_URL` set to an RPC you trust; confirm `cast chain-id --rpc-url $WHITECHAIN_RPC_URL` returns `1874`.
-- Second-teammate security review of `src/WhitePayCheckout.sol` signed off (PR.md Section 10.4 requires this before Step 04).
-
-## 1. Compile (reproducible, no secrets touched)
+Run from repository root:
 
 ```bash
-cd packages/contracts
-bash ../../scripts/vendor-oz.sh
-FOUNDRY_PROFILE=step03 forge build
+pnpm build:checkout
+pnpm test:checkout
+FOUNDRY_PROFILE=step03 forge test --root packages/contracts --match-contract DeploySmokeTest -vv
+shasum -a 256 packages/contracts/src/WhitePayCheckout.sol
 ```
 
-Record the exact compiler output hash:
+Expect 43 total tests, including 8 smoke/deployment-tool tests. Source SHA-256 must be `37c440f166e04dd646a1b4c551115b7d0fd7a7b043abae889f6a9bbc56cba3a5`, matching accepted commit `6f58f37`. Compiler: 0.8.24+commit.e11b9ed9, Paris, optimizer 200, viaIR enabled. Do not substitute the old experimental PoC artifact.
+
+## 2. Review the exact unsigned preview
+
+Local file: `docs/evidence/step-04-deployment-preview.json`. It contains public deployment data, not signatures or keys. Check:
+
+- Chain 1874; sender `0x59F5C817cF19394402DcefeBaf5796Fe7514fDed`; latest and pending nonce 3.
+- Constructor `(1874, [0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7])`; no other allowed token; native value zero.
+- Full creation input hash `0x1bd599fc11cae8d9202aa5555c774e6329c38ec686191857ef965db9edf48c10`.
+- Predicted address `0x4d1761ABB4eD290F23fcDA00890039800E2e53f0` has no code.
+- Gas estimate 1,251,708; gas limit 2,000,000; max fee 20 gwei; priority fee cap 0.001 gwei.
+- Estimated total cost 0.006259791708119273 WBT, including the snapshot L1 quote. Maximum L2 charge 0.04 WBT plus variable L1 fee.
+
+Independently refresh RPC chain ID, block, latest/pending nonce, sender balance, empty predicted address, official proxy implementation/code hashes, constructor simulation and gas/L1 estimate immediately before signing. Changed source, constructor, nonce, fee limits or creation input requires a replacement preview and approval. Never reuse the old nonce-2 PoC command.
+
+## 3. Approve and sign the reviewed creation transaction
+
+After specific deployment approval, prepare a launcher bound to the reviewed unsigned payload and revalidate all fields. The user unlocks the existing encrypted deployer keystore in their private terminal; passwords must remain out of command arguments, chat and logs. No raw key, seed export or browser import is needed. Supply explicit nonce, gas and fee limits; reject mismatches instead of accepting wallet defaults. Do not run a generic broadcaster that can silently change these fields.
+
+Compare the mined transaction with the approved preview. Require successful receipt and the predicted contract address, then compare complete deployed runtime with the constructor simulation, including immutable EIP712 values. Record actual gas price, gas used and any L1 fee, and reconcile the deployer balance debit.
+
+## 4. Publish and verify source only after approval
+
+The standard JSON bundle is already prepared locally in `docs/evidence/step-04-standard-input.json`. Recompiling it with the exact compiler matches the accepted base creation bytecode. Constructor arguments are separate. Read-only explorer API access was checked, but verification POST/authentication requirements have not been proven.
+
+Use the official explorer endpoint `https://explorer.testnet.whitechain.io/api/`. Submit the exact standard JSON/compiler/constructor arguments after public-source approval. Confirm full verification through the explorer, exact source/settings and full deployed runtime; an accepted submission or Forge exit alone is insufficient. Do not claim verification if publication fails; record the failure and resolve it before milestone acceptance.
+
+Read-only post-deployment checks (replace ADDRESS only after receipt verification):
 
 ```bash
-cat out-step03/WhitePayCheckout.sol/WhitePayCheckout.json | jq -r '.metadata.sources."src/WhitePayCheckout.sol".keccak256'
+cast chain-id --rpc-url https://rpc.testnet.whitechain.io
+cast call ADDRESS 'expectedChainId()(uint256)' --rpc-url https://rpc.testnet.whitechain.io
+cast call ADDRESS 'tokenAllowed(address)(bool)' 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7 --rpc-url https://rpc.testnet.whitechain.io
+cast call ADDRESS 'eip712Domain()(bytes1,string,string,uint256,address,bytes32,uint256[])' --rpc-url https://rpc.testnet.whitechain.io
 ```
 
-Pin this hash in the step report before broadcasting.
+Expect chain 1874, token allowed, domain name WhitePayCheckout/version 1/chain 1874/actual final address. Independently compare a canonical order digest with off-chain EIP712 encoding and verify payer-scoped `settled(address,bytes32)` ABI.
 
-## 2. Dry-run (safe, no RPC)
+## 5. Prepare a separately approved live smoke payment
 
-```bash
-export FOUNDRY_PROFILE=step03
-export EXPECTED_CHAIN_ID=1874
-export WHITECHAIN_USDT_ADDRESS=0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7
-forge script script/DeployWhitePayCheckout.s.sol --sig 'run()' --chain-id 1874
-```
+Payer snapshot: 4.995 official USDT and exactly zero WBT. Propose 1 USDT to merchant plus 0.001 USDT fee, leaving 3.994 USDT. Relayer has 0.099029250888990698 WBT. Refresh all balances; no additional funding is currently needed for this proposal.
 
-Expected on 2026-11: `Gas used: 1278582`. Returns a fake deployment address from the in-memory EVM. **No network call.** Confirmed GREEN.
+After deployment, generate fresh order/quote identifiers, validity window and both signatures for the actual final contract domain. Obtain signing approval first. Keep signatures and executable payment payloads in ignored owner-only files. Simulate settlement, independently verify every signed field and decoded calldata, estimate actual gas/L1 cost and preview relayer nonce and fee limits. Request payment broadcast approval separately.
 
-## 3. Simulated remote (uses RPC, still does NOT broadcast)
-
-```bash
-forge script script/DeployWhitePayCheckout.s.sol --sig 'run()' \
-  --rpc-url $WHITECHAIN_RPC_URL \
-  --sender $DEPLOYER_ADDRESS
-```
-
-Expected: successful simulation, printed gas estimate, printed future contract address derived from (sender, nonce). No tx submitted. Review the printed **constructor calldata** — it must contain the exact USDT address bytes with no accidental substitution.
-
-## 4. Broadcast + verify (THIS IS THE EXTERNAL WRITE — requires approval)
-
-**Do not run without the "approve deploy" message.** Draft command:
-
-```bash
-forge script script/DeployWhitePayCheckout.s.sol --sig 'run()' \
-  --rpc-url $WHITECHAIN_RPC_URL \
-  --keystore $DEPLOYER_KEYSTORE \
-  --sender $DEPLOYER_ADDRESS \
-  --broadcast \
-  --verify --verifier blockscout \
-  --verifier-url https://sepolia.whitechain.io/api/ \
-  --slow
-```
-
-If Foundry's bundled verification fails, verify manually:
-
-```bash
-forge verify-contract <DEPLOYED_ADDRESS> src/WhitePayCheckout.sol:WhitePayCheckout \
-  --verifier blockscout \
-  --verifier-url https://sepolia.whitechain.io/api/ \
-  --chain-id 1874 \
-  --compiler-version 0.8.24 \
-  --optimizer-runs 200 \
-  --constructor-args $(cast abi-encode 'constructor(uint256,address[])' 1874 '[0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7]')
-```
-
-## 5. Post-deploy acceptance smoke
-
-Run the acceptance script against the live address. Any failure means do **not** advertise this deployment.
-
-```bash
-# 5a: direct checks via cast
-cast call $DEPLOYED_ADDRESS "expectedChainId()(uint256)" --rpc-url $WHITECHAIN_RPC_URL   # expect 1874
-cast call $DEPLOYED_ADDRESS "tokenAllowed(address)(bool)" 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7 --rpc-url $WHITECHAIN_RPC_URL   # expect true
-cast code $DEPLOYED_ADDRESS --rpc-url $WHITECHAIN_RPC_URL | head -c 64   # must not be 0x
-
-# 5b: EIP-712 domain separator vs recomputed
-cast call $DEPLOYED_ADDRESS "eip712Domain()(bytes1,string,string,uint256,address,bytes32,uint256[])" --rpc-url $WHITECHAIN_RPC_URL
-# Check fields/name/version/chain/verifyingContract; inherited EIP712 exposes eip712Domain(), not DOMAIN_SEPARATOR().
-# Independently compare orderDigest for a canonical order against off-chain EIP-712 encoding.
-```
-
-Record:
-
-- `DEPLOYED_ADDRESS`
-- Deploy tx hash
-- Block number
-- Blockscout verified-source URL
-- EIP-712 domain fields and independently matched order digest
-
-in `docs/evidence/step-04-deploy.json` (gitignored path for pre-publication, then promoted).
-
-## 6. Real official-USDT settlement (SEPARATE external-write gate)
-
-**This is a second external write and a second approval.** Requires:
-
-- Payer funded with ≥ 5.005 official USDT, **zero WBT**. Still blocked on the 10-USDT transfer from Step 02 funding plan.
-- Relayer wallet funded with WBT for a fresh final-contract gas estimate and L1 fee quote. The accepted PoC's actual gas cost is evidence, not an unchanged fee quote for this contract.
-- A signed order from the payer (produced by the Step 05 API once Step 05 lands — or manually via a one-off script for the Step 04 proof).
-
-Approval phrases expected: "approve deploy" (for step 4 broadcast) and separately "approve settlement" (for step 6).
-
-## What is NOT prepared
-
-- No private keys handled. No keystores decrypted.
-- No RPC URL hardcoded. Operator supplies.
-- No Blockscout API key required (Whitechain explorer accepts verification without a key as of 2026-11; re-check before running).
-- No settlement script yet — builds on Step 05's quote/signing surface.
+On confirmation require exact payer -1.001, merchant +1, fee recipient +0.001 USDT, zero receiver residual, and payer WBT exactly zero before/after. Reconcile relayer gas debit. Decode PaymentSettled including quoteId; check payer-scoped settlement and token authorization state. Attempt both order replay and token replay using read-only calls only. Record evidence, obtain manual acceptance, then commit/push Step 04. Do not advance to Step 05 before that acceptance.

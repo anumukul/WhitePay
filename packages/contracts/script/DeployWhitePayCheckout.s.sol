@@ -33,7 +33,7 @@ contract DeployWhitePayCheckout {
     function run() external returns (WhitePayCheckout checkout, address[] memory tokens) {
         uint256 expectedChainId = vm.envUint("EXPECTED_CHAIN_ID");
         address usdt = vm.envAddress("WHITECHAIN_USDT_ADDRESS");
-        require(usdt != address(0), "USDT address required");
+        validateDeploymentInputs(expectedChainId, usdt);
 
         tokens = new address[](1);
         tokens[0] = usdt;
@@ -41,5 +41,11 @@ contract DeployWhitePayCheckout {
         vm.startBroadcast();
         checkout = new WhitePayCheckout(expectedChainId, tokens);
         vm.stopBroadcast();
+    }
+
+    /// @notice Deployment-tool guard, not an additional function on WhitePayCheckout.
+    function validateDeploymentInputs(uint256 expectedChainId, address usdt) public pure {
+        require(expectedChainId == 1874, "Expected Whitechain Sepolia chain 1874");
+        require(usdt == 0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7, "Expected official Whitechain Sepolia USDT");
     }
 }
