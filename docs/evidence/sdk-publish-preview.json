@@ -1,0 +1,80 @@
+{
+  "status": "PUBLISHED_VERIFIED_TAG_CLEANUP_PENDING",
+  "registry": "https://registry.npmjs.org/",
+  "published": true,
+  "packages": [
+    {
+      "name": "@whitepay/node",
+      "version": "0.1.0-alpha.0",
+      "tag": "alpha",
+      "access": "public",
+      "archive": "whitepay-node-0.1.0-alpha.0.tgz",
+      "files": [
+        "package/LICENSE",
+        "package/dist/bridge.js",
+        "package/dist/index.js",
+        "package/package.json",
+        "package/CHANGELOG.md",
+        "package/README.md",
+        "package/dist/bridge.d.ts",
+        "package/dist/index.d.ts"
+      ],
+      "sha256": "509d49a0136a505d39b75c52551293ac5a9d787b25297ece449399cf093ac86b",
+      "integrity": "sha512-MMXl+QZyiSRJzzBcRWD9/alpyPmXBqL2f6FqcNmjFST+MdoFh4SBj2T3cPfre60zCBtZHNH57gvAxNppF+XBMQ==",
+      "dependencies": {},
+      "peerDependencies": {}
+    },
+    {
+      "name": "@whitepay/react",
+      "version": "0.1.0-alpha.0",
+      "tag": "alpha",
+      "access": "public",
+      "archive": "whitepay-react-0.1.0-alpha.0.tgz",
+      "files": [
+        "package/LICENSE",
+        "package/dist/checkout.js",
+        "package/dist/index.js",
+        "package/package.json",
+        "package/CHANGELOG.md",
+        "package/README.md",
+        "package/dist/checkout.d.ts",
+        "package/dist/index.d.ts"
+      ],
+      "sha256": "808a5b8e496fcac29a8d03744581825e588b933b3006d3bac34372892d57e784",
+      "integrity": "sha512-iDxk0N426phZfbajOTd3sb3quRRH3fTVypKg6+VDcq9b8J1peI6mmqsZ7uWE6vqD33i7G6+m1EfmvO9xGKcC0Q==",
+      "dependencies": {
+        "viem": "2.38.5"
+      },
+      "peerDependencies": {
+        "react": ">=18"
+      }
+    }
+  ],
+  "publisher": {
+    "username": "anumukul",
+    "organization": "whitepay",
+    "role": "owner",
+    "verified": true
+  },
+  "npmDryRunsPassed": true,
+  "publicInstallVerified": true,
+  "releaseApproval": "User explicitly approved both exact public alpha releases",
+  "uploadResults": {
+    "node": {
+      "exitCode": 0
+    },
+    "react": {
+      "exitCode": 0
+    }
+  },
+  "registryObservation": "Both exact alpha versions are public and integrity-matched. npm automatically assigned latest as well as alpha. Latest-tag deletion failed with npm registry HTTP 400; no successful cleanup is verified.",
+  "verification": {
+    "registryIntegrityMatches": true,
+    "freshRegistryInstall": true,
+    "nodeHttpIdempotencyErrorsWebhooks": "passed against disposable HTTP fixture",
+    "typescriptConsumer": "passed including expected negative type checks",
+    "reactSsrImports": "passed",
+    "reactBrowserBundleChrome": "passed including missing-wallet safety path",
+    "blockchainTransactions": false
+  }
+}

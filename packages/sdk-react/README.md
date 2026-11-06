@@ -1,6 +1,6 @@
 # @whitepay/react
 
-React 18+ checkout widget, `0.1.0-alpha.0`. Whitechain Sepolia only (1874), exact official six-decimal USDT and the deployed final WhitePay checkout. Not yet published. Build and pack locally with `pnpm --filter @whitepay/react build` and `pnpm --filter @whitepay/react pack --pack-destination /tmp`.
+React 18+ checkout widget, `0.1.0-alpha.0`. Whitechain Sepolia only (1874), exact official six-decimal USDT and the deployed final WhitePay checkout. Install the alpha release after publication with `npm install @whitepay/react@alpha react react-dom`. Build and pack locally with `pnpm --filter @whitepay/react build` and `pnpm --filter @whitepay/react pack --pack-destination /tmp`.
 
 ```tsx
 import { WhitePayCheckout } from '@whitepay/react';

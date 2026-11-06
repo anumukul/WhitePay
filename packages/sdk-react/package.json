@@ -1,7 +1,7 @@
 {
   "name": "@whitepay/react",
   "version": "0.1.0-alpha.0",
-  "description": "React widget for WhitePay checkout. Not yet published.",
+  "description": "React checkout widget for WhitePay on Whitechain Sepolia.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
@@ -15,7 +15,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "engines": {
@@ -29,7 +31,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "pnpm build && node --test --import tsx/esm test/*.test.ts",
     "test:browser": "node --test --import tsx/esm test/browser.e2e.ts",
-    "step09:live": "pnpm --filter @whitepay/node build && node --import tsx/esm scripts/live-checkout.ts"
+    "step09:live": "pnpm --filter @whitepay/node build && node --import tsx/esm scripts/live-checkout.ts",
+    "clean": "node --input-type=module -e \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true });\"",
+    "prepack": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
@@ -47,5 +51,27 @@
   },
   "dependencies": {
     "viem": "2.38.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anumukul/WhitePay.git",
+    "directory": "packages/sdk-react"
+  },
+  "homepage": "https://github.com/anumukul/WhitePay/tree/main/packages/sdk-react#readme",
+  "bugs": {
+    "url": "https://github.com/anumukul/WhitePay/issues"
+  },
+  "keywords": [
+    "whitepay",
+    "whitechain",
+    "sepolia",
+    "usdt",
+    "payments",
+    "react"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha",
+    "registry": "https://registry.npmjs.org/"
   }
 }

@@ -1,6 +1,14 @@
 # @whitepay/node
 
-WhitePay's server-side SDK, version `0.1.0-alpha.0`. Testnet only; not published to a registry. Install a locally built tarball or use the workspace package. Requires Node 20 or later. Never import this package into a browser bundle; it uses Node crypto and rejects browser execution. Merchant secret keys belong exclusively on your server.
+WhitePay's server-side SDK, version `0.1.0-alpha.0`. Whitechain Sepolia testnet only. Requires Node 20 or later; ESM imports only. Never import this package into a browser bundle; it uses Node crypto and rejects browser execution. Merchant secret keys belong exclusively on your server.
+
+Install the alpha release after publication:
+
+```sh
+npm install @whitepay/node@alpha
+```
+
+For local development:
 
 ```sh
 pnpm --filter @whitepay/node build
@@ -30,7 +38,7 @@ const session = await whitepay.checkout.createSession(
 const refreshed = await whitepay.checkout.retrieve(session.id);
 ```
 
-Use the server-created `redirectUrl` for navigation. Product creation is `products.create({name})`; price creation is `prices.create({productId, amountMinor, currency: 'USDT', tokenAddress})`. Use exactly `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7` and six-decimal integer minor units: 1 USDT = 1,000,000. Price creation returns `{id, version}`; `prices.retrieve(id)` returns its full immutable terms. Products, payments and prices have `retrieve(id)` methods; `payments.list()` returns `{data}`. Checkout quote/signature/submission methods support a merchant backend's browser bridge; they do not sign or broadcast.
+Use `session.id` with the React widget and your authenticated merchant bridge. The API-provided `redirectUrl` works only when you have configured and mounted a corresponding checkout page; this package does not host one. Product creation is `products.create({name})`; price creation is `prices.create({productId, amountMinor, currency: 'USDT', tokenAddress})`. Use exactly `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7` and six-decimal integer minor units: 1 USDT = 1,000,000. Price creation returns `{id, version}`; `prices.retrieve(id)` returns its full immutable terms. Products, payments and prices have `retrieve(id)` methods; `payments.list()` returns `{data}`. Checkout quote/signature/submission methods support a merchant backend's browser bridge; they do not sign or broadcast.
 
 Verify webhook bytes before parsing, using the exact request body:
 
