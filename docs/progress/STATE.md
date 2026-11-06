@@ -1,16 +1,16 @@
 # WhitePay implementation state
 
-Last approved implementation step: 02 — genuine live zero-WBT official-USDT proof
-Current step: 02 — genuine zero-WBT live proof verified
-Status: APPROVED — user explicitly accepted Step 02 and authorized its evidence commit/push to origin/main
+Last approved implementation step: 03 — final checkout correction and ABI reader tests
+Current step: 03 — final checkout correction, tests and ABI reader review
+Status: APPROVED — user confirmed Step 03 manual checks passed and requested Step 04 preparation; no deployment approval
 
 Live payment: 0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641, chain 1874, block 12366248, exact approved relayer nonce-0 payload. Payer 10 → 4.995 official USDT with exactly zero WBT before/after/latest. Merchant +5 USDT; fee recipient +0.005 USDT; receiver zero residual. Relayer 0.1 → 0.099029250888990698 WBT; exact total fee 0.000970749111009302 WBT (194111 gas at 5.001 gwei plus L1 9302 wei). Both order replay (OrderAlreadySettled) and token nonce replay (TetherToken: auth invalid) rejected through read-only calls, with zero extra broadcasts.
 
 Current branch: main
 Reviewed handoff base: d70b519 (teammate API/chain/relayer/worker integration; pulled after 6da644f)
-Current implementation report: docs/progress/step-02.md
+Current implementation report: docs/progress/step-03.md
 Authorized remote: https://github.com/anumukul/WhitePay.git
-Git policy: user explicitly approved Step 02 and its reviewed evidence commit/push to origin/main. Later milestones still require manual testing/approval before commit/push; deployments/payments require separate exact transaction approval. No Step 03 implementation is authorized by the evidence publication.
+Git policy: user confirmed Step 03 tests successful and requested the next step, satisfying manual acceptance under the agreed commit/push-to-origin/main workflow. Publish only reviewed Step 03 files, then prepare Step 04. Actual deployment/payment approval remains separate.
 Configured remote branch: origin/main
 Step 01 code/evidence commit: 013a87b — pushed to origin/main
 Step 01 review transition: user authorized Step 02 after receiving manual testing instructions.
@@ -49,9 +49,9 @@ Verified findings:
 - Payer-scoped settled getter and token authorizationState are true for the paid order/digest. Read-only replay fails for the intended reasons.
 - Latest local checks: 28 root Node tests, 10 PoC tests and 11 official-token fork tests passed. Full formatting still has 63 inherited issues. User substituted AI review for unavailable teammate review.
 
-Manual acceptance received: user replied APPROVE STEP 02 AND COMMIT/PUSH TO origin/main. Publish only the reviewed Step 02 public evidence/docs and local-artifact ignore rule. No more payment/replay transactions are needed. After the authorized push, STOP before Step 03; the user must request its start.
+Step 02 manual acceptance and publication completed at 5fec28d. User requested the next step, authorizing Step 03. Current gate: run the manual commands in docs/progress/step-03.md, inspect payer-scoped replay, event/domain checks and matching reader ABI, then approve the reviewed source/docs before commit/push. Do not proceed to Step 04 or broadcast.
 
-Known limits/follow-up: final WhitePayCheckout remains affected by R-01 and needs its own correction/review; offchain services and wallet UX remain prototypes; no explorer source publication or Ethereum-finality claim is made. Payer's remaining 4.995 USDT is below the default 5.005-USDT proof amount; do not rerun payment/signing launchers or infer that another payment is funded/approved. Prior trading-wallet approvals remain, with no revocation authorized.
+Known limits/follow-up: final WhitePayCheckout R-01 is corrected in the Step 03 candidate, with 39 Solidity tests, 11 official-token local-fork tests and 14 chain/Anvil tests; it still needs manual acceptance and the final security-review gate; offchain services and wallet UX remain prototypes; no explorer source publication or Ethereum-finality claim is made. Payer's remaining 4.995 USDT is below the default 5.005-USDT proof amount; do not rerun payment/signing launchers or infer that another payment is funded/approved. Prior trading-wallet approvals remain, with no revocation authorized.
 
 Historical Step 02 preparation and funding snapshots (superseded by current live result above):
 

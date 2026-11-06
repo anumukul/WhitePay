@@ -6,4 +6,7 @@ node_modules/
 dist/
 packages/contracts/out/
 packages/contracts/cache/
+packages/contracts/out-step03/
+packages/contracts/cache-step03/
+packages/contracts/lib/
 docs/evidence/token-probe-manual.json

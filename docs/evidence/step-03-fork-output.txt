@@ -1,0 +1,23 @@
+
+> whitepay@0.0.0 test:checkout:fork /Users/anubhavsingh/Desktop/EthGlobal/WhitePay
+> FOUNDRY_PROFILE=step03fork forge test --root packages/contracts --fork-url https://rpc.testnet.whitechain.io --fork-block-number 12300809 --match-contract OfficialCheckoutForkTest -vv
+
+Compiling 20 files with Solc 0.8.24
+Solc 0.8.24 finished in 3.99s
+Compiler run successful!
+
+Ran 11 tests for test/checkout-fork/OfficialCheckoutFork.t.sol:OfficialCheckoutForkTest
+[PASS] testDifferentPayerCannotBlockSignedOrder() (gas: 343416)
+[PASS] testOfficialTokenBlockedReceiverRollsBack() (gas: 128544)
+[PASS] testOfficialTokenFeePayoutFailureRollsBackMerchantAndNonce() (gas: 200401)
+[PASS] testOfficialTokenInsufficientUSDTDoesNotSettle() (gas: 138155)
+[PASS] testOfficialTokenPositiveTransferAndReplayLocally() (gas: 232675)
+[PASS] testOfficialTokenTamperedTokenSignatureRejected() (gas: 107708)
+[PASS] testOfficialTokenThirdPartyCannotConsumeReceiveAuthorization() (gas: 201797)
+[PASS] testReviewEveryMutableOrderFieldRejectsOriginalSignature() (gas: 231330)
+[PASS] testReviewMalformedSignatureDoesNotConsumeState() (gas: 60448)
+[PASS] testReviewZeroFeePaysMerchantWithoutResidual() (gas: 176587)
+[PASS] testSamePayerCannotReuseOrderIdWithFreshSignaturesAndTerms() (gas: 210646)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 5.97ms (33.86ms CPU time)
+
+Ran 1 test suite in 254.98ms (5.97ms CPU time): 11 tests passed, 0 failed, 0 skipped (11 total tests)

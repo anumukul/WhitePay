@@ -22,16 +22,11 @@ interface Vm {
 contract DeploySmokeTest {
     Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    // Known-good fixture: digest for a canonical order under chain 1874 and the MOCK token
-    // at address(0x10000...1874). Any difference here means the contract's EIP-712 domain
-    // or Order encoding has drifted from the spec.
-    bytes32 constant FIXTURE_DIGEST = 0x0000000000000000000000000000000000000000000000000000000000000000;
-
     function _knownToken() internal pure returns (address) {
         return address(uint160(0x1874));
     }
 
-    function testEmptyAddressFailsSmoke() public {
+    function testEmptyAddressFailsSmoke() public view {
         // Simulated negative: an address with no code must fail the smoke check.
         address candidate = address(0xdead);
         require(candidate.code.length == 0, "fixture: dead address should have no code");
@@ -52,13 +47,14 @@ contract DeploySmokeTest {
         require(checkout.tokenAllowed(_knownToken()), "token not allowed");
         // 4: ORDER_TYPEHASH matches the canonical spec string
         require(
-            checkout.ORDER_TYPEHASH() == keccak256(
-                "Order(bytes32 orderId,address payer,address merchant,uint256 amount,uint256 fee,address feeRecipient,address token,uint256 validAfter,uint256 validBefore,bytes32 quoteId)"
-            ),
+            checkout.ORDER_TYPEHASH()
+                == keccak256(
+                    "Order(bytes32 orderId,address payer,address merchant,uint256 amount,uint256 fee,address feeRecipient,address token,uint256 validAfter,uint256 validBefore,bytes32 quoteId)"
+                ),
             "ORDER_TYPEHASH drift"
         );
         // 5: no accidental initial settlements
-        require(!checkout.settled(bytes32(uint256(1))), "pre-settled");
+        require(!checkout.settled(address(0xA11CE), bytes32(uint256(1))), "pre-settled");
     }
 
     function testWrongChainConstructorRejected() public {

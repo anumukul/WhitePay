@@ -1,26 +1,103 @@
-No files changed, compilation skipped
 
-Ran 20 tests for test/unit/WhitePayCheckout.t.sol:WhitePayCheckoutTest
-[PASS] testAmountTamperRejected() (gas: 67513)
-[PASS] testCrossContractSignatureRejected() (gas: 1317875)
-[PASS] testDisallowedTokenRejected() (gas: 714502)
-[PASS] testExactAtomicSplit() (gas: 230119)
-[PASS] testExpiredBoundaryRejected() (gas: 63113)
-[PASS] testFeeRecipientTamperRejected() (gas: 67306)
-[PASS] testFeeTamperRejected() (gas: 67190)
-[PASS] testFeeTransferFailureRollsBack() (gas: 258096)
-[PASS] testFrontRunDifferentPayerRejected() (gas: 69508)
-[PASS] testFuzzExactMathHolds(uint64,uint64) (runs: 256, μ: 265626, ~: 266732)
-[PASS] testMerchantTamperRejected() (gas: 67284)
-[PASS] testPayerEqualsMerchantRejected() (gas: 61867)
-[PASS] testReentryBlocked() (gas: 658173)
-[PASS] testReplayRejected() (gas: 220035)
-[PASS] testTokenTamperRejected() (gas: 714448)
-[PASS] testValidAfterBoundaryRejected() (gas: 62926)
-[PASS] testWrongRuntimeChainRejected() (gas: 56733)
-[PASS] testWrongSignerRejected() (gas: 67250)
-[PASS] testZeroAmountRejected() (gas: 61389)
-[PASS] testZeroFeeNoFeeTransfer() (gas: 175480)
-Suite result: ok. 20 passed; 0 failed; 0 skipped; finished in 48.22ms (80.37ms CPU time)
+> whitepay@0.0.0 test:checkout /Users/anubhavsingh/Desktop/EthGlobal/WhitePay
+> FOUNDRY_PROFILE=step03 forge test --root packages/contracts -vv --gas-report
 
-Ran 1 test suite in 50.91ms (48.22ms CPU time): 20 tests passed, 0 failed, 0 skipped (20 total tests)
+Compiling 1 files with Solc 0.8.24
+Solc 0.8.24 finished in 1.96s
+Compiler run successful!
+
+Ran 4 tests for test/unit/DeploySmoke.t.sol:DeploySmokeTest
+[PASS] testEmptyAddressFailsSmoke() (gas: 2792)
+[PASS] testFreshDeploymentPassesSmoke() (gas: 1291952)
+[PASS] testWrongChainConstructorRejected() (gas: 219779)
+[PASS] testZeroTokenInAllowlistRejected() (gas: 220013)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 1.06ms (2.18ms CPU time)
+
+Ran 35 tests for test/unit/WhitePayCheckout.t.sol:WhitePayCheckoutTest
+[PASS] testAllRemainingSignedFieldsRejectTampering() (gas: 271283)
+[PASS] testAllowedTokenSubstitutionStillRejectsSignature() (gas: 2038708)
+[PASS] testAmountTamperRejected() (gas: 68007)
+[PASS] testCrossContractSignatureRejected() (gas: 1339706)
+[PASS] testDifferentPayerCannotBlockSignedOrder() (gas: 358148)
+[PASS] testDigestMatchesIndependentEIP712Encoding() (gas: 17139)
+[PASS] testDisallowedTokenRejected() (gas: 730701)
+[PASS] testExactAtomicSplit() (gas: 210500)
+[PASS] testExactSettlementEvent() (gas: 174971)
+[PASS] testExpiredBoundaryRejected() (gas: 63562)
+[PASS] testFeeRecipientTamperRejected() (gas: 67615)
+[PASS] testFeeTamperRejected() (gas: 67353)
+[PASS] testFeeTransferFailureRollsBack() (gas: 261238)
+[PASS] testFrontRunDifferentPayerRejected() (gas: 69950)
+[PASS] testFuzzExactMathHolds(uint64,uint64) (runs: 256, μ: 313332, ~: 315222)
+[PASS] testFuzzPayerReplayIsolation(bytes32,uint64) (runs: 256, μ: 375358, ~: 375578)
+[PASS] testInsufficientBalanceRollsBackAuthorization() (gas: 149613)
+[PASS] testInvalidRoleAndIdentifierCases() (gas: 401340)
+[PASS] testInvalidWindowRejected() (gas: 54584)
+[PASS] testMalformedSignatureDoesNotConsumeOrder() (gas: 81091)
+[PASS] testMerchantTamperRejected() (gas: 67571)
+[PASS] testPayerEqualsMerchantRejected() (gas: 62109)
+[PASS] testReentryBlocked() (gas: 658910)
+[PASS] testReplayRejected() (gas: 200521)
+[PASS] testSamePayerCannotReuseOrderIdWithNewTerms() (gas: 231459)
+[PASS] testShortFeeTransferRollsBack() (gas: 296336)
+[PASS] testShortMerchantTransferRollsBack() (gas: 295256)
+[PASS] testTokenTamperRejected() (gas: 730569)
+[PASS] testTotalOverflowDoesNotConsumeOrder() (gas: 73896)
+[PASS] testValidAfterBoundaryRejected() (gas: 63226)
+[PASS] testWrongChainSignatureRejectedOnCorrectChain() (gas: 71434)
+[PASS] testWrongRuntimeChainRejected() (gas: 56843)
+[PASS] testWrongSignerRejected() (gas: 67666)
+[PASS] testZeroAmountRejected() (gas: 61908)
+[PASS] testZeroFeeNoFeeTransfer() (gas: 155512)
+Suite result: ok. 35 passed; 0 failed; 0 skipped; finished in 36.28ms (68.28ms CPU time)
+
+╭----------------------------------------------------+-----------------+-------+--------+--------+---------╮
+| src/WhitePayCheckout.sol:WhitePayCheckout Contract |                 |       |        |        |         |
++==========================================================================================================+
+| Deployment Cost                                    | Deployment Size |       |        |        |         |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                            1240252 |            7042 |       |        |        |         |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                                    |                 |       |        |        |         |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                                      | Min             | Avg   | Median | Max    | # Calls |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| ORDER_TYPEHASH                                     |             279 |   279 |    279 |    279 |       1 |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| expectedChainId                                    |             218 |   218 |    218 |    218 |       1 |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| orderDigest                                        |             955 |   955 |    955 |   1181 |    1067 |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| settle                                             |           31300 | 99279 | 133598 | 178456 |    1332 |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| settled                                            |            2578 |  2578 |   2578 |   2578 |     783 |
+|----------------------------------------------------+-----------------+-------+--------+--------+---------|
+| tokenAllowed                                       |            2446 |  2446 |   2446 |   2446 |       1 |
+╰----------------------------------------------------+-----------------+-------+--------+--------+---------╯
+
+╭----------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| test/unit/WhitePayCheckout.t.sol:MockReceiveAuthToken Contract |                 |        |        |        |         |
++=======================================================================================================================+
+| Deployment Cost                                                | Deployment Size |        |        |        |         |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                         639234 |            2739 |        |        |        |         |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                |                 |        |        |        |         |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                  | Min             | Avg    | Median | Max    | # Calls |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| authorizationState                                             |            2815 |   2815 |   2815 |   2815 |     264 |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| balanceOf                                                      |             563 |   1814 |   2563 |   2563 |    8325 |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| failTransfersTo                                                |           43734 |  43734 |  43734 |  43734 |       1 |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| mint                                                           |           27034 |  36153 |  44134 |  44158 |     550 |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| scheduleReenter                                                |          453367 | 453367 | 453367 | 453367 |       1 |
+|----------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| shortPay                                                       |           43778 |  43778 |  43778 |  43778 |       2 |
+╰----------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+
+Ran 2 test suites in 68.39ms (37.34ms CPU time): 39 tests passed, 0 failed, 0 skipped (39 total tests)

@@ -35,3 +35,13 @@ via_ir = true
 
 [profile.step03.fuzz]
 runs = 256
+
+# Final checkout validation against pinned official-token state. Local execution only.
+[profile.step03fork]
+src = "src"
+script = "script"
+test = "test/checkout-fork"
+out = "out-step03"
+cache_path = "cache-step03"
+remappings = ["@openzeppelin/contracts/=lib/@openzeppelin/contracts/"]
+via_ir = true

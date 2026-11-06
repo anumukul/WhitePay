@@ -5,7 +5,7 @@ External-write gate. Nothing in this runbook has been broadcast. All commands be
 ## Pre-flight (one-time, human-confirmed)
 
 - Branch at `f91920e` or later (Step 03 GREEN).
-- Deployer keystore encrypted at the path recorded in `docs/progress/step-02.md`. **Do not paste the password into chat.** The deployer must have at least `0.01 WBT` (the Step 02 funding preview quoted ≈0.00642 WBT for this exact contract — 1.28M gas + L1 data fee at 5 gwei).
+- Deployer keystore encrypted at the path recorded in `docs/progress/step-02.md`. **Do not paste the password into chat.** Refresh gas and L1 fees for the approved final candidate, constructor args and current nonce. Step 02's deployment estimate applied to the experimental PoC; it is not a quote for this changed final contract.
 - `WHITECHAIN_RPC_URL` set to an RPC you trust; confirm `cast chain-id --rpc-url $WHITECHAIN_RPC_URL` returns `1874`.
 - Second-teammate security review of `src/WhitePayCheckout.sol` signed off (PR.md Section 10.4 requires this before Step 04).
 
@@ -84,16 +84,18 @@ cast call $DEPLOYED_ADDRESS "tokenAllowed(address)(bool)" 0xcedfB56113143d55b235
 cast code $DEPLOYED_ADDRESS --rpc-url $WHITECHAIN_RPC_URL | head -c 64   # must not be 0x
 
 # 5b: EIP-712 domain separator vs recomputed
-cast call $DEPLOYED_ADDRESS "DOMAIN_SEPARATOR()(bytes32)" --rpc-url $WHITECHAIN_RPC_URL
-# compare with computed off-chain for name="WhitePayCheckout", version="1", chainid=1874, verifyingContract=$DEPLOYED_ADDRESS
+cast call $DEPLOYED_ADDRESS "eip712Domain()(bytes1,string,string,uint256,address,bytes32,uint256[])" --rpc-url $WHITECHAIN_RPC_URL
+# Check fields/name/version/chain/verifyingContract; inherited EIP712 exposes eip712Domain(), not DOMAIN_SEPARATOR().
+# Independently compare orderDigest for a canonical order against off-chain EIP-712 encoding.
 ```
 
 Record:
+
 - `DEPLOYED_ADDRESS`
 - Deploy tx hash
 - Block number
 - Blockscout verified-source URL
-- `DOMAIN_SEPARATOR` value
+- EIP-712 domain fields and independently matched order digest
 
 in `docs/evidence/step-04-deploy.json` (gitignored path for pre-publication, then promoted).
 
@@ -102,7 +104,7 @@ in `docs/evidence/step-04-deploy.json` (gitignored path for pre-publication, the
 **This is a second external write and a second approval.** Requires:
 
 - Payer funded with ≥ 5.005 official USDT, **zero WBT**. Still blocked on the 10-USDT transfer from Step 02 funding plan.
-- Relayer wallet funded with WBT for gas (Step 02 preview quoted ≈0.0001 WBT per settle at 5 gwei).
+- Relayer wallet funded with WBT for a fresh final-contract gas estimate and L1 fee quote. The accepted PoC's actual gas cost is evidence, not an unchanged fee quote for this contract.
 - A signed order from the payer (produced by the Step 05 API once Step 05 lands — or manually via a one-off script for the Step 04 proof).
 
 Approval phrases expected: "approve deploy" (for step 4 broadcast) and separately "approve settlement" (for step 6).

@@ -4,25 +4,25 @@ Gas-sponsored USDT checkout infrastructure for merchants on Whitechain. Buyers p
 
 ## Submission status (testnet)
 
-**Step 02 live proof verified and manually approved:** the experimental PoC settled 5 USDT to the merchant plus a 0.005-USDT fee, with exactly zero payer WBT and relayer-paid gas. [Payment receipt](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) and [manual acceptance checks](docs/progress/step-02.md) document exact balances, fees and read-only replay rejection. The final WhitePayCheckout is not deployed and still requires the corresponding payer-scoped replay correction/review in Step 03. Future deployments and payments require separate explicit transaction approval.
+**Step 02 live proof verified and manually approved:** the experimental PoC settled 5 USDT to the merchant plus a 0.005-USDT fee, with exactly zero payer WBT and relayer-paid gas. [Payment receipt](https://explorer.testnet.whitechain.io/tx/0x93b866b4855b0fe05a86578ecbebe174671417c809c8598822fb04a3623c4641) and [manual acceptance checks](docs/progress/step-02.md) document exact balances, fees and read-only replay rejection. The final WhitePayCheckout is not deployed; Step 03 now corrects payer-scoped replay and its ABI reader, with Step 03 manual acceptance recorded; final security/deployment approval remains separate. Future deployments and payments require separate explicit transaction approval.
 
-| Component                     | Status                   | Tests                | Note                                                               |
-| ----------------------------- | ------------------------ | -------------------- | ------------------------------------------------------------------ |
-| Contract — `WhitePayCheckout` | GREEN on mocks           | 20/20 + 256-run fuzz | Step 03, `docs/progress/step-03.md`                                |
-| Deploy script + smoke         | PREPARED, not broadcast  | 4/4                  | Step 04, `docs/runbooks/step-04-deploy.md`                         |
-| Merchant API                  | GREEN                    | 8/8                  | Step 05, `services/api/`                                           |
-| Relayer logic                 | GREEN (mock chain)       | 11/11                | Step 06, `services/relayer/`                                       |
-| Indexer + signed webhooks     | GREEN                    | 7/7                  | Step 07, `services/worker/`                                        |
-| `@whitepay/node` SDK          | GREEN, packable          | 6/6                  | Step 08, `packages/sdk-node/`                                      |
-| `@whitepay/react` widget      | GREEN, packable          | 5/5                  | Step 09, `packages/sdk-react/`                                     |
-| Dashboard                     | GREEN                    | 3/3                  | Step 10, `apps/dashboard/`                                         |
-| Demo SaaS                     | GREEN                    | 3/3                  | Step 11, `apps/demo-saas/` (on branch `feat/step-11-12-demo-saas`) |
-| Demo Shop                     | GREEN                    | 3/3                  | Step 12, `apps/demo-shop/` (same branch)                           |
-| Service deploy                | PREPARED, not deployed   | —                    | Step 13, `docs/runbooks/step-13-deploy.md`                         |
-| npm publish of SDKs           | PREPARED, tarballs built | —                    | Step 14, `docs/runbooks/step-14-publish.md`                        |
-| Landing site                  | SHIPS                    | —                    | Step 15, `apps/website/`                                           |
-| Adversarial regression        | GREEN                    | 2/2                  | Step 16, `tests/adversarial.test.mjs`                              |
-| Demo video script             | PREPARED                 | —                    | Step 17, `docs/demo-script.md`                                     |
+| Component                     | Status                   | Tests                                                                         | Note                                                               |
+| ----------------------------- | ------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Contract — `WhitePayCheckout` | STEP 03 APPROVED         | 35 contract tests (two 256-run fuzz tests), plus 11 official-token fork tests | Step 03, `docs/progress/step-03.md`; not deployed                  |
+| Deploy script + smoke         | PREPARED, not broadcast  | 4/4                                                                           | Step 04, `docs/runbooks/step-04-deploy.md`                         |
+| Merchant API                  | GREEN                    | 8/8                                                                           | Step 05, `services/api/`                                           |
+| Relayer logic                 | GREEN (mock chain)       | 11/11                                                                         | Step 06, `services/relayer/`                                       |
+| Indexer + signed webhooks     | GREEN                    | 7/7                                                                           | Step 07, `services/worker/`                                        |
+| `@whitepay/node` SDK          | GREEN, packable          | 6/6                                                                           | Step 08, `packages/sdk-node/`                                      |
+| `@whitepay/react` widget      | GREEN, packable          | 5/5                                                                           | Step 09, `packages/sdk-react/`                                     |
+| Dashboard                     | GREEN                    | 3/3                                                                           | Step 10, `apps/dashboard/`                                         |
+| Demo SaaS                     | GREEN                    | 3/3                                                                           | Step 11, `apps/demo-saas/` (on branch `feat/step-11-12-demo-saas`) |
+| Demo Shop                     | GREEN                    | 3/3                                                                           | Step 12, `apps/demo-shop/` (same branch)                           |
+| Service deploy                | PREPARED, not deployed   | —                                                                             | Step 13, `docs/runbooks/step-13-deploy.md`                         |
+| npm publish of SDKs           | PREPARED, tarballs built | —                                                                             | Step 14, `docs/runbooks/step-14-publish.md`                        |
+| Landing site                  | SHIPS                    | —                                                                             | Step 15, `apps/website/`                                           |
+| Adversarial regression        | GREEN                    | 2/2                                                                           | Step 16, `tests/adversarial.test.mjs`                              |
+| Demo video script             | PREPARED                 | —                                                                             | Step 17, `docs/demo-script.md`                                     |
 
 Component counts above are historical teammate reports, not a fresh full-stack certification. Latest Step 02 verification: 28 root Node tests, 10 local PoC tests, 11 official-token fork tests and the live payment/replay checks. Demo apps referenced on another branch are not present on current main.
 

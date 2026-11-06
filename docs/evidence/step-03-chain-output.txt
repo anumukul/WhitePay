@@ -1,0 +1,26 @@
+
+> @whitepay/chain@0.0.0 test /Users/anubhavsingh/Desktop/EthGlobal/WhitePay/packages/chain
+> node --test --import tsx/esm test/*.test.ts
+
+✔ getChainId matches anvil chain-id flag (112.343125ms)
+✔ getBlockNumber returns a non-negative integer (1.215167ms)
+✔ getBalance of deployer matches expected anvil pre-fund (0.554291ms)
+✔ getRelayerBalance works and is positive (0.41125ms)
+✔ settled ABI scopes an orderId to its payer (0.641917ms)
+✔ chain ABI matches compiled contract function and event shapes (0.249708ms)
+✔ isSettled requires a payer and returns false for a fresh orderId (1.339583ms)
+✔ orderDigest returns a bytes32 for a canonical order (0.812209ms)
+✔ getLogs returns empty array over a fresh block range (1.295584ms)
+✔ getLogs parses a PaymentSettled event emitted by the Emitter helper (3.750625ms)
+✔ sendTransaction via wallet client mines (plain ETH transfer from relayer) (2.659375ms)
+✔ asChainAdapter conforms to the ChainAdapter interface shape (0.074458ms)
+✔ asChainReader conforms to the ChainReader interface shape (0.034125ms)
+✔ estimateSettleGas rejects invalid order (not allowed token, no sig) (1.502584ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2638.455833

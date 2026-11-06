@@ -20,14 +20,14 @@ interface IReceiveAuthorization {
 }
 
 /// @title WhitePayCheckout
-/// @notice Production checkout settling buyer payments atomically in a permitted ERC-20 token
+/// @notice Testnet checkout candidate settling buyer payments atomically in a permitted ERC-20 token
 ///         (EIP-3009 `receiveWithAuthorization`), splitting between merchant and fee recipient.
 ///         Matches the authorization path proven in WhitePayAuthorizationPoC (ADR 0001 path A).
 ///         No funds custodied — all transfers occur within a single call.
 contract WhitePayCheckout is EIP712, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /// @dev Expected chain id; immutable so cross-chain replay reverts even if runtime chain is spoofed.
+    /// @dev Required runtime chain id, checked at construction and every settlement.
     uint256 public immutable expectedChainId;
 
     /// @dev Only tokens explicitly allowed by the deployer may be used. Prevents abuse with arbitrary
@@ -51,7 +51,8 @@ contract WhitePayCheckout is EIP712, ReentrancyGuard {
         bytes32 quoteId;
     }
 
-    mapping(bytes32 => bool) public settled;
+    /// @notice Replay protection is scoped to payer so another payer cannot consume its orderId.
+    mapping(address => mapping(bytes32 => bool)) public settled;
 
     error WrongChain();
     error TokenNotAllowed();
@@ -73,9 +74,7 @@ contract WhitePayCheckout is EIP712, ReentrancyGuard {
     );
     event TokenAllowanceSet(address indexed token, bool allowed);
 
-    constructor(uint256 _expectedChainId, address[] memory allowedTokens)
-        EIP712("WhitePayCheckout", "1")
-    {
+    constructor(uint256 _expectedChainId, address[] memory allowedTokens) EIP712("WhitePayCheckout", "1") {
         if (block.chainid != _expectedChainId) revert WrongChain();
         expectedChainId = _expectedChainId;
         for (uint256 i = 0; i < allowedTokens.length; i++) {
@@ -113,7 +112,7 @@ contract WhitePayCheckout is EIP712, ReentrancyGuard {
     {
         if (block.chainid != expectedChainId) revert WrongChain();
         if (!tokenAllowed[order.token]) revert TokenNotAllowed();
-        if (settled[order.orderId]) revert OrderAlreadySettled();
+        if (settled[order.payer][order.orderId]) revert OrderAlreadySettled();
         _validateTerms(order);
         if (block.timestamp <= order.validAfter || block.timestamp >= order.validBefore) {
             revert InvalidTimeWindow();
@@ -129,11 +128,12 @@ contract WhitePayCheckout is EIP712, ReentrancyGuard {
         uint256 feeBefore = token.balanceOf(order.feeRecipient);
         uint256 selfBefore = token.balanceOf(address(this));
 
-        settled[order.orderId] = true;
+        settled[order.payer][order.orderId] = true;
 
-        IReceiveAuthorization(order.token).receiveWithAuthorization(
-            order.payer, address(this), total, order.validAfter, order.validBefore, digest, tokenSignature
-        );
+        IReceiveAuthorization(order.token)
+            .receiveWithAuthorization(
+                order.payer, address(this), total, order.validAfter, order.validBefore, digest, tokenSignature
+            );
         token.safeTransfer(order.merchant, order.amount);
         if (order.fee != 0) token.safeTransfer(order.feeRecipient, order.fee);
 
@@ -158,19 +158,11 @@ contract WhitePayCheckout is EIP712, ReentrancyGuard {
 
     function _validateTerms(Order calldata order) internal view {
         if (
-            order.orderId == bytes32(0)
-                || order.quoteId == bytes32(0)
-                || order.amount == 0
-                || order.payer == address(0)
-                || order.merchant == address(0)
-                || order.feeRecipient == address(0)
-                || order.payer == order.merchant
-                || order.payer == order.feeRecipient
-                || order.merchant == order.feeRecipient
-                || order.payer == address(this)
-                || order.merchant == address(this)
-                || order.feeRecipient == address(this)
-                || order.validBefore <= order.validAfter
+            order.orderId == bytes32(0) || order.quoteId == bytes32(0) || order.amount == 0 || order.payer == address(0)
+                || order.merchant == address(0) || order.feeRecipient == address(0) || order.payer == order.merchant
+                || order.payer == order.feeRecipient || order.merchant == order.feeRecipient
+                || order.payer == address(this) || order.merchant == address(this)
+                || order.feeRecipient == address(this) || order.validBefore <= order.validAfter
         ) revert InvalidTerms();
     }
 }

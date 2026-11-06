@@ -14,6 +14,7 @@ interface Vm {
     function expectRevert(bytes4) external;
     function expectRevert(bytes calldata) external;
     function expectEmit(bool, bool, bool, bool) external;
+    function expectEmit(bool, bool, bool, bool, address) external;
     function recordLogs() external;
     function label(address, string calldata) external;
     function assume(bool) external;
@@ -28,15 +29,25 @@ contract MockReceiveAuthToken {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(bytes32 => bool)) public authorizationState;
     address public failRecipient;
-    bool public lyingBalance;
+    address public shortPayRecipient;
     address public reenterInto;
     bytes public reenterCalldata;
 
-    function mint(address to, uint256 amount) external { balanceOf[to] += amount; }
-    function failTransfersTo(address r) external { failRecipient = r; }
-    function setLyingBalance(bool v) external { lyingBalance = v; }
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function failTransfersTo(address r) external {
+        failRecipient = r;
+    }
+
+    function shortPay(address recipient) external {
+        shortPayRecipient = recipient;
+    }
+
     function scheduleReenter(address target, bytes calldata data) external {
-        reenterInto = target; reenterCalldata = data;
+        reenterInto = target;
+        reenterCalldata = data;
     }
 
     function receiveWithAuthorization(
@@ -64,18 +75,22 @@ contract MockReceiveAuthToken {
         if (to == failRecipient) return false;
         if (balanceOf[msg.sender] < value) return false;
         balanceOf[msg.sender] -= value;
-        balanceOf[to] += value;
+        balanceOf[to] += to == shortPayRecipient && value > 0 ? value - 1 : value;
         return true;
-    }
-
-    // Deliberately misreports balance of this contract after transfer to prove the exact-balance check catches it.
-    function balanceOfOverride(address who, uint256 real) internal view returns (uint256) {
-        if (lyingBalance && who == msg.sender) return real + 1;
-        return real;
     }
 }
 
 contract WhitePayCheckoutTest {
+    event PaymentSettled(
+        bytes32 indexed orderId,
+        address indexed payer,
+        address indexed merchant,
+        address token,
+        uint256 amount,
+        uint256 fee,
+        address feeRecipient,
+        bytes32 quoteId
+    );
     Vm constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     uint256 constant CHAIN_ID = 1874;
@@ -134,7 +149,7 @@ contract WhitePayCheckoutTest {
         require(token.balanceOf(merchant) == 5_000_000, "merchant credit");
         require(token.balanceOf(treasury) == 5_000, "fee credit");
         require(token.balanceOf(address(checkout)) == 0, "residual");
-        require(checkout.settled(order.orderId), "unsettled");
+        require(checkout.settled(order.payer, order.orderId), "unsettled");
         require(token.authorizationState(payer, checkout.orderDigest(order)), "nonce not consumed");
     }
 
@@ -155,6 +170,171 @@ contract WhitePayCheckoutTest {
         checkout.settle(order, sig, hex"00");
         vm.expectRevert(WhitePayCheckout.OrderAlreadySettled.selector);
         checkout.settle(order, sig, hex"00");
+    }
+
+    function testDifferentPayerCannotBlockSignedOrder() public {
+        WhitePayCheckout.Order memory victim = baseOrder();
+        bytes memory victimSig = sign(PAYER_KEY, victim);
+        WhitePayCheckout.Order memory attack = baseOrder();
+        attack.payer = other;
+        attack.merchant = address(0xB21);
+        attack.amount = 1;
+        attack.fee = 0;
+        token.mint(other, 1);
+        bytes memory attackSig = sign(OTHER_KEY, attack);
+        vm.prank(other);
+        checkout.settle(attack, attackSig, hex"00");
+        checkout.settle(victim, victimSig, hex"00");
+        require(token.balanceOf(payer) == 994_995_000, "victim not paid");
+        require(token.balanceOf(merchant) == 5_000_000, "merchant credit");
+    }
+
+    function testSamePayerCannotReuseOrderIdWithNewTerms() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        checkout.settle(order, sign(PAYER_KEY, order), hex"00");
+        order.quoteId = keccak256("new quote");
+        order.fee += 1;
+        bytes32 freshNonce = checkout.orderDigest(order);
+        bytes memory sig = sign(PAYER_KEY, order);
+        vm.expectRevert(WhitePayCheckout.OrderAlreadySettled.selector);
+        checkout.settle(order, sig, hex"00");
+        require(!token.authorizationState(payer, freshNonce), "new nonce consumed");
+        require(token.balanceOf(payer) == 994_995_000, "payer debited twice");
+    }
+
+    function testExactSettlementEvent() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        bytes memory sig = sign(PAYER_KEY, order);
+        vm.expectEmit(true, true, true, true, address(checkout));
+        emit PaymentSettled(
+            order.orderId, payer, merchant, address(token), order.amount, order.fee, treasury, order.quoteId
+        );
+        checkout.settle(order, sig, hex"00");
+    }
+
+    function testAllRemainingSignedFieldsRejectTampering() public {
+        bytes memory sig = sign(PAYER_KEY, baseOrder());
+        for (uint256 field; field < 4; ++field) {
+            WhitePayCheckout.Order memory changed = baseOrder();
+            if (field == 0) changed.orderId = keccak256("different order");
+            if (field == 1) changed.quoteId = keccak256("different quote");
+            if (field == 2) changed.validAfter -= 1;
+            if (field == 3) changed.validBefore += 1;
+            vm.expectRevert(WhitePayCheckout.InvalidOrderSignature.selector);
+            checkout.settle(changed, sig, hex"00");
+            require(!checkout.settled(changed.payer, changed.orderId), "changed order consumed");
+        }
+    }
+
+    function testAllowedTokenSubstitutionStillRejectsSignature() public {
+        MockReceiveAuthToken second = new MockReceiveAuthToken();
+        address[] memory allowed = new address[](2);
+        allowed[0] = address(token);
+        allowed[1] = address(second);
+        checkout = new WhitePayCheckout(CHAIN_ID, allowed);
+        WhitePayCheckout.Order memory order = baseOrder();
+        bytes memory sig = sign(PAYER_KEY, order);
+        order.token = address(second);
+        vm.expectRevert(WhitePayCheckout.InvalidOrderSignature.selector);
+        checkout.settle(order, sig, hex"00");
+    }
+
+    function testShortMerchantTransferRollsBack() public {
+        assertShortTransferRollsBack(merchant);
+    }
+
+    function testShortFeeTransferRollsBack() public {
+        assertShortTransferRollsBack(treasury);
+    }
+
+    function assertShortTransferRollsBack(address recipient) internal {
+        WhitePayCheckout.Order memory order = baseOrder();
+        bytes memory sig = sign(PAYER_KEY, order);
+        token.shortPay(recipient);
+        vm.expectRevert(WhitePayCheckout.InexactTokenTransfer.selector);
+        checkout.settle(order, sig, hex"00");
+        require(token.balanceOf(payer) == 1_000_000_000, "payer not restored");
+        require(token.balanceOf(merchant) == 0 && token.balanceOf(treasury) == 0, "partial payout");
+        require(token.balanceOf(address(checkout)) == 0, "receiver residual");
+        require(!checkout.settled(payer, order.orderId), "order consumed");
+        require(!token.authorizationState(payer, checkout.orderDigest(order)), "token nonce consumed");
+    }
+
+    function testTotalOverflowDoesNotConsumeOrder() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        order.amount = type(uint256).max;
+        order.fee = 1;
+        bytes memory sig = sign(PAYER_KEY, order);
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", uint256(0x11)));
+        checkout.settle(order, sig, hex"00");
+        require(!checkout.settled(payer, order.orderId), "overflow consumed order");
+    }
+
+    function testMalformedSignatureDoesNotConsumeOrder() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        bytes32 nonce = checkout.orderDigest(order);
+        vm.expectRevert();
+        checkout.settle(order, hex"01", hex"00");
+        require(!checkout.settled(payer, order.orderId), "order consumed");
+        require(!token.authorizationState(payer, nonce), "token nonce consumed");
+        require(token.balanceOf(payer) == 1_000_000_000, "payer debited");
+    }
+
+    function testInvalidWindowRejected() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        order.validBefore = order.validAfter;
+        vm.expectRevert(WhitePayCheckout.InvalidTerms.selector);
+        checkout.settle(order, hex"00", hex"00");
+    }
+
+    function testInsufficientBalanceRollsBackAuthorization() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        order.amount = 1_000_000_001;
+        bytes memory sig = sign(PAYER_KEY, order);
+        bytes32 nonce = checkout.orderDigest(order);
+        vm.expectRevert(bytes("insufficient"));
+        checkout.settle(order, sig, hex"00");
+        require(!checkout.settled(payer, order.orderId), "order consumed");
+        require(!token.authorizationState(payer, nonce), "token nonce consumed");
+    }
+
+    function testDigestMatchesIndependentEIP712Encoding() public view {
+        WhitePayCheckout.Order memory order = baseOrder();
+        bytes32 domain = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256("WhitePayCheckout"),
+                keccak256("1"),
+                CHAIN_ID,
+                address(checkout)
+            )
+        );
+        bytes32 typeHash = keccak256(
+            "Order(bytes32 orderId,address payer,address merchant,uint256 amount,uint256 fee,address feeRecipient,address token,uint256 validAfter,uint256 validBefore,bytes32 quoteId)"
+        );
+        bytes32 structHash = keccak256(abi.encode(typeHash, order));
+        require(
+            checkout.orderDigest(order) == keccak256(abi.encodePacked(hex"1901", domain, structHash)),
+            "digest encoding drift"
+        );
+    }
+
+    function testInvalidRoleAndIdentifierCases() public {
+        for (uint256 choice; choice < 10; ++choice) {
+            WhitePayCheckout.Order memory order = baseOrder();
+            if (choice == 0) order.orderId = bytes32(0);
+            if (choice == 1) order.quoteId = bytes32(0);
+            if (choice == 2) order.payer = address(0);
+            if (choice == 3) order.merchant = address(0);
+            if (choice == 4) order.feeRecipient = address(0);
+            if (choice == 5) order.payer = address(checkout);
+            if (choice == 6) order.merchant = address(checkout);
+            if (choice == 7) order.feeRecipient = address(checkout);
+            if (choice == 8) order.feeRecipient = order.merchant;
+            if (choice == 9) order.feeRecipient = order.payer;
+            vm.expectRevert(WhitePayCheckout.InvalidTerms.selector);
+            checkout.settle(order, hex"00", hex"00");
+        }
     }
 
     // ─────────────────────── tampering ───────────────────────────
@@ -239,6 +419,15 @@ contract WhitePayCheckoutTest {
         other2.settle(order, sig, hex"00");
     }
 
+    function testWrongChainSignatureRejectedOnCorrectChain() public {
+        WhitePayCheckout.Order memory order = baseOrder();
+        vm.chainId(1);
+        bytes memory wrongDomainSig = sign(PAYER_KEY, order);
+        vm.chainId(CHAIN_ID);
+        vm.expectRevert(WhitePayCheckout.InvalidOrderSignature.selector);
+        checkout.settle(order, wrongDomainSig, hex"00");
+    }
+
     // ─────────────────────── wrong signer ────────────────────────
 
     function testWrongSignerRejected() public {
@@ -294,7 +483,7 @@ contract WhitePayCheckoutTest {
         checkout.settle(order, sig, hex"00");
         require(token.balanceOf(payer) == 1_000_000_000, "payer not restored");
         require(token.balanceOf(merchant) == 0, "partial merchant payout");
-        require(!checkout.settled(order.orderId), "order consumed after failure");
+        require(!checkout.settled(order.payer, order.orderId), "order consumed after failure");
         require(!token.authorizationState(payer, checkout.orderDigest(order)), "nonce consumed after failure");
     }
 
@@ -308,6 +497,28 @@ contract WhitePayCheckoutTest {
     }
 
     // ─────────────────────── fuzz ────────────────────────────────
+
+    function testFuzzPayerReplayIsolation(bytes32 id, uint64 payment) public {
+        if (id == bytes32(0)) id = bytes32(uint256(1));
+        WhitePayCheckout.Order memory victim = baseOrder();
+        victim.orderId = id;
+        victim.amount = uint256(payment) % 500_000_000 + 1;
+        victim.fee = 0;
+        WhitePayCheckout.Order memory attack = baseOrder();
+        attack.orderId = id;
+        attack.payer = other;
+        attack.merchant = address(0xB21);
+        attack.amount = 1;
+        attack.fee = 0;
+        token.mint(other, 1);
+        checkout.settle(attack, sign(OTHER_KEY, attack), hex"00");
+        bytes memory sig = sign(PAYER_KEY, victim);
+        checkout.settle(victim, sig, hex"00");
+        require(checkout.settled(payer, id) && checkout.settled(other, id), "payer isolation");
+        require(token.balanceOf(merchant) == victim.amount, "merchant credit");
+        vm.expectRevert(WhitePayCheckout.OrderAlreadySettled.selector);
+        checkout.settle(victim, sig, hex"00");
+    }
 
     function testFuzzExactMathHolds(uint64 amount, uint64 fee) public {
         vm.assume(amount > 0 && amount < 500_000_000);
@@ -326,5 +537,10 @@ contract WhitePayCheckoutTest {
         require(token.balanceOf(payer) == payerBefore - total, "payer");
         require(token.balanceOf(merchant) == merchantBefore + amount, "merchant");
         require(token.balanceOf(treasury) == feeBefore + fee, "fee");
+        require(token.balanceOf(address(checkout)) == 0, "receiver residual");
+        require(checkout.settled(payer, order.orderId), "not settled");
+        require(token.authorizationState(payer, checkout.orderDigest(order)), "nonce not consumed");
+        vm.expectRevert(WhitePayCheckout.OrderAlreadySettled.selector);
+        checkout.settle(order, sig, hex"00");
     }
 }
