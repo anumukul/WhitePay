@@ -23,7 +23,8 @@ COPY packages ./packages
 COPY services ./services
 COPY apps ./apps
 
-RUN --mount=type=cache,id=whitepay-pnpm,target=/pnpm/store pnpm install --frozen-lockfile \
+# tsx is a devDependency but is required by the source-based service runtime.
+RUN --mount=type=cache,id=whitepay-pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prod=false \
     --filter @whitepay/api... \
     --filter @whitepay/worker... \
     --filter @whitepay/relayer...

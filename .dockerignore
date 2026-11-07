@@ -13,3 +13,13 @@ packages/contracts/out
 packages/contracts/broadcast
 *.tsbuildinfo
 .DS_Store
+keystores
+**/keystores
+**/authorizations
+.aws
+.codex
+.agents
+.vercel
+**/.vercel
+**/*.key
+**/*.pem

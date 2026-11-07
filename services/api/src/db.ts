@@ -76,6 +76,36 @@ export async function migrate(direction: 'up' | 'down' = 'up'): Promise<void> {
     }
   });
 }
+export async function migrationReadiness(): Promise<{
+  current: boolean;
+  appliedCount: number;
+}> {
+  const folder = new URL('../migrations/', import.meta.url);
+  const files = (await readdir(folder))
+    .filter((file) => /^\d+-.*\.up\.sql$/.test(file))
+    .sort();
+  const expected = new Map<number, string>();
+  for (const file of files) {
+    expected.set(
+      Number(file.split('-')[0]),
+      createHash('sha256')
+        .update(await readFile(new URL(file, folder)))
+        .digest('hex'),
+    );
+  }
+  const actual = (
+    await getDb().query<{ version: number; checksum: string }>(
+      'SELECT version,checksum FROM schema_migrations',
+    )
+  ).rows;
+  return {
+    current:
+      expected.size > 0 &&
+      actual.length === expected.size &&
+      actual.every((row) => expected.get(row.version) === row.checksum),
+    appliedCount: actual.length,
+  };
+}
 export async function closeDb(): Promise<void> {
   if (!singleton) return;
   const pool = singleton;

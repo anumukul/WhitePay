@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { resetDbForTests, closeDb } from '../src/db.js';
+import { resetDbForTests, closeDb, getDb } from '../src/db.js';
 import { createMerchant } from '../src/merchants.js';
 import { mintApiKey } from '../src/auth.js';
 import { createApp } from '../src/app.js';
@@ -60,6 +60,59 @@ test('readiness proves the database and migrations are usable', async () => {
   assert.ok(body.checks.migrations > 0);
 });
 
+test('readiness rejects a missing migration marker even while PostgreSQL is reachable', async () => {
+  const db = getDb();
+  const row = (
+    await db.query(
+      'DELETE FROM schema_migrations WHERE version=(SELECT MIN(version) FROM schema_migrations) RETURNING version,checksum',
+    )
+  ).rows[0];
+  try {
+    assert.equal((await req('/ready')).status, 503);
+  } finally {
+    await db.query(
+      'INSERT INTO schema_migrations(version,checksum) VALUES($1,$2)',
+      [row.version, row.checksum],
+    );
+  }
+});
+
+test('readiness rejects a migration checksum mismatch without exposing checksum values', async () => {
+  const db = getDb();
+  const row = (
+    await db.query(
+      'SELECT version,checksum FROM schema_migrations ORDER BY version LIMIT 1',
+    )
+  ).rows[0];
+  await db.query('UPDATE schema_migrations SET checksum=$1 WHERE version=$2', [
+    'mismatched-checksum-fixture',
+    row.version,
+  ]);
+  try {
+    const response = await req('/ready');
+    assert.equal(response.status, 503);
+    assert.ok(!(await response.text()).includes('mismatched-checksum-fixture'));
+  } finally {
+    await db.query(
+      'UPDATE schema_migrations SET checksum=$1 WHERE version=$2',
+      [row.checksum, row.version],
+    );
+  }
+});
+
+test('readiness rejects an unexpected migration version', async () => {
+  const db = getDb();
+  await db.query(
+    'INSERT INTO schema_migrations(version,checksum) VALUES(999999,$1)',
+    ['unexpected-version-fixture'],
+  );
+  try {
+    assert.equal((await req('/ready')).status, 503);
+  } finally {
+    await db.query('DELETE FROM schema_migrations WHERE version=999999');
+  }
+});
+
 test('CORS preflight allows configured origins and rejects others', async () => {
   const ok = await req('/v1/products', {
     method: 'OPTIONS',
@@ -97,7 +150,10 @@ test('CORS allows listed browser origins, denies unlisted ones, and leaves serve
   assert.equal(browser.headers.get('access-control-allow-origin'), allowed);
 
   const denied = await req('/v1/products', {
-    headers: { authorization: `Bearer ${secret}`, origin: 'https://evil.example' },
+    headers: {
+      authorization: `Bearer ${secret}`,
+      origin: 'https://evil.example',
+    },
   });
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get('access-control-allow-origin'), null);

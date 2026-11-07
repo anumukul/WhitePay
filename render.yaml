@@ -1,0 +1,48 @@
+# Reference for a new API/Postgres installation. Live services were created
+# manually; this blueprint has not been applied to adopt existing resources.
+# SaaS startup/build settings are documented in apps/demo-saas/README.md.
+databases:
+  - name: whitepay-demo-postgres
+    plan: free
+    databaseName: whitepay
+    postgresMajorVersion: '16'
+    ipAllowList: []
+
+services:
+  - type: web
+    name: whitepay-api
+    runtime: node
+    plan: free
+    repo: https://github.com/anumukul/WhitePay
+    branch: main
+    autoDeployTrigger: 'off'
+    buildCommand: npx --yes pnpm@10.25.0 install --frozen-lockfile --ignore-scripts --prod=false --filter @whitepay/api...
+    startCommand: cd services/api && node --import tsx/esm src/server.ts
+    healthCheckPath: /ready
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: whitepay-demo-postgres
+          property: connectionString
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_ENV
+        value: production
+      - key: WHITECHAIN_CHAIN_ID
+        value: '1874'
+      - key: WHITEPAY_CHECKOUT_CONTRACT_ADDRESS
+        value: '0x4d1761ABB4eD290F23fcDA00890039800E2e53f0'
+      - key: WHITEPAY_FEE_RECIPIENT
+        value: '0x2F51C76D37BA9118ce8D5b9377329965ddb411c2'
+      - key: WHITEPAY_FEE_BASIS_POINTS
+        value: '10'
+      - key: WHITEPAY_QUOTE_VALIDITY_SECONDS
+        value: '900'
+      - key: WHITEPAY_ALLOWED_ORIGINS
+        sync: false
+      - key: WHITEPAY_WEBHOOK_ALLOWED_ORIGINS
+        sync: false
+      - key: CHECKOUT_PAGE_BASE_URL
+        sync: false

@@ -20,7 +20,7 @@ import {
 import { createHash } from 'node:crypto';
 import { z, ZodError } from 'zod';
 import { authenticate } from './auth.js';
-import { getDb, transaction } from './db.js';
+import { getDb, transaction, migrationReadiness } from './db.js';
 import {
   createSession,
   getSession,
@@ -108,17 +108,15 @@ export function createApp() {
         try {
           const db = getDb();
           await db.query('SELECT 1');
-          const migrations = Number(
-            (
-              await db.query(
-                'SELECT COUNT(*)::int AS n FROM schema_migrations',
-              )
-            ).rows[0].n,
-          );
-          return send(res, 200, {
-            ok: true,
+          const migrations = await migrationReadiness();
+          return send(res, migrations.current ? 200 : 503, {
+            ok: migrations.current,
             service: 'api',
-            checks: { database: 'up', migrations },
+            checks: {
+              database: 'up',
+              migrations: migrations.appliedCount,
+              schema: migrations.current ? 'current' : 'mismatch',
+            },
           });
         } catch {
           return send(res, 503, {
