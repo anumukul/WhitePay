@@ -1,9 +1,18 @@
-export const metadata = { title: "WhitePay — USDT checkout on Whitechain" };
+import './globals.css';
+export const metadata = {
+  title: 'WhitePay — Accept USDT without customer WBT',
+  description:
+    'Gas-sponsored checkout on Whitechain Sepolia. Public alpha SDKs, exact USDT authorizations and verifiable settlement.',
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body style={{ fontFamily: "system-ui, sans-serif", margin: 0 }}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

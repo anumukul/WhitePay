@@ -20,3 +20,4 @@ services/relayer/data/
 services/worker/data/
 apps/docs/out/
 apps/docs/public/search-index.json
+apps/website/out/

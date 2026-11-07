@@ -19,6 +19,9 @@ jobs:
       - run: pnpm --filter @whitepay/docs build
       - run: pnpm --filter @whitepay/docs exec playwright install --with-deps chromium
       - run: pnpm --filter @whitepay/docs test:browser
+      - run: pnpm --filter @whitepay/website test
+      - run: pnpm --filter @whitepay/website build
+      - run: pnpm --filter @whitepay/website test:browser
   baseline:
     runs-on: ubuntu-latest
     steps:
@@ -67,6 +70,8 @@ jobs:
           version: stable
       - run: bash scripts/vendor-oz.sh
       - run: pnpm build:checkout
+      - run: pnpm --filter @whitepay/node build
+      - run: pnpm --filter @whitepay/react build
       - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard --filter @whitepay/relayer --filter @whitepay/worker --filter @whitepay/react typecheck
       - run: pnpm --filter @whitepay/api --filter @whitepay/node --filter @whitepay/dashboard --filter @whitepay/relayer --filter @whitepay/worker --filter @whitepay/react test
 
@@ -76,3 +81,8 @@ jobs:
       - run: pnpm --filter @whitepay/react exec tsc -p tsconfig.operator.json --noEmit
       - run: pnpm --filter @whitepay/dashboard build
       - run: pnpm --filter @whitepay/dashboard test:browser
+
+      - run: pnpm --filter @whitepay/demo-saas typecheck
+      - run: pnpm --filter @whitepay/demo-saas test
+      - run: pnpm --filter @whitepay/demo-saas build
+      - run: pnpm --filter @whitepay/demo-saas test:browser
