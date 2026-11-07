@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,34 @@ import { mintApiKey } from '@whitepay/api/src/auth.js';
 import { settleRegisteredSubmission } from '../../../services/worker/test/settle-registered.js';
 import { dispatchOnce } from '../../../services/worker/src/webhooks.js';
 import { Pool } from 'pg';
+const screenshots = join(tmpdir(), 'whitepay-saas-redesign');
+async function capture(page: import('@playwright/test').Page, name: string) {
+  mkdirSync(screenshots, { recursive: true });
+  for (const [device, width, height] of [
+    ['desktop', 1440, 1000],
+    ['mobile', 390, 844],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    const pageHeight = await page.evaluate<number>(
+      'document.documentElement.scrollHeight',
+    );
+    await page.setViewportSize({ width, height: Math.max(height, pageHeight) });
+    await page.evaluate(
+      'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))',
+    );
+    assert.ok(
+      await page.evaluate(
+        'document.documentElement.scrollWidth <= window.innerWidth',
+      ),
+      name + ' ' + device + ' overflows',
+    );
+    await page.screenshot({
+      path: join(screenshots, name + '-' + device + '.png'),
+      fullPage: false,
+    });
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+}
 let demo: Pool;
 const demoDb = () => demo;
 let api: ReturnType<typeof createApp>,
@@ -151,8 +179,10 @@ test('independent SaaS SDK checkout and real signed HTTP webhook grant once; cal
   );
   try {
     await page.goto(origin);
+    await capture(page, 'overview');
     await page.getByRole('button', { name: 'Start your demo session' }).click();
     await page.getByRole('button', { name: 'Continue to WhitePay' }).waitFor();
+    await capture(page, 'credits-pack');
     await page.getByRole('button', { name: 'Continue to WhitePay' }).click();
     await page
       .getByRole('button', { name: 'Review payment' })
@@ -164,6 +194,7 @@ test('independent SaaS SDK checkout and real signed HTTP webhook grant once; cal
     assert.ok(order?.session_id);
     await page.getByRole('button', { name: 'Review payment' }).click();
     await page.getByRole('button', { name: 'Authorize 5.005 USDT' }).waitFor();
+    await capture(page, 'payment');
     await page.getByRole('button', { name: 'Authorize 5.005 USDT' }).click();
     await page
       .getByText('Authorizations submitted.', { exact: false })
@@ -221,10 +252,12 @@ test('independent SaaS SDK checkout and real signed HTTP webhook grant once; cal
       .getByTestId('credit-balance')
       .filter({ hasText: '99' })
       .waitFor();
+    await capture(page, 'balance');
     await other.goto(origin);
     await other
       .getByRole('button', { name: 'Start your demo session' })
       .click();
+    await other.getByRole('button', { name: 'Continue to WhitePay' }).waitFor();
     const stolen = await other.request.get(
       origin + '/api/whitepay/sessions/' + order.session_id,
     );

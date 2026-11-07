@@ -28,6 +28,24 @@ payment. These checks do not deploy the hosted SaaS or sign/broadcast a chain tr
 
 ## Scope completed
 
+### SaaS visual refresh — approved for publication
+
+Replaced the default HTML layout with the Forma demo workspace: responsive
+navigation, an ivory/forest-green palette, a locally drawn workspace illustration,
+credits dashboard, clear pack summary and a styled SDK checkout container.
+The existing server actions, 5-USDT amount, .005-USDT fee, session ownership and
+fulfillment rules are unchanged. Testnet and sample-action limitations remain
+visible. No external fonts, image services or UI dependencies were added.
+
+Production build and type checks pass. The existing Postgres Chrome end-to-end
+test passes, with eight desktop/mobile captures and overflow checks across the
+overview, pack, payment and balance views. Customer isolation, one credit grant
+from duplicate webhooks and spending 100→99 remain verified with controlled
+receipt fixtures. The browser harness now waits for the second customer's
+session redirect before checking isolation, removing a navigation race.
+The user approved committing and pushing this redesign. Render rollout must
+be checked separately; these checks performed no live payer signing or transaction.
+
 - Audited the existing `apps/demo-saas` against the Step 11 acceptance criteria
   in `PR.md` §10.12 / §8.2. The app is an independent Next.js merchant that uses
   the real public `@whitepay/node` and `@whitepay/react` packages (no WhitePay
