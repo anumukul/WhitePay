@@ -1,0 +1,299 @@
+{
+  "status": "DEPLOYED_PUBLIC_FILES_VERIFIED",
+  "provider": "vercel",
+  "scope": "anubhav-singhs-projects-d49ae242",
+  "plan": "hobby",
+  "project": "whitepay-docs",
+  "functionCount": 0,
+  "containsSecrets": false,
+  "previousDeploymentId": "dpl_6epfhRkDT9epAtgEJsSwp9rcKocD",
+  "source": "apps/docs/out",
+  "totalBytes": 1466247,
+  "files": [
+    {
+      "path": "404.html",
+      "sha256": "4e4fa03202ea22255c89f25223cfc984936f4ff73336705a9cfb5a8a26638f39",
+      "bytes": 2181
+    },
+    {
+      "path": "_next/static/chunks/774.94df669a538074b9.js",
+      "sha256": "5824daa5e4796623b2842562048f0bce17443bd1ccdedbe998436f3adac4ac77",
+      "bytes": 15662
+    },
+    {
+      "path": "_next/static/chunks/910-40bf85ac195139cb.js",
+      "sha256": "a91701da23906ee9c47f73ff35f711f4e2672acf6aa7b47dcbc8e105364159bb",
+      "bytes": 28615
+    },
+    {
+      "path": "_next/static/chunks/framework-1c02a2e60068b586.js",
+      "sha256": "0952a49aaea74c234ecc2448bd155978c07926efe484445d2e5e0c415c85a4e5",
+      "bytes": 139833
+    },
+    {
+      "path": "_next/static/chunks/main-91161636de080f23.js",
+      "sha256": "f994bb0b737e0f7fbdd6315f59705c3f55050998055b94869ab3303e107c6da1",
+      "bytes": 125602
+    },
+    {
+      "path": "_next/static/chunks/nextra-data-en-US.json",
+      "sha256": "58a1d686f17cd9f3f8b386ae3ce8a514f0a6341ceca42ec0417eab1ae8c153f6",
+      "bytes": 29553
+    },
+    {
+      "path": "_next/static/chunks/nextra-page-map-.mjs",
+      "sha256": "4757e886aae34da46510a272d1f05bbc8bb06867e0d5f450efa226d7d84f6ff5",
+      "bytes": 2049
+    },
+    {
+      "path": "_next/static/chunks/pages/_app-ed77322d366cef39.js",
+      "sha256": "422b31938aa4787e605c8a62cc9c165bc85871ced48d6d84e5ba90430c14b804",
+      "bytes": 246754
+    },
+    {
+      "path": "_next/static/chunks/pages/_error-8aa53f2ad2cc19b0.js",
+      "sha256": "31c3abc40b698579ded551f7388383e4a3d06024aecef8ee1af5b34635faa7ce",
+      "bytes": 218
+    },
+    {
+      "path": "_next/static/chunks/pages/_meta-84bed8413759f59a.js",
+      "sha256": "22a5293bd1237971b7edcc840ccdf818d03ca0f60cec4b8c9f291f8fb64c485a",
+      "bytes": 313
+    },
+    {
+      "path": "_next/static/chunks/pages/api-reference-3ab66fc542a48e56.js",
+      "sha256": "35835901a1aa724efe34f977bb0ff9bef360dca5d68db59e0b144021ba697729",
+      "bytes": 11327
+    },
+    {
+      "path": "_next/static/chunks/pages/architecture-c136c7f34acf43b1.js",
+      "sha256": "65d2137c887d5f119d11f6d69a419c5eaa8b82d6306005220f34002b1d15f7c2",
+      "bytes": 5664
+    },
+    {
+      "path": "_next/static/chunks/pages/changelog-72096023d8e4aa2a.js",
+      "sha256": "d3b8ea07dc3b043700bb6260c5815e94cbbbcc70c33acb7a71fe6d1db5a6df1f",
+      "bytes": 4399
+    },
+    {
+      "path": "_next/static/chunks/pages/contracts-4ab92d2c8e8b6eda.js",
+      "sha256": "d3042263512c7148d516aa84110ea5a2857a0e804888d84344172a26c6889642",
+      "bytes": 5209
+    },
+    {
+      "path": "_next/static/chunks/pages/fees-057398fda5d7fac5.js",
+      "sha256": "eb467e7db77e7a27811d3ba6651c421b018397437d5e136d33ac7276e1fd04f4",
+      "bytes": 4375
+    },
+    {
+      "path": "_next/static/chunks/pages/idempotency-a1edcc35e18407aa.js",
+      "sha256": "df3f42a9bcbd8fde1430ae2aebe7dd5f72b60cd18049843f18a040e5ee372b1c",
+      "bytes": 4434
+    },
+    {
+      "path": "_next/static/chunks/pages/index-a41190ac1aee6cce.js",
+      "sha256": "2dcb8999ef7bf04ebe913d1b136f0c4976e20d068ce1210a1d8819fabd4ec88a",
+      "bytes": 5489
+    },
+    {
+      "path": "_next/static/chunks/pages/install-d4c283c1cc80f587.js",
+      "sha256": "f5e684a56cdb5dd8f138e489d90ace5247ea146d00f3a27a7eb3e69bbcbb26e0",
+      "bytes": 5448
+    },
+    {
+      "path": "_next/static/chunks/pages/limitations-6f95db3b97f865df.js",
+      "sha256": "d316ce8e1015d1154dfcd01e1f0b50ba9f59a0d9b7fdd866a894e0652912cf01",
+      "bytes": 5029
+    },
+    {
+      "path": "_next/static/chunks/pages/local-development-1d95aa12dca87a7c.js",
+      "sha256": "3ee75fc7b5225c368c7d515d51e31e8e3db96fcba1330ecbeff044380fe9d28a",
+      "bytes": 7599
+    },
+    {
+      "path": "_next/static/chunks/pages/prerequisites-bc82531f6f6b67ec.js",
+      "sha256": "927cce62dcbf62e60cd1ed9fdc71ad937eb82959661e16bf30b36f9e1b5bc1c2",
+      "bytes": 5396
+    },
+    {
+      "path": "_next/static/chunks/pages/quickstart-0c9ec3dd9ea0a333.js",
+      "sha256": "e3d00a5c414abceeb4db413a2ffb30f24ecfbbcf554486e8a5b7202adf747ece",
+      "bytes": 9402
+    },
+    {
+      "path": "_next/static/chunks/pages/security-4e44ebbbc4e9c5e4.js",
+      "sha256": "270cf4b544615b83c65cf5b04fc9c0a86db45c4c4f5d8cbdb1a4151fe113d8d9",
+      "bytes": 4952
+    },
+    {
+      "path": "_next/static/chunks/pages/server-d295b9b357db966e.js",
+      "sha256": "9649980427577ea886d9862c61034c9efb4f8df705735a208e8a13d00c38e0b6",
+      "bytes": 12782
+    },
+    {
+      "path": "_next/static/chunks/pages/sessions-1b04df389f3e57f9.js",
+      "sha256": "05a94d7e703590f34abe279056875bf70abd568f706fc276a6151769952d87f5",
+      "bytes": 14020
+    },
+    {
+      "path": "_next/static/chunks/pages/statuses-0f1bb0c318cf6c9c.js",
+      "sha256": "ff5282a8003aa04346236c740a9f2fb8b71944bc83e568a040ea99c0eafb1407",
+      "bytes": 5325
+    },
+    {
+      "path": "_next/static/chunks/pages/troubleshooting-38246723331c92d9.js",
+      "sha256": "0d79d007e23ab6b93aa3a5fac259304ab46c2e7499af2bf663793fd2fe1c158b",
+      "bytes": 6014
+    },
+    {
+      "path": "_next/static/chunks/pages/wallets-aaf127f9b6fe6c8c.js",
+      "sha256": "045cda8db7585da432b3974c5b4bd4159d985949c43edc91f774f8bd5e40273b",
+      "bytes": 4534
+    },
+    {
+      "path": "_next/static/chunks/pages/webhooks-904a5d93abdc56b7.js",
+      "sha256": "37164df7a0c567f06a171505eae89de6e326c80565b9928d28c2729180cd340c",
+      "bytes": 9390
+    },
+    {
+      "path": "_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "bytes": 112594
+    },
+    {
+      "path": "_next/static/chunks/webpack-c3d29a1cc2240e15.js",
+      "sha256": "b1273d322176952b6c98c7fdcd751bd133fc0e70505912392a65828cdf5cbd95",
+      "bytes": 3422
+    },
+    {
+      "path": "_next/static/css/b46be2fda15f60fe.css",
+      "sha256": "88f55eb3729d551e7fb616335664797594b1e5c9721589a793cecadd3588c6d7",
+      "bytes": 64121
+    },
+    {
+      "path": "_next/static/nJ2Gjf8UYNa_IRYgVEbvz/_buildManifest.js",
+      "sha256": "a859a7e3f8367d2dd9a558d5a6d32ec69336036e32e9a809355208322664b4dc",
+      "bytes": 2114
+    },
+    {
+      "path": "_next/static/nJ2Gjf8UYNa_IRYgVEbvz/_ssgManifest.js",
+      "sha256": "7d7baca9ec6b63a9bbd73c0da6ff737289689ec1e8da8998a31e6180bb21b28b",
+      "bytes": 93
+    },
+    {
+      "path": "api-reference.html",
+      "sha256": "b3962e0f7d6b316a5b3d8ec96dcaa0cfa2b3c9efe1fb963dc879dbf3e39d389d",
+      "bytes": 34509
+    },
+    {
+      "path": "architecture.html",
+      "sha256": "31cb842af33e36a22a1bab3460004083155f4cd3e98c1606d6aba22e538c7251",
+      "bytes": 28388
+    },
+    {
+      "path": "changelog.html",
+      "sha256": "deb4d97b3266fc2d5d2eea353d29a97f592b867637dc5271e2b60c79cc333632",
+      "bytes": 25851
+    },
+    {
+      "path": "contracts.html",
+      "sha256": "b78aa60b67526a7630b93f16ab4ca2e321ae74080985f512823476835858e859",
+      "bytes": 26324
+    },
+    {
+      "path": "fees.html",
+      "sha256": "4d3835232c76de52da61f13f0a7d2e6a01ba71313e8ce68d914a826c8ea99bd3",
+      "bytes": 24926
+    },
+    {
+      "path": "idempotency.html",
+      "sha256": "fdf5007ec3c9883e82621b3bcc6b1672a852c67b2e0b59b8259bbda19b6bf88a",
+      "bytes": 25090
+    },
+    {
+      "path": "index.html",
+      "sha256": "f3bd022a3e46a1bc2c4f8a79c841e1fb18c502570411e4d265eddba1f5bbca02",
+      "bytes": 27532
+    },
+    {
+      "path": "install.html",
+      "sha256": "b4506b7a004cf786639d019f2730faea2f521ac25aea90d37b3a1c213786112c",
+      "bytes": 26954
+    },
+    {
+      "path": "limitations.html",
+      "sha256": "6b46e7f810f95d5b0d54dba1d82b57c1b60d4c355a64e68ce8f78e9b0b8b9ce1",
+      "bytes": 25471
+    },
+    {
+      "path": "local-development.html",
+      "sha256": "3e51711decbae3e6904fe84fdce6d68aff9c995fae5d7aa86132228a6a879c77",
+      "bytes": 29100
+    },
+    {
+      "path": "prerequisites.html",
+      "sha256": "7e0bb77802a59deb26b3eee6d79e1e20784767c6c79db8ecb96822c8de8c0ab8",
+      "bytes": 27631
+    },
+    {
+      "path": "quickstart.html",
+      "sha256": "c768e039863c1129b88eebfa51ed0b28937bad5fce1bd955550470fba53f9eae",
+      "bytes": 29440
+    },
+    {
+      "path": "search-index.json",
+      "sha256": "25406871ce04924cfdc9174e66a5ef87a468225aa720330c8c6da2f095310e8c",
+      "bytes": 27499
+    },
+    {
+      "path": "security.html",
+      "sha256": "af0852f6933108f0412d730b6ba0b80a265b1f4591a33a28d85855f3ad9d46a9",
+      "bytes": 26631
+    },
+    {
+      "path": "server.html",
+      "sha256": "ca60281889129095ea82a65827a5da236281b3319c653813f24c8f7a0e1c1b95",
+      "bytes": 32724
+    },
+    {
+      "path": "sessions.html",
+      "sha256": "664c4f2e6f2f7c21568e9c5216b609006c796791dc06a773103fe870f9e26d1a",
+      "bytes": 33623
+    },
+    {
+      "path": "statuses.html",
+      "sha256": "0057906de5a7a757e2a8be4c4191f6384b2fa7b41b46c19084df11996e344066",
+      "bytes": 27283
+    },
+    {
+      "path": "troubleshooting.html",
+      "sha256": "159e4711d228df5556d9ab362398d9a492196cd30b0a1a4cbb7625246d6dabcd",
+      "bytes": 28838
+    },
+    {
+      "path": "wallets.html",
+      "sha256": "3e717446a4626edbe26ea696645e82858239204c98f234b1e5bef01f45c60d97",
+      "bytes": 25210
+    },
+    {
+      "path": "webhooks.html",
+      "sha256": "04bd8a6fe8cf659c84a93025701b4e9ccd763ea40521634b54775791b8f4400a",
+      "bytes": 29311
+    }
+  ],
+  "config": {
+    "framework": null,
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "cleanUrls": true,
+    "trailingSlash": false
+  },
+  "url": "https://whitepay-docs.vercel.app",
+  "deploymentId": "dpl_3AvxprmCNZFwKdQHFF317K3nvQkM",
+  "deploymentUrl": "https://whitepay-docs-8na0syg1s-anubhav-singhs-projects-d49ae242.vercel.app",
+  "publicFilesVerified": 54,
+  "exactSha256Files": 53,
+  "vercelToolbarAppendedFiles": [
+    "_next/static/chunks/webpack-c3d29a1cc2240e15.js"
+  ]
+}

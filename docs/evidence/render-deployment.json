@@ -1,0 +1,85 @@
+{
+  "status": "API_AND_SAAS_DEPLOYED_VERIFIED_MERCHANT_CONFIGURATION_PENDING",
+  "deployed": true,
+  "budgetUsd": 0,
+  "blueprint": "render.yaml",
+  "validation": "Reference blueprint syntax checked; live resources were created manually and verified through public health/customer flows. Blueprint has not been applied to adopt them.",
+  "resources": [
+    {
+      "name": "whitepay-demo-postgres",
+      "type": "postgres",
+      "plan": "free",
+      "postgresMajorVersion": "16",
+      "externalIpAllowList": []
+    },
+    {
+      "name": "whitepay-api",
+      "type": "web",
+      "plan": "free",
+      "healthCheckPath": "/ready"
+    }
+  ],
+  "fundingSnapshot": {
+    "chainId": 1874,
+    "block": 12420141,
+    "payer": "0x9AfB652bB337eB4D5a09221Af7972D69B500e035",
+    "payerWbtWei": "0",
+    "payerUsdtMinor": "1992000",
+    "requiredUsdtMinor": "5005000",
+    "shortfallUsdtMinor": "3013000",
+    "relayerWbtWei": "96640583250954836"
+  },
+  "remaining": [
+    "Provision real merchant, 5-USDT product/price, server API key and webhook signing secret securely",
+    "Connect indexer and signed webhook delivery on a suitable free runtime",
+    "Fund payer with official USDT while preserving zero WBT",
+    "Obtain exact signing and broadcast approvals, confirm real receipt and one credit grant"
+  ],
+  "newTransactions": false,
+  "databaseCreation": {
+    "reportedBy": "user",
+    "databaseConnectivityVerifiedThroughApi": true,
+    "regionVerified": false
+  },
+  "apiBuildVerification": {
+    "revision": "9e57032",
+    "isolatedCheckout": true,
+    "install": "frozen lockfile; scripts ignored; dev dependencies included",
+    "testsPassed": 50,
+    "runtime": "Node 25 local; Render configured Node 24"
+  },
+  "api": {
+    "url": "https://whitepay-api.onrender.com",
+    "healthHttpStatus": 200,
+    "readinessHttpStatus": 200,
+    "database": "up",
+    "migrations": 5
+  },
+  "saas": {
+    "deployed": true,
+    "postgresTestsAndFulfillmentTestsPassed": 9,
+    "browserTestsPassed": 1,
+    "browserUsesPostgres": true,
+    "controlledReceipt": true,
+    "buildPassed": true,
+    "productionImplicitSqliteRejected": true,
+    "url": "https://whitepay-saas.onrender.com",
+    "revision": "fd4cfc1",
+    "landingHttpStatus": 200,
+    "unauthenticatedAccountHttpStatus": 401,
+    "customerStartHttpStatus": 303,
+    "customerStartRedirect": "/checkout",
+    "secureHttpOnlyCustomerCookie": true,
+    "authenticatedCheckoutHttpStatus": 200,
+    "checkoutPriceUsdt": "5",
+    "checkoutFeeUsdt": "0.005",
+    "checkoutTotalUsdt": "5.005",
+    "hostedPostgresCustomerWriteVerified": true,
+    "livePaymentConfirmed": false,
+    "redesignSourceCommittedAndPushed": "fc7caec",
+    "redesignLiveVerified": true,
+    "liveTitle": "Forma \u2014 Creative credits, powered by WhitePay"
+  },
+  "saasSourceCommittedAndPushed": "fd4cfc1",
+  "originConfigurationReportedByUser": true
+}

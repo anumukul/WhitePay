@@ -1,8 +1,8 @@
 # Step 13 — deployed service
 
-Status: **PARTIAL — local production-like acceptance GREEN; external hosted deployment BLOCKED by the approval gate.**
+Status: **PARTIAL — API, Postgres and SaaS deployed; hosted merchant fulfillment remains open.** The API serves HTTPS health/readiness with five migrations. SaaS Postgres storage and customer-start flow were verified; its redesign is live. Current evidence is in `docs/evidence/render-deployment.json`.
 
-No cloud resource, domain, secret or hosted database was created. The relayer remains preview-only and performs no broadcast.
+The stricter readiness implementation validates migration versions/checksums, with three regressions added to the existing API tests. The operator relayer remains separately controlled; no new chain payment was made by deployment work.
 
 ## Acceptance mapping
 
@@ -14,8 +14,8 @@ No cloud resource, domain, secret or hosted database was created. The relayer re
 | Webhook retry after crash                    | Covered by existing Step 07 tests (`crash after merchant accepts retries the same event id`).                      |
 | CORS unauthorized origin                     | GREEN — allowlisted origins receive `Access-Control-Allow-Origin`; others get 403 with no CORS header.             |
 | DB connection fail                           | GREEN — stopping Postgres made `/ready` return 503 while the process stayed alive; recovery restored 200.          |
-| Hosted URL + managed DB + HTTPS + monitoring | **BLOCKED** — requires explicit deployment approval, a host, a managed database and a secret manager.              |
-| Public-URL checkout on a second device       | **BLOCKED** — no hosted URL exists yet.                                                                            |
+| Hosted URL + managed DB + HTTPS + monitoring | PARTIAL — API, SaaS and managed Postgres are live; monitoring and merchant credential provisioning remain.         |
+| Public-URL checkout on a second device       | PARTIAL — hosted UI/customer flow verified; real hosted purchase and second-device acceptance remain.              |
 | Hosted relayer with secrets                  | **BLOCKED** — the relayer is intentionally preview-only and has no signer support in this build.                   |
 
 ## RED → GREEN
@@ -113,3 +113,25 @@ docker compose down -v                     # stop and drop the local volume
 - `services/api/src/server.ts` — listen-first startup with migration retry and graceful shutdown.
 - `services/api/test/deploy.test.ts` — 5 local acceptance tests.
 - `infra/Dockerfile`, `docker-compose.yml`, `.dockerignore` — local production-like stack.
+
+## Demo deployment preparation — zero budget, provider selection open
+
+User requested deployment for the recording flow: pitch → landing → actual SaaS USDT purchase → explorer → npm → docs. Budget is explicitly $0. Railway was initially selected, then user asked about Render. Official Render documentation confirms free static/web services, ephemeral local files, no free background-worker service and a 30-day lifetime for free PostgreSQL. The initial review identified the need to replace SQLite for hosted SaaS storage; that Postgres integration is now implemented and deployed. Hosted automatic signing has not been approved or implemented. Browser access to the hosting dashboard failed because the browser access host is unavailable; no cloud resources or migrations were created. Docker is installed but its local engine is stopped.
+
+Fixed the known readiness blocker before any host deployment. RED: missing migration marker, mismatched checksum and unexpected migration version all incorrectly returned 200. GREEN: /ready now compares exact migration versions/checksums against the application's migration files and returns 503 for a mismatch while reporting PostgreSQL reachable; no checksum values are returned. Full API suite passes 53/53 and typecheck passes. Disposable PostgreSQL was stopped and removed. No accepted SQL migration file or payment/signature behavior changed. This fix is published in `f629bf9`; live runtime verification is tracked separately.
+
+Read-only chain preflight at block 12406026 on chain 1874 found payer WBT exactly 0, official USDT 1.992, and relayer WBT 0.096640583250954836. SaaS is currently fixed at 5 USDT + .005 fee, so the payer lacks 3.013 USDT. No transfer, swap, signature or broadcast was attempted. Funding and the eventual SaaS payment need their own exact previews/approvals.
+
+Sources checked: https://render.com/docs/free ; https://render.com/docs/background-workers ; https://render.com/docs/static-sites ; https://docs.railway.com/pricing/free-trial . The user subsequently selected Render Free Postgres; the current deployment status is recorded above.
+
+### Additional hosting investigation — Vercel and GitHub Pages
+
+User asked about Vercel/GitHub Pages and worker hosting. Public static landing/pitch and SDK documentation have since been deployed to Vercel Hobby; evidence is in `docs/evidence/website-deployment.json` and `docs/evidence/docs-deployment.json`. API, database, SaaS and worker remain undeployed. Current official Vercel documentation confirms Daemons public beta supports continuous container workers on Hobby, with 5 active CPU-hours and 420 GB-hours provisioned memory per month; Hobby daemons stop at the quota rather than incur daemon charges. This is a candidate for the existing indexer/outbox worker, not a validated deployment. Daemons have no persistent local disk or inbound traffic and currently require a repository-root project (subfolder root projects cannot attach daemons); durable state must stay in PostgreSQL. Ordinary request functions/once-daily Hobby cron are not a drop-in replacement for this polling worker. A hosted executing relayer still needs its secure signer work; keep the existing local encrypted-keystore path unless separately reviewed.
+
+Vercel can host the Next frontends; the SaaS must replace local SQLite with persistent external storage before serverless hosting. Its webhook receiver can run as a normal Next route while the worker sends/retries deliveries separately. GitHub Pages can host exported static landing/docs, not server-side SaaS/API/workers, and the current root-relative routes/search path need base-path configuration for /WhitePay/. At the time of this investigation no platform or database persistence strategy had been selected. The later user request explicitly started free hosting, so the public landing and docs were deployed; no SaaS persistence strategy was assumed and no backend deployment was made.
+
+Sources: https://vercel.com/docs/daemons ; https://vercel.com/docs/daemons/limits ; https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages ; https://vercel.com/docs/storage .
+
+## Publication polish
+
+Readiness regressions and the full 53-test API suite pass against disposable PostgreSQL. Root lint, 33 root tests, shared/package type checks, both static site builds and their Chrome checks pass. The Docker runtime explicitly installs its required TypeScript runner, and private signing/configuration paths are excluded from uploads. The Docker image was not rebuilt in this polish pass; the native Render startup was checked separately. The live SaaS storage/redesign commits remain `fd4cfc1` and `fc7caec`. No new chain signature or transaction is part of this publication.

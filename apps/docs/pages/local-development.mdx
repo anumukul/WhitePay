@@ -11,7 +11,7 @@ pnpm --filter @whitepay/docs build
 pnpm --filter @whitepay/docs dev
 ```
 
-Docs serve at http://localhost:3400. Building them produces a static `apps/docs/out` export; no public deployment is performed. The docs tests compile the literal snippets against the published SDK versions, check planned pages/internal links and verify testnet limitations/evidence text. Shell examples are syntax-checked only.
+Docs serve at http://localhost:3400. Building them produces a static `apps/docs/out` export; that build command does not deploy it. The docs tests compile the literal snippets against the published SDK versions, check planned pages/internal links and verify testnet limitations/evidence text. Shell examples are syntax-checked only.
 
 For the API, use the dedicated local PostgreSQL helper and the existing [Step 05 runbook](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-05-api.md). Follow the [Step 06 relayer](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-06-relayer.md), [Step 07 worker](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-07-worker.md) and [Step 13 stack](https://github.com/anumukul/WhitePay/blob/main/docs/runbooks/step-13-deploy.md) runbooks rather than pointing tests at a real database or enabling a signer accidentally.
 

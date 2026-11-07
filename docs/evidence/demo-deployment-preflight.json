@@ -1,0 +1,15 @@
+{
+  "chainId": 1874,
+  "block": "12406026",
+  "payer": "0x9AfB652bB337eB4D5a09221Af7972D69B500e035",
+  "payerWbt": "0",
+  "payerOfficialUsdt": "1.992",
+  "requiredSaasUsdt": "5.005",
+  "usdtShortfall": "3.013",
+  "relayer": "0xba780C2e4e79e4109EC53b52fCE9982f33962A92",
+  "relayerWbt": "0.096640583250954836",
+  "broadcast": false,
+  "deployed": false,
+  "hostingBudget": "0",
+  "hostingChoice": "Render queried; free persistence/execution strategy pending"
+}

@@ -1,0 +1,154 @@
+{
+  "status": "DEPLOYED_PUBLIC_FILES_VERIFIED",
+  "provider": "vercel",
+  "scope": "anubhav-singhs-projects-d49ae242",
+  "plan": "hobby",
+  "project": "whitepay-website",
+  "functionCount": 0,
+  "containsSecrets": false,
+  "previousDeploymentId": "dpl_2SLrUJX7JuaNCoq7qshUchQ1G5zk",
+  "source": "apps/website/out",
+  "totalBytes": 952728,
+  "files": [
+    {
+      "path": "404.html",
+      "sha256": "81ce19ac0e6884d4619cf12d3660c79c2d82ad45e90ba73ec2eeb112e0ee3151",
+      "bytes": 6150
+    },
+    {
+      "path": "_next/static/chunks/805c177d-1c2c2090dd76fa42.js",
+      "sha256": "2831217e6adbfee64e8ac888d8a0c1c339e5fd816211aa143b77520d4fb84647",
+      "bytes": 173018
+    },
+    {
+      "path": "_next/static/chunks/86-dfff0a4321c95edd.js",
+      "sha256": "6976e8ea82179745173ca5d83ee4212ef349e2242171a201cff8e5d6e06d4780",
+      "bytes": 172685
+    },
+    {
+      "path": "_next/static/chunks/app/_not-found/page-0735340fafa0734f.js",
+      "sha256": "1a51583127cedf9bdb40989149f3082295d9c44ed95278ef87a9fe3a2334d0be",
+      "bytes": 2669
+    },
+    {
+      "path": "_next/static/chunks/app/demo/page-dc3cf1638127a6c3.js",
+      "sha256": "edb194b53b232528d14d7220477c36f840cefed51eeaf75a49cceff5aa1ffea1",
+      "bytes": 9312
+    },
+    {
+      "path": "_next/static/chunks/app/layout-4220fea5ff64d8f5.js",
+      "sha256": "e97e5495d59b3e9cac5cd32ff3ca2759dc514c6842801cc15d166488ecc45fa0",
+      "bytes": 194
+    },
+    {
+      "path": "_next/static/chunks/app/page-63478959c5fa8812.js",
+      "sha256": "34b3952673b2ba9a68ea25ce70216056d057acf1645e337efd31ecf5de8aad2d",
+      "bytes": 130
+    },
+    {
+      "path": "_next/static/chunks/app/pitch/page-57cb7a400a565cea.js",
+      "sha256": "40098e450e65b28603ee91f4b63d7a0d4f4807304e2192277ce810a3e72d180e",
+      "bytes": 8400
+    },
+    {
+      "path": "_next/static/chunks/framework-1c02a2e60068b586.js",
+      "sha256": "0952a49aaea74c234ecc2448bd155978c07926efe484445d2e5e0c415c85a4e5",
+      "bytes": 139833
+    },
+    {
+      "path": "_next/static/chunks/main-3e0e036ed9042322.js",
+      "sha256": "0c66173ddd29eebaf4ea3eaf797e56b2d6319b1c6046e99cee8dc1b7266a8eb4",
+      "bytes": 125588
+    },
+    {
+      "path": "_next/static/chunks/main-app-eb5eb957d75f3b05.js",
+      "sha256": "4c65f3c08b53204fb1de927c051eb167fb5509a32aac27bd8a11c6bf987b32e6",
+      "bytes": 554
+    },
+    {
+      "path": "_next/static/chunks/pages/_app-a3a300a3d4387fd5.js",
+      "sha256": "66d649ae104b485e48bbc10bc2a17e2952eada0aab92a4a84c6787aff77b20e6",
+      "bytes": 236
+    },
+    {
+      "path": "_next/static/chunks/pages/_error-cc468f1a886671eb.js",
+      "sha256": "e290d43899905729a3ba364c58d091c2e81b584de8e9b2d6d51c2545d425cb78",
+      "bytes": 218
+    },
+    {
+      "path": "_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "bytes": 112594
+    },
+    {
+      "path": "_next/static/chunks/webpack-8f59ecbc16445fb5.js",
+      "sha256": "4c116083013d403f5fe712b38aa7b73ebae04ffac975b3c26db73319613476c8",
+      "bytes": 3331
+    },
+    {
+      "path": "_next/static/css/1540aabdbc4f23e6.css",
+      "sha256": "a227da32a6ed33b08caf0322f4f2637566e93a473ff4cc823477eafdf42851a6",
+      "bytes": 8903
+    },
+    {
+      "path": "_next/static/ezeGH7_G_PC-4gPm8MM7S/_buildManifest.js",
+      "sha256": "1a65c12f7925c7b7728d1e1c7adb7c71388476d01f99d5dea4df5dbca6fbf5f0",
+      "bytes": 582
+    },
+    {
+      "path": "_next/static/ezeGH7_G_PC-4gPm8MM7S/_ssgManifest.js",
+      "sha256": "678f6ce2cb80b1fe72fc67e7412be6e2ab6ada083111b64f7c40d35e3cba5e00",
+      "bytes": 80
+    },
+    {
+      "path": "demo.html",
+      "sha256": "9f89f552f917fcf630b429abc626dacfb0ebbb957f5ee5c9d97a933091b4ce32",
+      "bytes": 8682
+    },
+    {
+      "path": "demo.txt",
+      "sha256": "09f42d1f98f2fd4e7081e4149766642f585997e8d01ed9aa06ccca961523911f",
+      "bytes": 4309
+    },
+    {
+      "path": "index.html",
+      "sha256": "50a48e70cfc849600bb9f5b46bd0a517ee9eb23cd350c27cc1c8a36e307b1c10",
+      "bytes": 20306
+    },
+    {
+      "path": "index.txt",
+      "sha256": "c67d345e4338f5e24da25ea43e41ea2c7a452e673add7e9f171db1db9bacd81b",
+      "bytes": 11485
+    },
+    {
+      "path": "pitch.html",
+      "sha256": "bffbd3aea28cda699d2449bb65db6df8d40f94911b223d9a16e711584c555a6b",
+      "bytes": 14408
+    },
+    {
+      "path": "pitch.txt",
+      "sha256": "e6b6e04842b085ecdb4ac03eed5d676c2e14aa65b635062ebb99cf8086401865",
+      "bytes": 3581
+    },
+    {
+      "path": "whitepay-pitch.pdf",
+      "sha256": "df5eeb71879451dab725bda978c0d6fd9ce3c3982657740d18b9602ed925a041",
+      "bytes": 125480
+    }
+  ],
+  "config": {
+    "framework": null,
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "cleanUrls": true,
+    "trailingSlash": false
+  },
+  "url": "https://whitepay-website.vercel.app",
+  "deploymentId": "dpl_HoJp4rAi7jKysjMokKtQArHgVY6D",
+  "deploymentUrl": "https://whitepay-website-7tihqunmj-anubhav-singhs-projects-d49ae242.vercel.app",
+  "publicFilesVerified": 25,
+  "exactSha256Files": 24,
+  "vercelToolbarAppendedFiles": [
+    "_next/static/chunks/webpack-8f59ecbc16445fb5.js"
+  ]
+}

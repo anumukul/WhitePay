@@ -1,0 +1,85 @@
+{
+  "status": "STATIC_SITES_DEPLOYED_AND_PUBLICLY_VERIFIED",
+  "previousStepCommit": "9e57032",
+  "pushedTo": "origin/main",
+  "network": {
+    "chainId": 1874,
+    "token": "0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7"
+  },
+  "historicalTransaction": "0x77784da3835084852e0f3904ba6845011725ffade891175b4b4a96d93948b41c",
+  "localRoutes": ["/", "/demo", "/pitch"],
+  "contentTests": 3,
+  "browserTests": 2,
+  "internalCtasVerified": 4,
+  "externalDestinationsAllowlisted": 9,
+  "externalHttp": {
+    "githubAndExplorer": {
+      "count": 7,
+      "status": 200
+    },
+    "npmWebsite": {
+      "count": 2,
+      "status": 403,
+      "note": "Automated client blocked; not treated as successful web-page checks"
+    }
+  },
+  "pdf": {
+    "path": "docs/pitch/whitepay-pitch.pdf",
+    "pages": 8,
+    "sha256": "df5eeb71879451dab725bda978c0d6fd9ce3c3982657740d18b9602ed925a041",
+    "actualPagesRenderedAndInspected": 8
+  },
+  "browserViews": [
+    "desktop landing",
+    "mobile landing",
+    "buyer receipt",
+    "merchant receipt",
+    "8 slides",
+    "keyboard navigation"
+  ],
+  "deployed": true,
+  "newTransactions": false,
+  "openGates": [
+    "explorer source verification",
+    "actual live hosted demo/video",
+    "final adversarial release",
+    "sponsor qualification"
+  ],
+  "walletCollisionRegression": {
+    "controlledCollisionReproduced": true,
+    "publicPagesPreserveProvider": true,
+    "walletRequests": 0,
+    "actualUserExtensionResolution": "not yet confirmed"
+  },
+  "deployments": [
+    {
+      "project": "whitepay-website",
+      "url": "https://whitepay-website.vercel.app",
+      "deploymentId": "dpl_HoJp4rAi7jKysjMokKtQArHgVY6D",
+      "plan": "hobby",
+      "functions": 0
+    },
+    {
+      "project": "whitepay-docs",
+      "url": "https://whitepay-docs.vercel.app",
+      "deploymentId": "dpl_3AvxprmCNZFwKdQHFF317K3nvQkM",
+      "plan": "hobby",
+      "functions": 0
+    }
+  ],
+  "liveDocs": "https://whitepay-docs.vercel.app",
+  "backendDeployed": true,
+  "backendScope": "API and SaaS only; hosted worker and unattended signer remain undeployed",
+  "polishVerification": {
+    "rootTests": 33,
+    "apiTests": 53,
+    "websiteContentTests": 3,
+    "websiteBrowserTests": 2,
+    "docsContentTests": 4,
+    "docsBrowserTests": 1,
+    "snippetTypeChecks": 6,
+    "snippetShellSyntaxChecks": 3,
+    "rootLintPassed": true,
+    "credentialScanPassed": true
+  }
+}
