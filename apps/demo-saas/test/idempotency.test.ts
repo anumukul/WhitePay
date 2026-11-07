@@ -1,20 +1,147 @@
-import {test} from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {createHmac} from 'node:crypto';
-import {resetDbForTests,closeDbForTests,createCustomer,createOrder,bindSession,getDb,ownsSession} from '../lib/db/index.js';
-import {creditBalance,spendOneCredit} from '../lib/db/entitlements.js';
-import {fulfillWebhook} from '../lib/fulfillment.js';
-function fixture(){const dir=mkdtempSync(join(tmpdir(),'whitepay-saas-'));resetDbForTests(join(dir,'saas.db'));const a=createCustomer(),b=createCustomer(),order=createOrder(a.id,'mer_test');bindSession(order.id,a.id,'cs_test');
- const event={id:'evt_1',type:'payment.succeeded',data:{orderId:'0x'+'1'.repeat(64),quoteId:'0x'+'2'.repeat(64),paymentId:'pay_test',sessionId:'cs_test',merchantId:'mer_test',amountMinor:'5000000',fee:'5000',currency:'USDT',chainId:1874,token:'0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',txHash:'0x'+'3'.repeat(64),blockNumber:1000}};
- const payment={id:'pay_test',sessionId:'cs_test',status:'succeeded' as const,amountMinor:5000000,txHash:event.data.txHash,blockNumber:1000,createdAt:Date.now()};
- const wp={payments:{retrieve:async()=>payment,list:async()=>({data:[payment]})}};
- const signed=(e=event)=>{const payload=JSON.stringify(e),timestamp=String(Math.floor(Date.now()/1000)),secret='test-only';return {payload,timestamp,secret,signature:createHmac('sha256',secret).update(timestamp+'.'+payload).digest('hex')};};
- return {a,b,order,event,payment,wp,signed,cleanup:()=>{closeDbForTests();rmSync(dir,{recursive:true,force:true});}};
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createHmac } from 'node:crypto';
+import {
+  resetDbForTests,
+  closeDbForTests,
+  createCustomer,
+  createOrder,
+  bindSession,
+  getDb,
+  ownsSession,
+} from '../lib/db/index.js';
+import { creditBalance, spendOneCredit } from '../lib/db/entitlements.js';
+import { fulfillWebhook } from '../lib/fulfillment.js';
+async function fixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'whitepay-saas-'));
+  resetDbForTests(join(dir, 'saas.db'));
+  const a = await createCustomer(),
+    b = await createCustomer(),
+    order = await createOrder(a.id, 'mer_test');
+  await bindSession(order.id, a.id, 'cs_test');
+  const event = {
+    id: 'evt_1',
+    type: 'payment.succeeded',
+    data: {
+      orderId: '0x' + '1'.repeat(64),
+      quoteId: '0x' + '2'.repeat(64),
+      paymentId: 'pay_test',
+      sessionId: 'cs_test',
+      merchantId: 'mer_test',
+      amountMinor: '5000000',
+      fee: '5000',
+      currency: 'USDT',
+      chainId: 1874,
+      token: '0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',
+      txHash: '0x' + '3'.repeat(64),
+      blockNumber: 1000,
+    },
+  };
+  const payment = {
+    id: 'pay_test',
+    sessionId: 'cs_test',
+    status: 'succeeded' as const,
+    amountMinor: 5000000,
+    txHash: event.data.txHash,
+    blockNumber: 1000,
+    createdAt: Date.now(),
+  };
+  const wp = {
+    payments: {
+      retrieve: async () => payment,
+      list: async () => ({ data: [payment] }),
+    },
+  };
+  const signed = (e = event) => {
+    const payload = JSON.stringify(e),
+      timestamp = String(Math.floor(Date.now() / 1000)),
+      secret = 'test-only';
+    return {
+      payload,
+      timestamp,
+      secret,
+      signature: createHmac('sha256', secret)
+        .update(timestamp + '.' + payload)
+        .digest('hex'),
+    };
+  };
+  return {
+    a,
+    b,
+    order,
+    event,
+    payment,
+    wp,
+    signed,
+    cleanup: () => {
+      closeDbForTests();
+      rmSync(dir, { recursive: true, force: true });
+    },
+  };
 }
-test('browser success and another customer session cannot grant or spend credits',()=>{const f=fixture();try{assert.equal(creditBalance(f.a.id),0);assert.equal(creditBalance(f.b.id),0);assert.equal(ownsSession(f.b.id,'cs_test'),false);assert.equal(spendOneCredit(f.b.id).ok,false);}finally{f.cleanup();}});
-test('duplicate verified payment grants 100 credits once and the customer can consume one',async()=>{const f=fixture();try{assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,true);assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,false);assert.equal(creditBalance(f.a.id),100);assert.equal(creditBalance(f.b.id),0);assert.equal(spendOneCredit(f.a.id).balance,99);}finally{f.cleanup();}});
-test('signed wrong merchant/session/amount and unconfirmed API payment cannot grant',async()=>{const f=fixture();try{for(const change of [{merchantId:'other'},{sessionId:'other'},{amountMinor:'1'}])await assert.rejects(()=>fulfillWebhook(f.signed({...f.event,data:{...f.event.data,...change}}),f.wp));f.payment.amountMinor=1;await assert.rejects(()=>fulfillWebhook(f.signed(),f.wp));assert.equal(creditBalance(f.a.id),0);}finally{f.cleanup();}});
-test('a crash during credit insertion rolls back event deduplication and retries safely',async()=>{const f=fixture();try{getDb().exec("CREATE TRIGGER crash_credit BEFORE INSERT ON credit_ledger BEGIN SELECT RAISE(ABORT,'test crash'); END");await assert.rejects(()=>fulfillWebhook(f.signed(),f.wp));assert.equal((getDb().prepare('SELECT COUNT(*) AS n FROM webhook_events').get() as any).n,0);getDb().exec('DROP TRIGGER crash_credit');assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,true);assert.equal(creditBalance(f.a.id),100);}finally{f.cleanup();}});
+test('browser success and another customer session cannot grant or spend credits', async () => {
+  const f = await fixture();
+  try {
+    assert.equal(await creditBalance(f.a.id), 0);
+    assert.equal(await creditBalance(f.b.id), 0);
+    assert.equal(await ownsSession(f.b.id, 'cs_test'), false);
+    assert.equal((await spendOneCredit(f.b.id)).ok, false);
+  } finally {
+    f.cleanup();
+  }
+});
+test('duplicate verified payment grants 100 credits once and the customer can consume one', async () => {
+  const f = await fixture();
+  try {
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, true);
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, false);
+    assert.equal(await creditBalance(f.a.id), 100);
+    assert.equal(await creditBalance(f.b.id), 0);
+    assert.equal((await spendOneCredit(f.a.id)).balance, 99);
+  } finally {
+    f.cleanup();
+  }
+});
+test('signed wrong merchant/session/amount and unconfirmed API payment cannot grant', async () => {
+  const f = await fixture();
+  try {
+    for (const change of [
+      { merchantId: 'other' },
+      { sessionId: 'other' },
+      { amountMinor: '1' },
+    ])
+      await assert.rejects(() =>
+        fulfillWebhook(
+          f.signed({ ...f.event, data: { ...f.event.data, ...change } }),
+          f.wp,
+        ),
+      );
+    f.payment.amountMinor = 1;
+    await assert.rejects(() => fulfillWebhook(f.signed(), f.wp));
+    assert.equal(await creditBalance(f.a.id), 0);
+  } finally {
+    f.cleanup();
+  }
+});
+test('a crash during credit insertion rolls back event deduplication and retries safely', async () => {
+  const f = await fixture();
+  try {
+    getDb().exec(
+      "CREATE TRIGGER crash_credit BEFORE INSERT ON credit_ledger BEGIN SELECT RAISE(ABORT,'test crash'); END",
+    );
+    await assert.rejects(() => fulfillWebhook(f.signed(), f.wp));
+    assert.equal(
+      (getDb().prepare('SELECT COUNT(*) AS n FROM webhook_events').get() as any)
+        .n,
+      0,
+    );
+    getDb().exec('DROP TRIGGER crash_credit');
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, true);
+    assert.equal(await creditBalance(f.a.id), 100);
+  } finally {
+    f.cleanup();
+  }
+});

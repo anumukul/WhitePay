@@ -13,6 +13,27 @@ verified, indexed `payment.succeeded` webhook — never from the browser callbac
 
 **Testnet only. No real funds move.**
 
+Hosted deployments use `DEMO_DATABASE_URL` for PostgreSQL. The SaaS keeps its
+orders and credits in the separate `whitepay_saas` schema; the API's five public
+schema migrations are unchanged. First use applies a transactionally locked,
+checksummed SaaS schema migration. Credit grants lock the order and customer;
+credit spending locks the customer so concurrent requests cannot overdraw.
+The production server refuses SQLite unless `DEMO_ALLOW_SQLITE=1` is explicitly
+set for a controlled test. Development can still use `DEMO_DATABASE_PATH`.
+
+The hosted API is `https://whitepay-api.onrender.com`; `/health` and `/ready`
+were verified HTTP 200, with five API migrations. The SaaS itself is not yet
+publicly deployed. Keep `DEMO_DATABASE_URL`, `WHITEPAY_SECRET_KEY` and
+`WHITEPAY_WEBHOOK_SECRET` in server environment settings only.
+
+Run the database and browser acceptance checks against a disposable local
+Postgres database by setting `TEST_DATABASE_URL`, then running `pnpm --filter
+@whitepay/demo-saas test`, `pnpm --filter @whitepay/demo-saas build` and
+`pnpm --filter @whitepay/demo-saas test:browser`. The browser harness now uses
+Postgres, the real API and signed HTTP webhooks, with controlled receipt
+fixtures and no chain broadcast. Nine database/fulfillment tests and one Chrome
+end-to-end test pass. A live hosted chain payment remains a separate gate.
+
 ## Buyer flow
 
 1. Open the app and click **Start your demo session** (creates a browser-scoped

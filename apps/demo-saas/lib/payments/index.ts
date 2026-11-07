@@ -1,1 +1,1 @@
-export {client} from './whitepay-adapter';
+export { client } from './whitepay-adapter';

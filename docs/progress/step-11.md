@@ -3,6 +3,29 @@
 STEP: 11 — independent AI credits SaaS
 STATUS: READY_FOR_HUMAN_TEST
 
+## Hosted deployment follow-up
+
+The API is now live at https://whitepay-api.onrender.com. Read-only checks
+returned HTTP 200 for both `/health` and `/ready`; PostgreSQL is reachable and
+five API migrations are applied. No database credentials were exposed.
+
+Added a Postgres storage adapter for the SaaS under its own `whitepay_saas`
+schema, asynchronous storage calls in the server routes/actions, locked and
+checksummed initialization, atomic duplicate-resistant credit grants, customer
+locks for concurrent spending and production rejection of implicit SQLite.
+The local SQLite development adapter is retained. The SaaS runtime now uses
+Next 15.5.12 / React 18.3.1, matching the existing documentation and website.
+
+TDD: the new Postgres suite initially failed because the adapter was missing.
+After implementation, all nine tests pass against disposable PostgreSQL,
+including parallel duplicate events, overspend prevention, reconnect
+persistence and rollback/retry after a forced ledger insertion failure.
+The production build and its type checks pass. One Chrome end-to-end test
+passes with Postgres, real local API/worker delivery, browser callback granting
+zero, duplicate signed webhook granting once, spend 100→99 and cross-customer
+access rejection. Its chain receipt is controlled test data, not a live chain
+payment. These checks do not deploy the hosted SaaS or sign/broadcast a chain transaction.
+
 ## Scope completed
 
 - Audited the existing `apps/demo-saas` against the Step 11 acceptance criteria

@@ -14,9 +14,10 @@
   "dependencies": {
     "@whitepay/node": "workspace:*",
     "@whitepay/react": "workspace:*",
-    "next": "15.0.3",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
+    "next": "15.5.12",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "pg": "8.16.3"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
@@ -25,6 +26,7 @@
     "@types/react-dom": "18.3.1",
     "@whitepay/api": "workspace:*",
     "tsx": "4.19.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@types/pg": "8.15.5"
   }
 }
