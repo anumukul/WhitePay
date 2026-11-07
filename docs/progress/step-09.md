@@ -38,7 +38,6 @@ Real worker indexing matched the exact signed order/nonce/receipt and persisted 
 
 Attempted direct widget inspection: browser host unavailable; native Chrome inspection timed out. Asked the user only whether the still-open page shows Payment confirmed / View receipt. Do not claim visible UI confirmation until that response. All financial/backend checks are complete. No additional transaction, external webhook, deployment, commit or push was performed during verification.
 
-
 ## Receipt-page recovery and visible verification
 
 The user reported waiting/error. Local listener inspection confirmed that the checkout/API servers were no longer running; do not infer an on-chain failure from that page. Added `receipt` mode so a settled checkout can be reopened after its signing window closes, without accessing any keystore, signing, permitting wallet requests or enabling POST actions. It validates the paid session and actual consumed on-chain order/token state, then exposes only the existing receipt.

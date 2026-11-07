@@ -1,32 +1,208 @@
-import {test} from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {createHmac} from 'node:crypto';
-import {resetDbForTests,closeDbForTests,createCustomer,createOrder,bindSession,getDb,ownsSession} from '../lib/db/index.js';
-import {redeemDownload} from '../lib/db/entitlements.js';
-import {fulfillWebhook} from '../lib/fulfillment.js';
-function fixture(){const dir=mkdtempSync(join(tmpdir(),'whitepay-shop-'));resetDbForTests(join(dir,'shop.db'));const a=createCustomer(),b=createCustomer(),order=createOrder(a.id,'mer_test');bindSession(order.id,a.id,'cs_test');
- const event={id:'evt_1',type:'payment.succeeded',data:{orderId:'0x'+'1'.repeat(64),quoteId:'0x'+'2'.repeat(64),paymentId:'pay_test',sessionId:'cs_test',merchantId:'mer_test',amountMinor:'3000000',fee:'3000',currency:'USDT',chainId:1874,token:'0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',txHash:'0x'+'3'.repeat(64),blockNumber:1000}};
- const payment={id:'pay_test',sessionId:'cs_test',status:'succeeded' as const,amountMinor:3000000,txHash:event.data.txHash,blockNumber:1000,createdAt:Date.now()};
- const wp={payments:{retrieve:async()=>payment,list:async()=>({data:[payment]})}};
- const signed=(e=event)=>{const payload=JSON.stringify(e),timestamp=String(Math.floor(Date.now()/1000)),secret='test-only';return {payload,timestamp,secret,signature:createHmac('sha256',secret).update(timestamp+'.'+payload).digest('hex')};};
- return {a,b,order,event,payment,wp,signed,cleanup:()=>{closeDbForTests();rmSync(dir,{recursive:true,force:true});}};
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createHmac } from 'node:crypto';
+import {
+  resetDbForTests,
+  closeDbForTests,
+  createCustomer,
+  createOrder,
+  bindSession,
+  getDb,
+  ownsSession,
+} from '../lib/db/index.js';
+import { redeemDownload } from '../lib/db/entitlements.js';
+import { fulfillWebhook } from '../lib/fulfillment.js';
+function fixture() {
+  const dir = mkdtempSync(join(tmpdir(), 'whitepay-shop-'));
+  resetDbForTests(join(dir, 'shop.db'));
+  const a = createCustomer(),
+    b = createCustomer(),
+    order = createOrder(a.id, 'mer_test');
+  bindSession(order.id, a.id, 'cs_test');
+  const event = {
+    id: 'evt_1',
+    type: 'payment.succeeded',
+    data: {
+      orderId: '0x' + '1'.repeat(64),
+      quoteId: '0x' + '2'.repeat(64),
+      paymentId: 'pay_test',
+      sessionId: 'cs_test',
+      merchantId: 'mer_test',
+      amountMinor: '3000000',
+      fee: '3000',
+      currency: 'USDT',
+      chainId: 1874,
+      token: '0xcedfb56113143d55b2358b8cfbb0deb5ad2f55a7',
+      txHash: '0x' + '3'.repeat(64),
+      blockNumber: 1000,
+    },
+  };
+  const payment = {
+    id: 'pay_test',
+    sessionId: 'cs_test',
+    status: 'succeeded' as const,
+    amountMinor: 3000000,
+    txHash: event.data.txHash,
+    blockNumber: 1000,
+    createdAt: Date.now(),
+  };
+  const wp = {
+    payments: {
+      retrieve: async () => payment,
+      list: async () => ({ data: [payment] }),
+    },
+  };
+  const signed = (e = event) => {
+    const payload = JSON.stringify(e),
+      timestamp = String(Math.floor(Date.now() / 1000)),
+      secret = 'test-only';
+    return {
+      payload,
+      timestamp,
+      secret,
+      signature: createHmac('sha256', secret)
+        .update(timestamp + '.' + payload)
+        .digest('hex'),
+    };
+  };
+  return {
+    a,
+    b,
+    order,
+    event,
+    payment,
+    wp,
+    signed,
+    cleanup: () => {
+      closeDbForTests();
+      rmSync(dir, { recursive: true, force: true });
+    },
+  };
 }
-const count=(table:string)=>Number((getDb().prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as any).n);
-test('a browser callback and another customer cannot unlock a download',()=>{const f=fixture();try{assert.equal(count('entitlements'),0);assert.equal(redeemDownload('0'.repeat(64),f.a.id),null);assert.equal(ownsSession(f.b.id,'cs_test'),false);assert.equal(redeemDownload('0'.repeat(64),f.b.id),null);}finally{f.cleanup();}});
-test('duplicate verified payment grants one download token and only its customer can redeem it',async()=>{const f=fixture();try{assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,true);const token=(getDb().prepare('SELECT download_token AS t FROM entitlements WHERE order_id=?').get(f.order.id) as any).t;assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,false);assert.equal(count('entitlements'),1);assert.equal(redeemDownload(token,f.b.id),null);const first=redeemDownload(token,f.a.id);assert.ok(first);assert.match(first!.content,/WhitePay launch template/);assert.equal(first!.downloads,1);assert.equal(redeemDownload(token,f.a.id)!.downloads,2);}finally{f.cleanup();}});
-test('signed wrong merchant/session/amount and unconfirmed API payment cannot grant a download',async()=>{const f=fixture();try{for(const change of [{merchantId:'other'},{sessionId:'other'},{amountMinor:'1'}])await assert.rejects(()=>fulfillWebhook(f.signed({...f.event,data:{...f.event.data,...change}}),f.wp));f.payment.amountMinor=1;await assert.rejects(()=>fulfillWebhook(f.signed(),f.wp));assert.equal(count('entitlements'),0);}finally{f.cleanup();}});
-test('a crash during entitlement insertion rolls back event deduplication and retries safely',async()=>{const f=fixture();try{getDb().exec("CREATE TRIGGER crash_entitlement BEFORE INSERT ON entitlements BEGIN SELECT RAISE(ABORT,'test crash'); END");await assert.rejects(()=>fulfillWebhook(f.signed(),f.wp));assert.equal(count('webhook_events'),0);getDb().exec('DROP TRIGGER crash_entitlement');assert.equal((await fulfillWebhook(f.signed(),f.wp)).granted,true);assert.equal(count('entitlements'),1);}finally{f.cleanup();}});
-test('two merchants keep independent orders and a cross-merchant event cannot unlock the other order',async()=>{const f=fixture();try{const orderB=createOrder(f.a.id,'mer_b');bindSession(orderB.id,f.a.id,'cs_b');
- const eventB={...f.event,id:'evt_2',data:{...f.event.data,paymentId:'pay_b',sessionId:'cs_b',merchantId:'mer_b'}};
- const paymentB={...f.payment,id:'pay_b',sessionId:'cs_b'};
- const wpB={payments:{retrieve:async()=>paymentB,list:async()=>({data:[paymentB]})}};
- assert.equal((await fulfillWebhook(f.signed(eventB),wpB)).granted,true);
- assert.equal(count('entitlements'),1);
- assert.equal((getDb().prepare('SELECT COUNT(*) AS n FROM entitlements WHERE order_id=?').get(orderB.id) as any).n,1);
- assert.equal((getDb().prepare('SELECT COUNT(*) AS n FROM entitlements WHERE order_id=?').get(f.order.id) as any).n,0);
- const crossMerchant={...eventB,id:'evt_3',data:{...eventB.data,merchantId:'mer_test'}};
- await assert.rejects(()=>fulfillWebhook(f.signed(crossMerchant),wpB));
- }finally{f.cleanup();}});
+const count = (table: string) =>
+  Number(
+    (getDb().prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as any).n,
+  );
+test('a browser callback and another customer cannot unlock a download', () => {
+  const f = fixture();
+  try {
+    assert.equal(count('entitlements'), 0);
+    assert.equal(redeemDownload('0'.repeat(64), f.a.id), null);
+    assert.equal(ownsSession(f.b.id, 'cs_test'), false);
+    assert.equal(redeemDownload('0'.repeat(64), f.b.id), null);
+  } finally {
+    f.cleanup();
+  }
+});
+test('duplicate verified payment grants one download token and only its customer can redeem it', async () => {
+  const f = fixture();
+  try {
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, true);
+    const token = (
+      getDb()
+        .prepare(
+          'SELECT download_token AS t FROM entitlements WHERE order_id=?',
+        )
+        .get(f.order.id) as any
+    ).t;
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, false);
+    assert.equal(count('entitlements'), 1);
+    assert.equal(redeemDownload(token, f.b.id), null);
+    const first = redeemDownload(token, f.a.id);
+    assert.ok(first);
+    assert.match(first!.content, /WhitePay launch template/);
+    assert.equal(first!.downloads, 1);
+    assert.equal(redeemDownload(token, f.a.id)!.downloads, 2);
+  } finally {
+    f.cleanup();
+  }
+});
+test('signed wrong merchant/session/amount and unconfirmed API payment cannot grant a download', async () => {
+  const f = fixture();
+  try {
+    for (const change of [
+      { merchantId: 'other' },
+      { sessionId: 'other' },
+      { amountMinor: '1' },
+    ])
+      await assert.rejects(() =>
+        fulfillWebhook(
+          f.signed({ ...f.event, data: { ...f.event.data, ...change } }),
+          f.wp,
+        ),
+      );
+    f.payment.amountMinor = 1;
+    await assert.rejects(() => fulfillWebhook(f.signed(), f.wp));
+    assert.equal(count('entitlements'), 0);
+  } finally {
+    f.cleanup();
+  }
+});
+test('a crash during entitlement insertion rolls back event deduplication and retries safely', async () => {
+  const f = fixture();
+  try {
+    getDb().exec(
+      "CREATE TRIGGER crash_entitlement BEFORE INSERT ON entitlements BEGIN SELECT RAISE(ABORT,'test crash'); END",
+    );
+    await assert.rejects(() => fulfillWebhook(f.signed(), f.wp));
+    assert.equal(count('webhook_events'), 0);
+    getDb().exec('DROP TRIGGER crash_entitlement');
+    assert.equal((await fulfillWebhook(f.signed(), f.wp)).granted, true);
+    assert.equal(count('entitlements'), 1);
+  } finally {
+    f.cleanup();
+  }
+});
+test('two merchants keep independent orders and a cross-merchant event cannot unlock the other order', async () => {
+  const f = fixture();
+  try {
+    const orderB = createOrder(f.a.id, 'mer_b');
+    bindSession(orderB.id, f.a.id, 'cs_b');
+    const eventB = {
+      ...f.event,
+      id: 'evt_2',
+      data: {
+        ...f.event.data,
+        paymentId: 'pay_b',
+        sessionId: 'cs_b',
+        merchantId: 'mer_b',
+      },
+    };
+    const paymentB = { ...f.payment, id: 'pay_b', sessionId: 'cs_b' };
+    const wpB = {
+      payments: {
+        retrieve: async () => paymentB,
+        list: async () => ({ data: [paymentB] }),
+      },
+    };
+    assert.equal((await fulfillWebhook(f.signed(eventB), wpB)).granted, true);
+    assert.equal(count('entitlements'), 1);
+    assert.equal(
+      (
+        getDb()
+          .prepare('SELECT COUNT(*) AS n FROM entitlements WHERE order_id=?')
+          .get(orderB.id) as any
+      ).n,
+      1,
+    );
+    assert.equal(
+      (
+        getDb()
+          .prepare('SELECT COUNT(*) AS n FROM entitlements WHERE order_id=?')
+          .get(f.order.id) as any
+      ).n,
+      0,
+    );
+    const crossMerchant = {
+      ...eventB,
+      id: 'evt_3',
+      data: { ...eventB.data, merchantId: 'mer_test' },
+    };
+    await assert.rejects(() => fulfillWebhook(f.signed(crossMerchant), wpB));
+  } finally {
+    f.cleanup();
+  }
+});

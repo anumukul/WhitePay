@@ -34,8 +34,17 @@ export interface ChainAdapter {
   chainId(): Promise<number>;
   nowSeconds(): number;
   getRelayerBalance(): Promise<bigint>;
-  estimateSettleGas(order: Order, orderSig: string, tokenSig: string): Promise<bigint>;
-  sendSettle(order: Order, orderSig: string, tokenSig: string, gasLimit: bigint): Promise<string>;
+  estimateSettleGas(
+    order: Order,
+    orderSig: string,
+    tokenSig: string,
+  ): Promise<bigint>;
+  sendSettle(
+    order: Order,
+    orderSig: string,
+    tokenSig: string,
+    gasLimit: bigint,
+  ): Promise<string>;
 }
 
 // Shape matches services/worker/src/indexer.ts#ChainReader.

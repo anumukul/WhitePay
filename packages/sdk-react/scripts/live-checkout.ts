@@ -304,16 +304,14 @@ try {
           'set-cookie',
           `whitepay_local=${cookie}; HttpOnly; SameSite=Strict; Path=/`,
         );
-        res
-          .writeHead(200, { 'content-type': 'text/html' })
-          .end(
-            '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script>globalThis.__whitepay=' +
-              JSON.stringify({
-                sessionId: ctx.sessionId,
-                readOnly: mode === 'receipt',
-              }) +
-              '</script><script src="/bundle.js"></script></body></html>',
-          );
+        res.writeHead(200, { 'content-type': 'text/html' }).end(
+          '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="root"></div><script>globalThis.__whitepay=' +
+            JSON.stringify({
+              sessionId: ctx.sessionId,
+              readOnly: mode === 'receipt',
+            }) +
+            '</script><script src="/bundle.js"></script></body></html>',
+        );
       } catch {
         if (!res.headersSent)
           res

@@ -96,7 +96,7 @@ const knownErrors = new Set([
 export class WhitePay {
   readonly checkout: CheckoutAPI;
   readonly payments: PaymentsAPI;
-  readonly merchant:MerchantAPI;
+  readonly merchant: MerchantAPI;
   readonly products: ProductsAPI;
   readonly prices: PricesAPI;
   readonly webhooks = new WebhooksAPI();
@@ -107,7 +107,7 @@ export class WhitePay {
     const client = new HttpClient(config);
     this.checkout = new CheckoutAPI(client);
     this.payments = new PaymentsAPI(client);
-    this.merchant=new MerchantAPI(client);
+    this.merchant = new MerchantAPI(client);
     this.products = new ProductsAPI(client);
     this.prices = new PricesAPI(client);
   }
@@ -361,7 +361,15 @@ class WebhooksAPI {
   }
 }
 
-export { createCheckoutBridge,createCheckoutFetchBridge } from './bridge.js';
-export type { CheckoutBridgeOptions,CheckoutFetchBridgeOptions } from './bridge.js';
+export { createCheckoutBridge, createCheckoutFetchBridge } from './bridge.js';
+export type {
+  CheckoutBridgeOptions,
+  CheckoutFetchBridgeOptions,
+} from './bridge.js';
 
-class MerchantAPI {constructor(private readonly client:HttpClient){} retrieve():Promise<{id:string;name:string;payoutAddress:string}>{return this.client.request('GET','/v1/merchant');}}
+class MerchantAPI {
+  constructor(private readonly client: HttpClient) {}
+  retrieve(): Promise<{ id: string; name: string; payoutAddress: string }> {
+    return this.client.request('GET', '/v1/merchant');
+  }
+}
